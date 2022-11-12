@@ -209,9 +209,9 @@
                                         <ComboBoxItem>Chat</ComboBoxItem>
                                         <ComboBoxItem>Metronome</ComboBoxItem>
                                     </ComboBox>
-                                    <CheckBox Margin="10,0,0,0"  Grid.Row="1" x:Name="MidiBardComp"      Content="Enable MidiBard sync"             Unchecked="MidiBard_Checked"          Checked="MidiBard_Checked"          ToolTip="{StaticResource MISC_MIDIBARD}"/>
-                                    <CheckBox Margin="10,0,0,0"  Grid.Row="3" x:Name="AutoequipDalamud"  Content="Liath Equip Mode"                 Unchecked="AutoequipDalamud_Checked"  Checked="AutoequipDalamud_Checked"  ToolTip="{StaticResource MISC_AUTOEQPLGN}"/>
-                                    <CheckBox Margin="10,0,0,0"  Grid.Row="4" x:Name="SkinUiBox"         Content="Use skinned Ui"                   Unchecked="SkinUiBox_Checked"         Checked="SkinUiBox_Checked"         ToolTip="{StaticResource MISC_SKINNEDUI}"/>
+                                    <CheckBox Visibility="Hidden" Margin="10,10,0,0" Grid.Row="1" x:Name="MidiBardComp"      Content="Enable MidiBard sync"             Unchecked="MidiBard_Checked"          Checked="MidiBard_Checked"          ToolTip="{StaticResource MISC_MIDIBARD}"/>
+                                    <CheckBox Margin="10,0,0,0"  Grid.Row="3" x:Name="AutoequipDalamud"  Content="Dalamud Equip Mode"                 Unchecked="AutoequipDalamud_Checked"  Checked="AutoequipDalamud_Checked"  ToolTip="{StaticResource MISC_AUTOEQPLGN}"/>
+                                    <CheckBox Margin="10,0,0,0"  Grid.Row="4" x:Name="SkinUiBox"         Content="Use skinned Ui"                   Unchecked="SkinUiBox_Checked"         Checked="SkinUiBox_Checked"         ToolTip="{StaticResource MISC_SKINNEDUI}" IsEnabled="False"/>
                                 </Grid>
                             </GroupBox>
                             <GroupBox Grid.Row="1" Grid.Column="1" Header="Local Ochestra">
@@ -224,10 +224,9 @@
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
                                     <CheckBox Margin="10,10,0,0" Grid.Row="0" x:Name="LocalOrchestraBox"       Content="Local Orchestra enabled"          Unchecked="LocalOrchestraBox_Checked"     Checked="LocalOrchestraBox_Checked"     ToolTip="{StaticResource LO_ENABLE}"/>
-                                    <CheckBox Margin="10,0,0,0" Grid.Row="1" x:Name="AutoEquipBox"             Content="Debras Auto Equip Bards"          Unchecked="AutoEquipBox_Checked"          Checked="AutoEquipBox_Checked"          ToolTip="{StaticResource LO_AUTOEQ}"/>
-                                    <CheckBox Margin="10,0,0,0" Grid.Row="2" x:Name="KeepTrackSettingsBox"     Content="Thymms I know what I'm doing box" Unchecked="KeepTrackSettingsBox_Checked"  Checked="KeepTrackSettingsBox_Checked"  ToolTip="{StaticResource LO_KEEPTRACKS}"/>
-                                    <CheckBox Margin="10,0,0,0" Grid.Row="3" x:Name="IgnoreProgchangeBox"      Content="City-Wok mode"                    Unchecked="IgnoreProgchangeBox_Checked"   Checked="IgnoreProgchangeBox_Checked"   ToolTip="{StaticResource LO_INGOREPROG}"/>
-                                    <CheckBox Margin="10,0,0,0" Grid.Row="4" x:Name="StartBardIndividuallyBox" Content="Individual start"                 Unchecked="StartBardIndividually_Checked" Checked="StartBardIndividually_Checked" ToolTip="{StaticResource LO_ISTART}"/>
+                                    <CheckBox Margin="10,0,0,0" Grid.Row="1" x:Name="AutoEquipBox"             Content="Auto Equip Performer(s)"          Unchecked="AutoEquipBox_Checked"          Checked="AutoEquipBox_Checked"          ToolTip="{StaticResource LO_AUTOEQ}" IsChecked="False"/>
+                                    <CheckBox Margin="10,0,0,0" Grid.Row="2" x:Name="KeepTrackSettingsBox"     Content="Keep Tracks" Unchecked="KeepTrackSettingsBox_Checked"  Checked="KeepTrackSettingsBox_Checked"  ToolTip="{StaticResource LO_KEEPTRACKS}"/>
+                                    <CheckBox Margin="10,0,0,0" Grid.Row="3" x:Name="IgnoreProgchangeBox"      Content="Ignore Non-Guitar Program Changes"                    Unchecked="IgnoreProgchangeBox_Checked"   Checked="IgnoreProgchangeBox_Checked"   ToolTip="{StaticResource LO_INGOREPROG}"/>
                                 </Grid>
                             </GroupBox>
                         </Grid>

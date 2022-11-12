@@ -70,7 +70,7 @@ namespace BardMusicPlayer.Pigeonhole
         /// <summary>
         /// Sets the autostart method
         /// </summary>
-        public virtual int AutostartMethod { get; set; } = 0;
+        public virtual int AutostartMethod { get; set; } = 2;
 
         /// <summary>
         /// Sets UnequipPause
@@ -150,11 +150,6 @@ namespace BardMusicPlayer.Pigeonhole
         public virtual int EnsembleReadyDelay { get; set; } = 500;
 
         /// <summary>
-        /// playback delay enabled
-        /// </summary>
-        public virtual bool EnsemblePlayDelay { get; set; } = true;
-
-        /// <summary>
         /// autoequip bards after song loaded
         /// </summary>
         public virtual bool AutoEquipBards { get; set; } = false;
@@ -168,11 +163,6 @@ namespace BardMusicPlayer.Pigeonhole
         /// ignores the progchange
         /// </summary>
         public virtual bool IgnoreProgChange { get; set; } = false;
-
-        /// <summary>
-        /// start the performer by it's own ready signal
-        /// </summary>
-        public virtual bool EnsembleStartIndividual { get; set; } = true;
 
         /// <summary>
         /// milliseconds between game process scans / seer scanner startups.

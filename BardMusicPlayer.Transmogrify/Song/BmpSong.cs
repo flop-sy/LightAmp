@@ -429,9 +429,9 @@ namespace BardMusicPlayer.Transmogrify.Song
                             long lastOn = notesToFix[k].GetTimedNoteOnEvent().Time;
                             if (lastOn < lowestParent) lowestParent = lastOn;
                         }
-                        if (lowestParent <= time + 30)
+                        if (lowestParent <= time + 50)
                         {
-                            time = lowestParent - 30;
+                            time = lowestParent - 50;
                             if (time < 0) continue;
                             notesToFix[i].Time = time;
                             dur = 25;
@@ -981,7 +981,7 @@ namespace BardMusicPlayer.Transmogrify.Song
                             if (programChangeEvent == null)
                                 continue;
 
-                            long newStart = _event.Time - delta;
+                            long newStart = _event.Time + offset - delta;
                             if (newStart <= -1)
                                 manager.Events.Remove(_event);
                             else

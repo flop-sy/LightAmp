@@ -41,7 +41,6 @@ namespace BardMusicPlayer.Ui.Classic
             this.AutoEquipBox.IsChecked = BmpPigeonhole.Instance.AutoEquipBards;
             this.KeepTrackSettingsBox.IsChecked = BmpPigeonhole.Instance.EnsembleKeepTrackSetting;
             this.IgnoreProgchangeBox.IsChecked = BmpPigeonhole.Instance.IgnoreProgChange;
-            StartBardIndividuallyBox.IsChecked = BmpPigeonhole.Instance.EnsembleStartIndividual;
         }
 
         private void AMPInFrontBox_Checked(object sender, RoutedEventArgs e)
@@ -124,10 +123,6 @@ namespace BardMusicPlayer.Ui.Classic
             BmpPigeonhole.Instance.IgnoreProgChange = IgnoreProgchangeBox.IsChecked ?? false;
         }
 
-        private void StartBardIndividually_Checked(object sender, RoutedEventArgs e)
-        {
-            BmpPigeonhole.Instance.EnsembleStartIndividual = StartBardIndividuallyBox.IsChecked ?? false;
-        }
         #endregion
     }
 }
