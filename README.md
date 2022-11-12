@@ -1,20 +1,30 @@
 # LightAmp
-It's just An other MIDI Player.
+Based on published [BMP2.0 libraries](https://github.com/BardMusicPlayer/BardMusicPlayer) and updated further by GiR-Zippo (Kalle).
 
-This is a fun project to create a MIDI player for XIV. It's based on the published BMP2.0 libraries and made with the help of the Bards of Light community.
-
-It's using two Ui layouts, the old well known classic BMP and a WinAmp one. The WinAmp Ui is skinnable with the classic WinAmp skins.
-
-For further informations or a quick start, just go to the [Wiki page](https://github.com/GiR-Zippo/LightAmp/wiki) 
-
-If you need the compiled version, go to the [Releases](https://github.com/GiR-Zippo/LightAmp/releases)
+For further information or a quick start, visit the [wiki page](https://github.com/GiR-Zippo/LightAmp/wiki).
 
 ## Hypnotoad
 
-The LightAmp can be used with the [Hypnotoad](https://github.com/GiR-Zippo/Hypnotoad-Plugin) to output lyrics.
+LightAmp can be used in conjunction with the [Hypnotoad](https://github.com/GiR-Zippo/Hypnotoad-Plugin) dalamud plugin for enhanced functionality.
+* Output lyrics.
+* Chat while playing.
+* Direct instrument & ensemble accept.
+* Set graphics toggle.
 
-Copy this url to your Dalamud and search for the hypnotoad
+Copy this url to your dalamud setting repositories and search for the hypnotoad plugin.
 
 `https://raw.githubusercontent.com/GiR-Zippo/Hypnotoad-Plugin/master/PluginDir/pluginmaster.json`
 
-Feel free to use, modify or fork it.
+## Libraries Info
+```
+coffer:       litedb catalog storage of midi files
+grunt:        pushes buttons in game and pastes lyrics in game
+jamboree:     cloud sync system (won't be used for 2.0)
+maestro:      midi sequencer, consumes transmogrify processed midi files, outputs to grunt
+pigeonhole:   json settings storage system. *all* settings are stored here. autosaves on variable write.
+quotidian:    general utilities/enum/struct used by other modules
+seer:         memory/network packet/.dat keybind reading system. event driven and has partial failover if a patch breaks a network read but not a memory read or vice versa
+siren:        alphatab synthesizer sequencer, consumes transmogrify processed midi file for *highly* accurate replication of in game playback.
+transmogrify: processes opened midi files into the format used by siren and maestro. an evolution of the bmp track naming conventions + lyric events.
+ui:           mvvm frontend
+```
