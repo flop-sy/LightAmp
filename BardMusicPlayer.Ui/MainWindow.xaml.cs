@@ -27,7 +27,7 @@ namespace BardMusicPlayer.Ui
             this.DataContext = new Classic_MainView();
             this.AllowsTransparency = false;
             this.WindowStyle = WindowStyle.SingleBorderWindow;
-            this.Height = 500;
+            this.Height = 520;
             this.Width = 830;
             this.ResizeMode = ResizeMode.CanResizeWithGrip;
         }
