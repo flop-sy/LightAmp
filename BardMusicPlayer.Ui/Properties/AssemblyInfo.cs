@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -8,11 +8,11 @@ using System.Windows;
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die einer Assembly zugeordnet sind.
 [assembly: AssemblyTitle("LightAmp")]
-[assembly: AssemblyDescription("LightAmp for the BoL")]
+[assembly: AssemblyDescription("LightAmp")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("GiR-Zippo")]
+[assembly: AssemblyCompany("LightAmp")]
 [assembly: AssemblyProduct("LightAmp")]
-[assembly: AssemblyCopyright("Copywrong ©  2022")]
+[assembly: AssemblyCopyright("Copywrong © 2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -51,5 +51,5 @@ using System.Windows;
 // Sie können alle Werte angeben oder Standardwerte für die Build- und Revisionsnummern verwenden,
 // indem Sie "*" wie unten gezeigt eingeben:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.4.4")]
-[assembly: AssemblyFileVersion("1.0.4.4")]
+[assembly: AssemblyVersion("1.0.4.4-custom")]
+[assembly: AssemblyFileVersion("1.0.4.4-custom")]
