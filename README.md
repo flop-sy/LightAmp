@@ -1,5 +1,6 @@
-# LightAmp
-Based on published [BMP2.0 libraries](https://github.com/BardMusicPlayer/BardMusicPlayer) and updated further by GiR-Zippo (Kalle).
+# LightAmp-Custom
+Based on published [BMP2.0 libraries](https://github.com/BardMusicPlayer/BardMusicPlayer) and updated further by GiR-Zippo (Kalle). 
+Personal fork including minor fixes and changes ahead of upstream.
 
 For further information or a quick start, visit the [wiki page](https://github.com/GiR-Zippo/LightAmp/wiki).
 
