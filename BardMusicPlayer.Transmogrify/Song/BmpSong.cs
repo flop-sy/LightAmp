@@ -958,7 +958,6 @@ namespace BardMusicPlayer.Transmogrify.Song
                 {
                     var te = chunk.Events.OfType<SequenceTrackNameEvent>().FirstOrDefault()?.Text;
                     var channel = chunk.Events.OfType<NoteOnEvent>().FirstOrDefault()?.Channel;
-                    int offset = Instrument.Parse(chunk.Events.OfType<SequenceTrackNameEvent>().FirstOrDefault()?.Text).SampleOffset; //get the offset
                     using (var manager = chunk.ManageTimedEvents())
                     {
                         var prog = new ProgramChangeEvent((SevenBitNumber)Instrument.Parse(te).MidiProgramChangeCode);
@@ -982,7 +981,7 @@ namespace BardMusicPlayer.Transmogrify.Song
                             if (programChangeEvent == null)
                                 continue;
 
-                            long newStart = _event.Time + offset - delta;
+                            long newStart = _event.Time - delta;
                             if (newStart <= -1)
                                 manager.Events.Remove(_event);
                             else
