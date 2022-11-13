@@ -38,7 +38,6 @@ namespace BardMusicPlayer.Ui.Skinned
         public BardsWindow _BardListView;
         public NetworkPlayWindow _Networkplaywindow;
         public Skinned_MainView_Ex _MainView_Ex;
-        public InfoBox _infoBox = null;
 
         private CancellationTokenSource Scroller = new CancellationTokenSource();
         public Skinned_MainView()
@@ -444,11 +443,5 @@ namespace BardMusicPlayer.Ui.Skinned
             _showLapTime = !_showLapTime;
         }
 
-        private void MenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            if (_infoBox == null)
-                _infoBox = new InfoBox();
-            _infoBox.Visibility = Visibility.Visible;
-        }
     }
 }

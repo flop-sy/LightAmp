@@ -298,32 +298,6 @@ namespace BardMusicPlayer.Ui.Classic
         }
         #endregion
 
-        private void Info_Button_Click(object sender, RoutedEventArgs e)
-        {
-            InfoBox _infoBox = new InfoBox();
-            _infoBox.Show();
-        }
-
-        private void Info_Button_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "BASIC file|*.bas",
-                Multiselect = false
-            };
-
-            if (openFileDialog.ShowDialog() != true)
-                return;
-
-            if (!openFileDialog.CheckFileExists)
-                return;
-
-            Script.BmpScript.Instance.LoadAndRun(openFileDialog.FileName);
-            /*if (_networkWindow == null)
-                _networkWindow = new NetworkPlayWindow();
-            _networkWindow.Visibility = Visibility.Visible;*/
-        }
-
         /// <summary>
         /// triggered by the songbrowser if a file should be loaded
         /// </summary>
