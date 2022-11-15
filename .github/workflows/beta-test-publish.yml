@@ -30,7 +30,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: LightAmp
-        path: LightAmp\bin\Release\net48\*.exe
+        path: BardMusicPlayer.Ui\bin\Release\net48\*.exe
         if-no-files-found: error
         retention-days: 1
 
@@ -48,14 +48,14 @@ jobs:
       
       - name: Delete old Beta files
         run: |
-          rm -f LightAmp/release/beta/*
-          rm -f LightAmp/updater/release/1/*
+          rm -f BardMusicPlayer.Ui/release/beta/*
+          rm -f BardMusicPlayer.Ui/updater/release/1/*
       
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
           name: LightAmp
-          path: LightAmp/release/beta/
+          path: BardMusicPlayer.Ui/release/beta/
       
       # - name: Delete Polly.dll
         # run: rm bmp/release/beta/Polly.dll
