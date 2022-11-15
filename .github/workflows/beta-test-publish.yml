@@ -33,18 +33,3 @@ jobs:
         path: BardMusicPlayer.Ui\bin\Release\net48\*.exe
         if-no-files-found: error
         retention-days: 1
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-    
-      - name: Checkout Downloads
-        uses: actions/checkout@v3
-      
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: LightAmp
-          path: BardMusicPlayer.Ui/release/beta/
