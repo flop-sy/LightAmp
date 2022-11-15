@@ -59,7 +59,6 @@
     <Compile Include="Controls\KeyboardHeatMap.xaml.cs" DependentUpon="KeyboardHeatMap.xaml" />
     <Compile Include="Functions\PlaylistImporter.cs" />
     <Compile Include="Globals\BmpChatParser.cs" />
-    <Compile Include="Globals\InfoBox.xaml.cs" DependentUpon="InfoBox.xaml" />
     <Compile Include="Resources\FolderPicker.cs" />
     <Compile Include="UI_Classic\Classic_Settings.cs" />
     <Compile Include="UI_Classic\Classic_Siren.cs" />
