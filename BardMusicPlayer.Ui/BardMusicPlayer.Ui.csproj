@@ -22,7 +22,7 @@
     <RepositoryType>git</RepositoryType>
 
     <Title>LightAmp</Title>
-	<Description>LightAmp for the BoL</Description>
+    <Description>LightAmp for the BoL</Description>
     <Company>GiR-Zippo</Company>
     <Product>LightAmp</Product>
     <Copyright>Copywrong © 2022</Copyright>
@@ -97,7 +97,6 @@
     <Page Include="Controls\OctaveNumericUpDown.xaml" Generator="MSBuild:Compile" SubType="Designer" />
     <Page Include="Controls\SongEditWindow.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Page Include="Controls\TrackNumericUpDown.xaml" SubType="Designer" Generator="MSBuild:Compile" />
-    <Page Include="Globals\InfoBox.xaml" Generator="MSBuild:Compile" SubType="Designer" />
     <Page Include="MainWindow.xaml" Generator="MSBuild:Compile" SubType="Designer" />
     <Page Include="Resources\ImageButtonStyle.xaml" SubType="Designer" Generator="MSBuild:Compile" />
     <Page Include="Resources\OctaveBarStyle.xaml" SubType="Designer" Generator="MSBuild:Compile" />
