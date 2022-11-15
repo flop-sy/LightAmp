@@ -10,7 +10,7 @@ jobs:
     runs-on: windows-latest
 
     env:
-      Solution_Name: BardMusicPlayer
+      Solution_Name: LightAmp
 
     steps:
     - name: Checkout
@@ -29,8 +29,8 @@ jobs:
     - name: Store artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: BardMusicPlayer
-        path: BardMusicPlayer\bin\Debug\net48\*.exe
+        name: LightAmp
+        path: LightAmp\bin\Debug\net48\*.exe
         if-no-files-found: error
         retention-days: 1
 
@@ -43,19 +43,19 @@ jobs:
       - name: Checkout Downloads
         uses: actions/checkout@v3
         with:
-          repository: BardMusicPlayer/Downloads
+          repository: LightAmp/Downloads
           ssh-key: ${{ secrets.DEPLOY_KEY_DOWNLOADS }}
       
       - name: Delete old Debug files
         run: |
-          rm -f bmp/debug/beta/*
-          rm -f bmp/updater/debug/1/*
+          rm -f LightAmp/debug/beta/*
+          rm -f LightAmp/updater/debug/1/*
       
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
           name: BardMusicPlayer
-          path: bmp/debug/beta/
+          path: LightAmp/debug/beta/
       
       # - name: Delete Polly.dll
         # run: rm bmp/debug/beta/Polly.dll
