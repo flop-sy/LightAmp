@@ -13,20 +13,20 @@
     <AssemblyOriginatorKeyFile>signature.snk</AssemblyOriginatorKeyFile>
     <LangVersion>9</LangVersion>
     <Configurations>Debug;DebugPublish;Release;ReleasePublish</Configurations>
-    <ApplicationIcon>Icon.ico</ApplicationIcon>
+    <ApplicationIcon>iconp.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageProjectUrl>https://bardmusicplayer.com</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/BardMusicPlayer/BardMusicPlayer</RepositoryUrl>
+    <RepositoryUrl>https://github.com/GiR-Zippo/LightAmp</RepositoryUrl>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
 
-    <Title>BardMusicPlayer</Title>
-    <Company>BardMusicPlayer</Company>
-    <Product>BardMusicPlayer</Product>
-    <Copyright>Copyright © MoogleTroupe 2022</Copyright>
-    <Authors>MoogleTroupe</Authors>
-    <Version>2.0.0.7</Version>
+    <Title>LightAmp</Title>
+	<Description>LightAmp for the BoL</Description>
+    <Company>GiR-Zippo</Company>
+    <Product>LightAmp</Product>
+    <Copyright>Copywrong © 2022</Copyright>
+    <Version>1.0.4.4</Version>
 
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
