@@ -154,7 +154,6 @@
     <Resource Include="Resources\Images\ClassicLoop.png" />
     <Resource Include="Resources\Images\ClassicRefresh.png" />
     <Resource Include="Resources\Images\ClassicShuffle.png" />
-    <Resource Include="Resources\Images\group.png" />
     <Resource Include="iconp.ico" />
   </ItemGroup>
 
