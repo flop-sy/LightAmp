@@ -24,8 +24,6 @@ jobs:
     - name: Build with dotnet
       run: dotnet build --configuration Debug
 
-    # Unit tests go here.
-
     - name: Store artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -33,19 +31,3 @@ jobs:
         path: BardMusicPlayer.Ui\bin\Debug\net48\*.exe
         if-no-files-found: error
         retention-days: 1
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-    
-      - name: Checkout Downloads
-        uses: actions/checkout@v3
-      
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: BardMusicPlayer
-          path: BardMusicPlayer.Ui/debug/beta/
-      
