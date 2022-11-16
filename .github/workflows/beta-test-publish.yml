@@ -24,8 +24,6 @@ jobs:
     - name: Build with dotnet
       run: dotnet build --configuration Release
 
-    # Unit tests go here.
-
     - name: Store artifacts
       uses: actions/upload-artifact@v3
       with:
