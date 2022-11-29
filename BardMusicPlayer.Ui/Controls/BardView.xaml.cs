@@ -221,6 +221,13 @@ namespace BardMusicPlayer.Ui.Controls
                 if (pconfig.AffinityMask != 0)
                     p.First().game.SetAffinity(pconfig.AffinityMask);
             }
+
+            //Set Thymms box, cuz if u use this function, you know what you are doing
+            if (!BmpPigeonhole.Instance.EnsembleKeepTrackSetting)
+            {
+                BmpPigeonhole.Instance.EnsembleKeepTrackSetting = true;
+                Globals.Globals.ReloadConfig();
+            }
         }
 
         /// <summary>
@@ -259,8 +266,11 @@ namespace BardMusicPlayer.Ui.Controls
         {
             foreach (var p in Bards)
             {
-                p.LowGfxMode = GfxLow_CheckBox.IsChecked ?? false;
-                DalamudBridge.GameExtensions.GfxSetLow(p.game, GfxLow_CheckBox.IsChecked ?? false);
+                if (p.game.GfxSettingsLow != GfxLow_CheckBox.IsChecked)
+                {
+                    p.game.GfxSettingsLow = GfxLow_CheckBox.IsChecked ?? false;
+                    DalamudBridge.GameExtensions.GfxSetLow(p.game, GfxLow_CheckBox.IsChecked ?? false);
+                }
             }
         }
 
