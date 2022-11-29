@@ -350,21 +350,21 @@ namespace BardMusicPlayer.Ui.Classic
         #endregion
 
 
-        private void Info_Button_Click(object sender, RoutedEventArgs e)
-        {
-            InfoBox _infoBox = new InfoBox();
-            _infoBox.Show();
-        }
+        // private void Info_Button_Click(object sender, RoutedEventArgs e)
+        // {
+            // InfoBox _infoBox = new InfoBox();
+            // _infoBox.Show();
+        // }
 
-        private void Info_Button_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            /*if (_networkWindow == null)
-                _networkWindow = new NetworkPlayWindow();
-            _networkWindow.Visibility = Visibility.Visible;*/
+        // private void Info_Button_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        // {
+            // /*if (_networkWindow == null)
+                // _networkWindow = new NetworkPlayWindow();
+            // _networkWindow.Visibility = Visibility.Visible;*/
 
-            MacroLaunchpad macroLaunchpad = new MacroLaunchpad();
-            macroLaunchpad.Visibility = Visibility.Visible;
-        }
+            // MacroLaunchpad macroLaunchpad = new MacroLaunchpad();
+            // macroLaunchpad.Visibility = Visibility.Visible;
+        // }
 
         /// <summary>
         /// triggered by the songbrowser if a file should be loaded
