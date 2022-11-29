@@ -28,6 +28,6 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: LightAmp
-        path: BardMusicPlayer.Ui\bin\Debug\net48\*.exe
+        path: BardMusicPlayer.Ui\bin\Debug\net481\*.exe
         if-no-files-found: error
         retention-days: 1
