@@ -14,7 +14,7 @@ LightAmp can be used in conjunction with the [Hypnotoad](https://github.com/GiR-
 
 Copy this url to your dalamud setting repositories and search for the hypnotoad plugin.
 
-`https://raw.githubusercontent.com/GiR-Zippo/Hypnotoad-Plugin/master/PluginDir/pluginmaster.json`
+`https://raw.githubusercontent.com/Meowchestra/Hypnotoad-Plugin/master/PluginDir/pluginmaster.json`
 
 ## Libraries Info
 ```
