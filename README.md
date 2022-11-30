@@ -9,12 +9,12 @@ For further information or a quick start, visit the [wiki page](https://github.c
 LightAmp can be used in conjunction with the [Hypnotoad](https://github.com/GiR-Zippo/Hypnotoad-Plugin) dalamud plugin for enhanced functionality.
 * Output lyrics.
 * Chat while playing.
-* Direct instrument & ensemble accept.
+* Direct instrument & ensemble ready / accept.
 * Set graphics toggle.
 
 Copy this url to your dalamud setting repositories and search for the hypnotoad plugin.
 
-`https://raw.githubusercontent.com/Meowchestra/Hypnotoad-Plugin/master/PluginDir/pluginmaster.json`
+`https://raw.githubusercontent.com/GiR-Zippo/Hypnotoad-Plugin/master/PluginDir/pluginmaster.json`
 
 ## Libraries Info
 ```
