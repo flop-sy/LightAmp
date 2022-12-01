@@ -8,7 +8,7 @@ namespace BardMusicPlayer.Ui.Globals
 {
     public static class Globals
     {
-        public static string FileFilters = "MIDI file|*.mid;*.midi;*.mmsong;*.mml;*.gp*";
+        public static string FileFilters = "MMSong files|*.mmsong|MIDI files|*.mid;*.midi|MML files|*.mml|GP files|*.gp*|All files|*.mid;*.midi;*.mmsong;*.mml;*.gp*";
         public static string MusicCatalogFilters = "Amp Catalog file|*.db";
         public static string DataPath;
         public enum Autostart_Types
