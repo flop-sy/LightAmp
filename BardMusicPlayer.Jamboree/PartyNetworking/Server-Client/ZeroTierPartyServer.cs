@@ -125,7 +125,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
                     return false;
                 }
             }
-            return true;
+            //return true;
         }
 
         public void Start(object sender, DoWorkEventArgs e)
