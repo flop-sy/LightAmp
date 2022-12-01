@@ -3,11 +3,11 @@
  * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
  */
 
-using BardMusicPlayer.Jamboree.PartyNetworking;
 using System;
 using System.Collections.Generic;
+using BardMusicPlayer.Jamboree.PartyNetworking;
 
-namespace BardMusicPlayer.Jamboree.PartyManagement
+namespace BardMusicPlayer.Jamboree.PartyClient.PartyManagement
 {
     internal interface IPartyClient : IDisposable
     {

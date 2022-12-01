@@ -406,4 +406,9 @@ using System.Text;
         {
             return DateTime.Now;
         }
+
+        protected virtual void OnExtractProgress(FileProgressEventArgs e)
+        {
+            ExtractProgress?.Invoke(this, e);
+        }
     }

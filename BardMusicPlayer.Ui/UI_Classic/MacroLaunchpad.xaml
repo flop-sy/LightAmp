@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BardMusicPlayer.Ui.Classic"
+        xmlns:performance="clr-namespace:BardMusicPlayer.Maestro.Performance;assembly=BardMusicPlayer.Maestro"
         mc:Ignorable="d"
         ResizeMode="NoResize"
         Title="MacroLaunchpad" Height="450" Width="350">
@@ -33,7 +34,7 @@
 
         <ListView x:Name="MacroList" Grid.Row="1" SelectedItem="{Binding SelectedMacro}" SelectionChanged="MacroList_SelectionChanged" MouseDoubleClick="MacroList_MouseDoubleClick" MouseRightButtonDown="TextBlock_MouseDown">
             <ListView.ItemTemplate>
-                <DataTemplate DataType="maestro:Performer">
+                <DataTemplate DataType="{x:Type performance:Performer}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*" />

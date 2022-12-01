@@ -1,5 +1,4 @@
-﻿using BardMusicPlayer.Jamboree.PartyManagement;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace BardMusicPlayer.Jamboree.PartyNetworking

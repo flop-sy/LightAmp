@@ -91,7 +91,7 @@ namespace BardMusicPlayer.Script
                 {
                     basic.Exec();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     Console.WriteLine("Error");
                 }

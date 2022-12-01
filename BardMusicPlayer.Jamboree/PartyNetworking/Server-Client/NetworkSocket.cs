@@ -4,7 +4,6 @@
  */
 
 using BardMusicPlayer.Jamboree.Events;
-using BardMusicPlayer.Jamboree.PartyManagement;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +12,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using BardMusicPlayer.Jamboree.PartyClient.PartyManagement;
 using ZeroTier.Sockets;
 
 namespace BardMusicPlayer.Jamboree.PartyNetworking
