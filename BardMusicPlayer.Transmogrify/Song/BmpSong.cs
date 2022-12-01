@@ -460,7 +460,7 @@ namespace BardMusicPlayer.Transmogrify.Song
                         if (j + 1 < notesToFix.Count())
                         {
                             // BACON MEOWCHESTRA
-                            // Bandaid fix: If sustained note is 100ms or greater, ensure 75ms between the end of that note and the beginning of the next note.
+                            // Bandaid fix: If sustained note is 100ms or greater, ensure 60ms between the end of that note and the beginning of the next note.
                             // Otherwise, leave the behavior as it was before.
                             if (notesToFix[j].Length >= 100 && notesToFix[j + 1].Time <= notesToFix[j].Time + notesToFix[j].Length + 60)
                             {
