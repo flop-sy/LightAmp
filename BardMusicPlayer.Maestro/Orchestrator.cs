@@ -753,48 +753,7 @@ namespace BardMusicPlayer.Maestro
             if (BmpPigeonhole.Instance.AutostartMethod != 2)
                 return;
 
-            //delay calc
-            int delayvalue = 0;
-            if (BmpPigeonhole.Instance.MidiBardCompatMode)
-                delayvalue = 1836;
-
-            if (BmpPigeonhole.Instance.EnsemblePlayDelay)
-                delayvalue = 2490;
-
-            //main delay, currently not needed
-            //int rdelay = (int)(Quotidian.UtcMilliTime.Clock.Time.Now - seerEvent.TimeStamp); delayvalue - rdelay
-
-            //if we are a single bard
-            //- start and exit
-            if (!BmpPigeonhole.Instance.LocalOrchestra)
-            {
-                Performer perf = _performers.Where(perf => perf.Value.HostProcess).FirstOrDefault().Value;
-                if (perf == null)
-                    return;
-                if (seerEvent.Game.Pid == perf.game.Pid)
-                    start(delayvalue, seerEvent.Game.Pid);
-                return;
-            }
-
-            //local orchestra, each bard started indiviual
-            //- start and exit
-            if (BmpPigeonhole.Instance.EnsembleStartIndividual)
-            {
-                start(delayvalue, seerEvent.Game.Pid);
-                return;
-            }
-
-            //all bards at one tick
-            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-            sw.Start();
-            Parallel.ForEach(_performers, perfo =>
-            {
-                delayvalue = delayvalue - (int)sw.ElapsedMilliseconds;
-                if (delayvalue < 0)
-                    delayvalue = 0;
-                start(delayvalue, perfo.Value.game.Pid);
-            });
-            sw.Stop();
+            start(0, seerEvent.Game.Pid);
         }
 
         /// <summary>
