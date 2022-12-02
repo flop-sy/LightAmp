@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BardMusicPlayer.Jamboree.Events
+﻿namespace BardMusicPlayer.Jamboree.Events
 {
     public sealed class PerformanceStartEvent : JamboreeEvent
     {
         /// <summary>
-        /// Start the performance received
+        ///     Start the performance received
         /// </summary>
         /// <param name="timestampinMillis">in milliseconds</param>
-        internal PerformanceStartEvent(long timestampinMillis, bool start) : base(0, false)
+        internal PerformanceStartEvent(long timestampinMillis, bool start)
         {
             EventType = GetType();
             SenderTimestamp_in_millis = timestampinMillis;
@@ -20,12 +14,15 @@ namespace BardMusicPlayer.Jamboree.Events
         }
 
         /// <summary>
-        /// The host time in milis
+        ///     The host time in milis
         /// </summary>
         public long SenderTimestamp_in_millis { get; }
+
         public bool Play { get; }
 
-        public override bool IsValid() => true;
+        public override bool IsValid()
+        {
+            return true;
+        }
     }
-
 }

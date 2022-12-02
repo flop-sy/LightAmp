@@ -1,18 +1,17 @@
+#region
+
+using System.Net;
 using BardMusicPlayer.Jamboree.Events;
 using BardMusicPlayer.Jamboree.PartyNetworking;
-using ZeroTier;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using BardMusicPlayer.Jamboree.PartyNetworking.Server_Client;
+using ZeroTier;
+
+#endregion
 
 namespace BardMusicPlayer.Jamboree
 {
     /// <summary>
-    /// The manager class for the festival
+    ///     The manager class for the festival
     /// </summary>
     /// We are creating a mesh network
     /// - fire up the ZeroTier
@@ -24,9 +23,8 @@ namespace BardMusicPlayer.Jamboree
     /// - handshake complete
     public class Pydna
     {
-        private bool _online { get; set; } = false;
-
-        private ZeroTierConnector zeroTierConnector = null;
+        private ZeroTierConnector zeroTierConnector;
+        private bool _online { get; set; }
 
         public void JoinParty(string networkId, byte type, string name)
         {
@@ -34,15 +32,14 @@ namespace BardMusicPlayer.Jamboree
                 return;
             FoundClients.Instance.OwnName = name;
             FoundClients.Instance.Type = type;
-            
+
             zeroTierConnector = new ZeroTierConnector();
-            string data = zeroTierConnector.ZeroTierConnect(networkId).Result;
+            var data = zeroTierConnector.ZeroTierConnect(networkId).Result;
 
             Autodiscover.Instance.StartAutodiscover(data, "0.1.0");
             NetworkPartyServer.Instance.StartServer(new IPEndPoint(IPAddress.Parse(data), 12345), type, name);
             _online = true;
             BmpJamboree.Instance.PublishEvent(new PartyCreatedEvent("Connected...\r\n"));
-            return;
         }
 
         public void LeaveParty()
@@ -56,16 +53,17 @@ namespace BardMusicPlayer.Jamboree
             BmpJamboree.Instance.PublishEvent(new PartyDebugLogEvent("[Pydna]: Stopped\r\n"));
         }
 
-#region NetworkSendFunctions
+        #region NetworkSendFunctions
+
         public void SendPerformanceStart()
         {
             FoundClients.Instance.SendToAll(ZeroTierPacketBuilder.PerformanceStart());
         }
 
         /// <summary>
-        /// Send we joined the party
-        /// | type 0 = bard
-        /// | type 1 = dancer
+        ///     Send we joined the party
+        ///     | type 0 = bard
+        ///     | type 1 = dancer
         /// </summary>
         /// <param name="type"></param>
         /// <param name="performer_name"></param>
@@ -80,7 +78,7 @@ namespace BardMusicPlayer.Jamboree
             }*/
         }
 
-        public void SendClientPacket(byte [] packet)
+        public void SendClientPacket(byte[] packet)
         {
             //if (!_servermode)
             //    client.SendPacket(packet);
@@ -94,6 +92,5 @@ namespace BardMusicPlayer.Jamboree
         }
 
         #endregion
-
     }
 }

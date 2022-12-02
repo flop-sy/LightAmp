@@ -1,30 +1,29 @@
+#region
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading;
+using System.Globalization;
 using System.Threading.Tasks;
-using ZeroTier;
 using ZeroTier.Core;
+
+#endregion
 
 namespace ZeroTier
 {
     public class ZeroTierConnector
     {
-        Node node;
-        private volatile bool nodeOnline = false;
+        private Node node;
+        private volatile bool nodeOnline;
 
         /// <summary>
-        /// start zerotier
+        ///     start zerotier
         /// </summary>
         /// <param name="network"></param>
         /// <returns>Ip address</returns>
         public Task<string> ZeroTierConnect(string network)
         {
             node = new Node();
-            string ipAddress = "";
-            ulong networkId = (ulong)Int64.Parse(network, System.Globalization.NumberStyles.HexNumber);
+            var ipAddress = "";
+            var networkId = (ulong)long.Parse(network, NumberStyles.HexNumber);
 #if DEBUG
             Console.WriteLine("Connecting to network...");
 #endif
@@ -38,9 +37,8 @@ namespace ZeroTier
             node.InitSetRandomPortRange(40000, 50000);
             // node.InitAllowSecondaryPort(false);
 
-            node.Start();   // Network activity only begins after calling Start()
-            while (!nodeOnline)
-            { Task.Delay(50); }
+            node.Start(); // Network activity only begins after calling Start()
+            while (!nodeOnline) Task.Delay(50);
 #if DEBUG
             Console.WriteLine("Id            : " + node.IdString);
             Console.WriteLine("Version       : " + node.Version);
@@ -53,26 +51,20 @@ namespace ZeroTier
 #if DEBUG
             Console.WriteLine("Waiting for join to complete...");
 #endif
-            while (node.Networks.Count == 0)
-            {
-                Task.Delay(50);
-            }
+            while (node.Networks.Count == 0) Task.Delay(50);
 
             // Wait until we've joined the network and we have routes + addresses
 #if DEBUG
             Console.WriteLine("Waiting for network to become transport ready...");
 #endif
-            while (!node.IsNetworkTransportReady(networkId))
-            {
-                Task.Delay(50);
-            }
+            while (!node.IsNetworkTransportReady(networkId)) Task.Delay(50);
 
 #if DEBUG
             Console.WriteLine("Num of assigned addresses : " + node.GetNetworkAddresses(networkId).Count);
 #endif
             if (node.GetNetworkAddresses(networkId).Count == 1)
             {
-                IPAddress addr = node.GetNetworkAddresses(networkId)[0];
+                var addr = node.GetNetworkAddresses(networkId)[0];
                 ipAddress = addr.ToString();
             }
 #if DEBUG
@@ -91,7 +83,7 @@ namespace ZeroTier
                     route.Metric);
             }
 #endif
-            return Task.FromResult(result: ipAddress);
+            return Task.FromResult(ipAddress);
         }
 
         public void ZeroTierDisconnect(bool free)
@@ -107,20 +99,13 @@ namespace ZeroTier
 #if DEBUG
             Console.WriteLine("Event.Code = {0} ({1})", e.Code, e.Name);
 #endif
-            if (e.Code == Constants.EVENT_NODE_ONLINE)
-            {
-                nodeOnline = true;
-            }
-            if (e.Code == Constants.EVENT_PEER_PATH_DEAD)
-            {
-                Console.WriteLine("DEAD");
-            }
+            if (e.Code == Constants.EVENT_NODE_ONLINE) nodeOnline = true;
+            if (e.Code == Constants.EVENT_PEER_PATH_DEAD) Console.WriteLine("DEAD");
             /*
         if (e.Code == ZeroTier.Constants.EVENT_NETWORK_OK) {
             Console.WriteLine(" - Network ID: " + e.NetworkInfo.Id.ToString("x16"));
         }
         */
         }
-
     }
 }

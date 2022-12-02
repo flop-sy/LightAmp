@@ -1,33 +1,24 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
+
+#endregion
 
 namespace BardMusicPlayer.Jamboree.PartyClient.PartyManagement
 {
-    class PartyManager
+    internal class PartyManager
     {
-        public List<PartyClientInfo> GetPartyMembers() { return _partyClients; }
-        private List<PartyClientInfo> _partyClients = new List<PartyClientInfo>();
+        private readonly List<PartyClientInfo> _partyClients = new();
 
-#region Instance Constructor/Destructor
-        private static readonly Lazy<PartyManager> LazyInstance = new(() => new PartyManager());
-        private PartyManager()
+        public List<PartyClientInfo> GetPartyMembers()
         {
-            _partyClients.Clear();
+            return _partyClients;
         }
-
-        public static PartyManager Instance => LazyInstance.Value;
-
-        ~PartyManager() { Dispose(); }
-
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
-#endregion
 
         public void Add(PartyClientInfo client)
         {
-            foreach(PartyClientInfo info in _partyClients)
+            foreach (var info in _partyClients)
                 if (info.Performer_Name == client.Performer_Name)
                     return;
             _partyClients.Add(client);
@@ -38,7 +29,27 @@ namespace BardMusicPlayer.Jamboree.PartyClient.PartyManagement
             _partyClients.Remove(client);
         }
 
+        #region Instance Constructor/Destructor
 
+        private static readonly Lazy<PartyManager> LazyInstance = new(() => new PartyManager());
 
+        private PartyManager()
+        {
+            _partyClients.Clear();
+        }
+
+        public static PartyManager Instance => LazyInstance.Value;
+
+        ~PartyManager()
+        {
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion
     }
 }

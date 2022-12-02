@@ -1,32 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BardMusicPlayer.Jamboree.Events
+﻿namespace BardMusicPlayer.Jamboree.Events
 {
     /// <summary>
-    /// Called only on host side
+    ///     Called only on host side
     /// </summary>
     public sealed class PartyLogEvent : JamboreeEvent
     {
         /// <summary>
-        /// on host, when a party and token was created
+        ///     on host, when a party and token was created
         /// </summary>
         /// <param name="token"></param>
-        internal PartyLogEvent(string logstring) : base(0, false)
+        internal PartyLogEvent(string logstring)
         {
             EventType = GetType();
             LogString = logstring;
         }
 
         /// <summary>
-        /// the base64 token for the clients to join
+        ///     the base64 token for the clients to join
         /// </summary>
         public string LogString { get; }
 
-        public override bool IsValid() => true;
+        public override bool IsValid()
+        {
+            return true;
+        }
     }
-
 }

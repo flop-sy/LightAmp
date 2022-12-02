@@ -1,30 +1,20 @@
-﻿/*
- * Copyright (C) 2012-2020 CypherCore <http://github.com/CypherCore>
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+﻿#region
 
 using System;
 using System.IO;
 using System.Numerics;
 using System.Text;
 
+#endregion
+
 namespace BardMusicPlayer.Jamboree.PartyNetworking
 {
     public class NetworkPacket : IDisposable
     {
-        private NetworkOpcodes.OpcodeEnum _opcode = NetworkOpcodes.OpcodeEnum.NULL_OPCODE;
+        private byte _bitPosition = 8;
+        private byte BitValue;
+        private readonly BinaryReader readStream;
+        private BinaryWriter writeStream;
 
         public NetworkPacket()
         {
@@ -40,13 +30,10 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         public NetworkPacket(byte[] data)
         {
             readStream = new BinaryReader(new MemoryStream(data));
-            _opcode = (NetworkOpcodes.OpcodeEnum)readStream.ReadByte();
+            Opcode = (NetworkOpcodes.OpcodeEnum)readStream.ReadByte();
         }
 
-        public NetworkOpcodes.OpcodeEnum Opcode
-        {
-            get { return _opcode; }
-        }
+        public NetworkOpcodes.OpcodeEnum Opcode { get; } = NetworkOpcodes.OpcodeEnum.NULL_OPCODE;
 
         public void Dispose()
         {
@@ -57,7 +44,66 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
                 readStream.Dispose();
         }
 
+        public bool HasUnfinishedBitPack()
+        {
+            return _bitPosition != 8;
+        }
+
+        public void FlushBits()
+        {
+            if (_bitPosition == 8)
+                return;
+
+            writeStream.Write(BitValue);
+            BitValue = 0;
+            _bitPosition = 8;
+        }
+
+        public void ResetBitPos()
+        {
+            if (_bitPosition > 7)
+                return;
+
+            _bitPosition = 8;
+            BitValue = 0;
+        }
+
+        public byte[] GetData()
+        {
+            var stream = GetCurrentStream();
+
+            var data = new byte[stream.Length];
+
+            var pos = stream.Position;
+            stream.Seek(0, SeekOrigin.Begin);
+            for (var i = 0; i < data.Length; i++)
+                data[i] = (byte)stream.ReadByte();
+
+            stream.Seek(pos, SeekOrigin.Begin);
+            return data;
+        }
+
+        public uint GetSize()
+        {
+            return (uint)GetCurrentStream().Length;
+        }
+
+        public Stream GetCurrentStream()
+        {
+            if (writeStream != null)
+                return writeStream.BaseStream;
+            return readStream.BaseStream;
+        }
+
+        public void Clear()
+        {
+            _bitPosition = 8;
+            BitValue = 0;
+            writeStream = new BinaryWriter(new MemoryStream());
+        }
+
         #region Read Methods
+
         public NetworkOpcodes.OpcodeEnum ReadOpcode()
         {
             return (NetworkOpcodes.OpcodeEnum)readStream.ReadByte();
@@ -127,8 +173,8 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         {
             ResetBitPos();
             StringBuilder tmpString = new();
-            char tmpChar = readStream.ReadChar();
-            char tmpEndChar = Convert.ToChar(Encoding.UTF8.GetString(new byte[] { 0 }));
+            var tmpChar = readStream.ReadChar();
+            var tmpEndChar = Convert.ToChar(Encoding.UTF8.GetString(new byte[] { 0 }));
 
             while (tmpChar != tmpEndChar)
             {
@@ -204,17 +250,19 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
 
         public T ReadBits<T>(int bitCount)
         {
-            int value = 0;
+            var value = 0;
 
             for (var i = bitCount - 1; i >= 0; --i)
                 if (HasBit())
-                    value |= (1 << i);
+                    value |= 1 << i;
 
             return (T)Convert.ChangeType(value, typeof(T));
         }
+
         #endregion
 
         #region Write Methods
+
         public void WriteOpcode(NetworkOpcodes.OpcodeEnum opcode)
         {
             writeStream.Write((byte)opcode);
@@ -281,7 +329,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         }
 
         /// <summary>
-        /// Writes a string to the packet with a null terminated (0)
+        ///     Writes a string to the packet with a null terminated (0)
         /// </summary>
         /// <param name="str"></param>
         public void WriteCString(string str)
@@ -301,7 +349,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
             if (str.Length < 1)
                 return;
 
-            byte[] sBytes = Encoding.UTF8.GetBytes(str);
+            var sBytes = Encoding.UTF8.GetBytes(str);
             WriteBytes(sBytes);
         }
 
@@ -346,7 +394,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         public void WritePackXYZ(Vector3 pos)
         {
             uint packed = 0;
-            packed |= ((uint)(pos.X / 0.25f) & 0x7FF);
+            packed |= (uint)(pos.X / 0.25f) & 0x7FF;
             packed |= ((uint)(pos.Y / 0.25f) & 0x7FF) << 11;
             packed |= ((uint)(pos.Z / 0.25f) & 0x3FF) << 22;
             WriteUInt32(packed);
@@ -366,78 +414,16 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
                 _bitPosition = 8;
                 BitValue = 0;
             }
+
             return bit;
         }
 
         public void WriteBits(object bit, int count)
         {
-            for (int i = count - 1; i >= 0; --i)
+            for (var i = count - 1; i >= 0; --i)
                 WriteBit(((Convert.ToUInt32(bit) >> i) & 1) != 0);
         }
+
         #endregion
-
-        public bool HasUnfinishedBitPack()
-        {
-            return _bitPosition != 8;
-        }
-
-        public void FlushBits()
-        {
-            if (_bitPosition == 8)
-                return;
-
-            writeStream.Write(BitValue);
-            BitValue = 0;
-            _bitPosition = 8;
-        }
-
-        public void ResetBitPos()
-        {
-            if (_bitPosition > 7)
-                return;
-
-            _bitPosition = 8;
-            BitValue = 0;
-        }
-
-        public byte[] GetData()
-        {
-            Stream stream = GetCurrentStream();
-
-            var data = new byte[stream.Length];
-
-            long pos = stream.Position;
-            stream.Seek(0, SeekOrigin.Begin);
-            for (int i = 0; i < data.Length; i++)
-                data[i] = (byte)stream.ReadByte();
-
-            stream.Seek(pos, SeekOrigin.Begin);
-            return data;
-        }
-
-        public uint GetSize()
-        {
-            return (uint)GetCurrentStream().Length;
-        }
-
-        public Stream GetCurrentStream()
-        {
-            if (writeStream != null)
-                return writeStream.BaseStream;
-            else
-                return readStream.BaseStream;
-        }
-
-        public void Clear()
-        {
-            _bitPosition = 8;
-            BitValue = 0;
-            writeStream = new BinaryWriter(new MemoryStream());
-        }
-
-        byte _bitPosition = 8;
-        byte BitValue;
-        BinaryWriter writeStream;
-        BinaryReader readStream;
     }
 }

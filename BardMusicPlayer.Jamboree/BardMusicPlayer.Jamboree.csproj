@@ -1,51 +1,51 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net481</TargetFramework>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>signature.snk</AssemblyOriginatorKeyFile>
-    <LangVersion>9</LangVersion>
-    <PackageProjectUrl>https://bardmusicplayer.com</PackageProjectUrl>
-    <Version>2.0.0.0</Version>
-    <Authors>MoogleTroupe, GiR_Zippo</Authors>
-    <Copyright>Copyright © MoogleTroupe 2022</Copyright>
-    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/BardMusicPlayer/BardMusicPlayer</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-	<Platforms>AnyCPU;x64</Platforms>
-    <Configurations>Debug;Release</Configurations>
-    <PlatformTarget>x64</PlatformTarget>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net481</TargetFramework>
+        <SignAssembly>false</SignAssembly>
+        <AssemblyOriginatorKeyFile>signature.snk</AssemblyOriginatorKeyFile>
+        <LangVersion>9</LangVersion>
+        <PackageProjectUrl>https://bardmusicplayer.com</PackageProjectUrl>
+        <Version>2.0.0.0</Version>
+        <Authors>MoogleTroupe, GiR_Zippo</Authors>
+        <Copyright>Copyright © MoogleTroupe 2022</Copyright>
+        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/BardMusicPlayer/BardMusicPlayer</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <Platforms>AnyCPU;x64</Platforms>
+        <Configurations>Debug;Release</Configurations>
+        <PlatformTarget>x64</PlatformTarget>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <NoWarn>1701;1702; MSB3246</NoWarn>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+        <NoWarn>1701;1702; MSB3246</NoWarn>
+    </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <NoWarn>1701;1702; MSB3246</NoWarn>
-  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+        <NoWarn>1701;1702; MSB3246</NoWarn>
+    </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="LibZeroTier" Version="1.0.8" />
-      <PackageReference Include="ZeroTier.Sockets" Version="1.8.4" />
+        <PackageReference Include="LibZeroTier" Version="1.0.8"/>
+        <PackageReference Include="ZeroTier.Sockets" Version="1.8.4"/>
     </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj" />
-    <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj"/>
+        <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Lib\" />
-    <Folder Include="PartyClient\ZeroTier\" />
-  </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Lib\"/>
+        <Folder Include="PartyClient\ZeroTier\"/>
+    </ItemGroup>
 
-  <ItemGroup>
-      <ContentWithTargetPath Include="Lib\libzt.dll">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-          <TargetPath>libzt.dll</TargetPath>
-      </ContentWithTargetPath>
-      <None Include="Lib\libzt.dll" />
-  </ItemGroup>
+    <ItemGroup>
+        <ContentWithTargetPath Include="Lib\libzt.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>libzt.dll</TargetPath>
+        </ContentWithTargetPath>
+        <None Include="Lib\libzt.dll"/>
+    </ItemGroup>
 
 </Project>

@@ -1,5 +1,9 @@
-﻿using System;
+﻿#region
+
+using System;
 using BardMusicPlayer.Quotidian.UtcMilliTime;
+
+#endregion
 
 namespace BardMusicPlayer.Jamboree.Events
 {
@@ -21,8 +25,8 @@ namespace BardMusicPlayer.Jamboree.Events
         public Type EventType { get; protected set; }
 
         /// <summary>
-        /// Used to determine if the Reader was able to successfully obtain the
-        /// data it was expecting to grab, and the Event is safe to use.
+        ///     Used to determine if the Reader was able to successfully obtain the
+        ///     data it was expecting to grab, and the Event is safe to use.
         /// </summary>
         /// <returns>True, if the Event should be used to update data.</returns>
         public abstract bool IsValid();

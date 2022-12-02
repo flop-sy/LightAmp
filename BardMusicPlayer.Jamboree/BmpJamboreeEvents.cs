@@ -1,22 +1,27 @@
-﻿using BardMusicPlayer.Jamboree.Events;
+﻿#region
+
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using BardMusicPlayer.Jamboree.Events;
+
+#endregion
 
 namespace BardMusicPlayer.Jamboree
 {
     public partial class BmpJamboree
     {
-        public EventHandler<PartyCreatedEvent> OnPartyCreated;
-        public EventHandler<PartyLogEvent> OnPartyLog;
-        public EventHandler<PartyDebugLogEvent> OnPartyDebugLog;
-        public EventHandler<PartyConnectionChangedEvent> OnPartyConnectionChanged;
-        public EventHandler<PartyChangedEvent> OnPartyChanged;
-        public EventHandler<PerformanceStartEvent> OnPerformanceStart;
-
         private ConcurrentQueue<JamboreeEvent> _eventQueue;
         private bool _eventQueueOpen;
+
+        private CancellationTokenSource _eventsTokenSource;
+        public EventHandler<PartyChangedEvent> OnPartyChanged;
+        public EventHandler<PartyConnectionChangedEvent> OnPartyConnectionChanged;
+        public EventHandler<PartyCreatedEvent> OnPartyCreated;
+        public EventHandler<PartyDebugLogEvent> OnPartyDebugLog;
+        public EventHandler<PartyLogEvent> OnPartyLog;
+        public EventHandler<PerformanceStartEvent> OnPerformanceStart;
 
         private async Task RunEventsHandler(CancellationToken token)
         {
@@ -61,16 +66,18 @@ namespace BardMusicPlayer.Jamboree
                                     break;
                                 OnPerformanceStart(this, performanceStart);
                                 break;
-                        };
+                        }
+
+                        ;
                     }
                     catch
-                    { }
+                    {
+                    }
                 }
+
                 await Task.Delay(25, token).ContinueWith(tsk => { });
             }
         }
-
-        private CancellationTokenSource _eventsTokenSource;
 
         private void StartEventsHandler()
         {
