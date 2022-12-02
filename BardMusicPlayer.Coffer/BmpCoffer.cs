@@ -569,10 +569,7 @@ namespace BardMusicPlayer.Coffer
                 if (song.Id != null)
                 {
                     var results = songCol.Find(x => x.Title.Equals(song.Title));
-                    if (results.Count() > 0)
-                    {
-                        songCol.Delete(song.Id);
-                    }
+                    if (results.Count() > 0) songCol.Delete(song.Id);
                 }
             }
             catch (LiteException e)
