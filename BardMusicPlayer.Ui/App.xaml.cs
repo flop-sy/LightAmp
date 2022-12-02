@@ -1,23 +1,25 @@
+#region
 
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using BardMusicPlayer.Coffer;
-using BardMusicPlayer.DalamudBridge;
-using BardMusicPlayer.Pigeonhole;
-using BardMusicPlayer.Seer;
-using BardMusicPlayer.Maestro;
-using System.Diagnostics;
-using BardMusicPlayer.Siren;
 using BardMusicPlayer.Jamboree;
+using BardMusicPlayer.Maestro;
+using BardMusicPlayer.Pigeonhole;
 using BardMusicPlayer.Script;
+using BardMusicPlayer.Seer;
+using BardMusicPlayer.Siren;
+
+#endregion
 
 namespace BardMusicPlayer.Ui
 {
     /// <summary>
-    /// Interaktionslogik für "App.xaml"
+    ///     Interaktionslogik für "App.xaml"
     /// </summary>
     public partial class App : Application
     {
-
         protected override void OnStartup(StartupEventArgs e)
         {
             Globals.Globals.DataPath = @"data\";
@@ -29,8 +31,8 @@ namespace BardMusicPlayer.Ui
             // LogManager.Initialize(new(view.Log));
 
             //Load the last used catalog
-            string CatalogFile = BmpPigeonhole.Instance.LastLoadedCatalog;
-            if (System.IO.File.Exists(CatalogFile))
+            var CatalogFile = BmpPigeonhole.Instance.LastLoadedCatalog;
+            if (File.Exists(CatalogFile))
                 BmpCoffer.Initialize(CatalogFile);
             else
                 BmpCoffer.Initialize(Globals.Globals.DataPath + @"\MusicCatalog.db");

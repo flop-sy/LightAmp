@@ -1,38 +1,55 @@
-﻿using BardMusicPlayer.Ui.Functions;
+﻿#region
+
 using System;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using BardMusicPlayer.Ui.Functions;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Controls
 {
     /// <summary>
-    /// Interaktionslogik für TrackNumericUpDown.xaml
+    ///     Interaktionslogik für TrackNumericUpDown.xaml
     /// </summary>
     public partial class TrackNumericUpDown : UserControl
     {
+        public static readonly DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value", typeof(string), typeof(TrackNumericUpDown),
+                new PropertyMetadata(OnValueChangedCallBack));
+
+
+        /* Track UP/Down */
+        private int _numValue = 1;
         public EventHandler<int> OnValueChanged;
+
         public TrackNumericUpDown()
         {
             InitializeComponent();
         }
 
-        public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register("Value", typeof(string), typeof(TrackNumericUpDown), new PropertyMetadata(OnValueChangedCallBack));
-
         public string Value
         {
-            get { return (string)GetValue(ValueProperty); }
-            set { SetValue(ValueProperty, value); }
+            get => (string)GetValue(ValueProperty);
+            set => SetValue(ValueProperty, value);
+        }
+
+        public int NumValue
+        {
+            get => _numValue;
+            set
+            {
+                _numValue = value;
+                Text.Text = "T" + NumValue;
+                OnValueChanged?.Invoke(this, _numValue);
+            }
         }
 
         private static void OnValueChangedCallBack(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
-            TrackNumericUpDown c = sender as TrackNumericUpDown;
-            if (c != null)
-            {
-                c.OnValueChangedC(c.Value);
-            }
+            var c = sender as TrackNumericUpDown;
+            if (c != null) c.OnValueChangedC(c.Value);
         }
 
         protected virtual void OnValueChangedC(string c)
@@ -40,20 +57,6 @@ namespace BardMusicPlayer.Ui.Controls
             NumValue = Convert.ToInt32(c);
         }
 
-
-        /* Track UP/Down */
-        private int _numValue = 1;
-        public int NumValue
-        {
-            get { return _numValue; }
-            set
-            {
-                _numValue = value;
-                this.Text.Text = "T" + NumValue.ToString();
-                OnValueChanged?.Invoke(this, _numValue);
-                return;
-            }
-        }
         private void NumUp_Click(object sender, RoutedEventArgs e)
         {
             if (PlaybackFunctions.CurrentSong == null)
@@ -75,21 +78,21 @@ namespace BardMusicPlayer.Ui.Controls
             if (Text == null)
                 return;
 
-            int val = 0;
-            string str = Regex.Replace(Text.Text, "[^0-9]", "");
+            var val = 0;
+            var str = Regex.Replace(Text.Text, "[^0-9]", "");
             if (int.TryParse(str, out val))
             {
                 if (PlaybackFunctions.CurrentSong == null)
                     return;
 
-                if ((val < 0) || (NumValue + 1 > PlaybackFunctions.CurrentSong.TrackContainers.Count))
+                if (val < 0 || NumValue + 1 > PlaybackFunctions.CurrentSong.TrackContainers.Count)
                 {
                     NumValue = NumValue;
                     return;
                 }
+
                 NumValue = val;
             }
         }
-
     }
 }

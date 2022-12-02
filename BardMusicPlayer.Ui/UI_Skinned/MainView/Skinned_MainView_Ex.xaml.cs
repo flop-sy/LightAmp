@@ -1,11 +1,15 @@
-﻿using BardMusicPlayer.Ui.Globals.SkinContainer;
+﻿#region
+
 using System;
 using System.Windows;
+using BardMusicPlayer.Ui.Globals.SkinContainer;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Skinned
 {
     /// <summary>
-    /// does nothing, but looks fancy
+    ///     does nothing, but looks fancy
     /// </summary>
     public partial class Skinned_MainView_Ex : Window
     {
@@ -18,7 +22,7 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void SkinContainer_OnNewSkinLoaded(object sender, EventArgs e)
         {
-            this.Background = SkinContainer.EQUALIZER[0]; //Temp
+            Background = SkinContainer.EQUALIZER[0]; //Temp
         }
     }
 }

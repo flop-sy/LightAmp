@@ -1,16 +1,22 @@
-﻿using BardMusicPlayer.Pigeonhole;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using BardMusicPlayer.Pigeonhole;
 using UI.Resources;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Controls
 {
     /// <summary>
-    /// The songbrowser but much faster than the BMP 1.x had
+    ///     The songbrowser but much faster than the BMP 1.x had
     /// </summary>
     public partial class SongBrowser : UserControl
     {
@@ -23,13 +29,13 @@ namespace BardMusicPlayer.Ui.Controls
         }
 
         /// <summary>
-        /// Load the doubleclicked song into the sequencer
+        ///     Load the doubleclicked song into the sequencer
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SongbrowserContainer_PreviewMouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void SongbrowserContainer_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            string filename = SongbrowserContainer.SelectedItem as String;
+            var filename = SongbrowserContainer.SelectedItem as string;
             if (!File.Exists(filename) || filename == null)
                 return;
 
@@ -37,41 +43,44 @@ namespace BardMusicPlayer.Ui.Controls
         }
 
         /// <summary>
-        /// Sets the search parameter
+        ///     Sets the search parameter
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SongSearch_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        private void SongSearch_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!Directory.Exists(SongPath.Text))
                 return;
 
-            string[] files = Directory.EnumerateFiles(SongPath.Text, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
-            List<string> list = new List<string>(files);
+            var files = Directory.EnumerateFiles(SongPath.Text, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
+            var list = new List<string>(files);
             if (SongSearch.Text != "")
-                list = list.FindAll(delegate (string s) { return s.ToLower().Contains(SongSearch.Text.ToLower()); });
+                list = list.FindAll(delegate(string s) { return s.ToLower().Contains(SongSearch.Text.ToLower()); });
             SongbrowserContainer.ItemsSource = list;
         }
 
         /// <summary>
-        /// Sets the songs folder path by typing
+        ///     Sets the songs folder path by typing
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void SongPath_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        private void SongPath_PreviewTextInput(object sender, TextCompositionEventArgs e)
         {
             if (!Directory.Exists(SongPath.Text))
                 return;
 
-            BmpPigeonhole.Instance.SongDirectory = SongPath.Text + (SongPath.Text.EndsWith("\\") ? "" : "\\"); ;
+            BmpPigeonhole.Instance.SongDirectory = SongPath.Text + (SongPath.Text.EndsWith("\\") ? "" : "\\");
+            ;
 
-            string[] files = Directory.EnumerateFiles(SongPath.Text, "*.*", SearchOption.AllDirectories).Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
-            List<string> list = new List<string>(files);
+            var files = Directory.EnumerateFiles(SongPath.Text, "*.*", SearchOption.AllDirectories)
+                .Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
+            var list = new List<string>(files);
             SongbrowserContainer.ItemsSource = list;
         }
 
         /// <summary>
-        /// Sets the songs folder path by folderselection
+        ///     Sets the songs folder path by folderselection
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -82,11 +91,11 @@ namespace BardMusicPlayer.Ui.Controls
             if (Directory.Exists(BmpPigeonhole.Instance.SongDirectory))
                 dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory);
             else
-                dlg.InputPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             if (dlg.ShowDialog() == true)
             {
-                string path = dlg.ResultPath;
+                var path = dlg.ResultPath;
                 if (!Directory.Exists(path))
                     return;
 

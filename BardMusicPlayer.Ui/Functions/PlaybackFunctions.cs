@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#region
+
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using BardMusicPlayer.Maestro;
@@ -7,12 +9,14 @@ using BardMusicPlayer.Transmogrify.Song;
 using BardMusicPlayer.Transmogrify.Song.Config;
 using Microsoft.Win32;
 
+#endregion
+
 namespace BardMusicPlayer.Ui.Functions
 {
     public static class PlaybackFunctions
     {
         /// <summary>
-        /// The playback states
+        ///     The playback states
         /// </summary>
         public enum PlaybackState_Enum
         {
@@ -20,16 +24,17 @@ namespace BardMusicPlayer.Ui.Functions
             PLAYBACK_STATE_PLAYING,
             PLAYBACK_STATE_PAUSE,
             PLAYBACK_STATE_PLAYNEXT //indicates the next song should be played
-        };
+        }
+
         public static PlaybackState_Enum PlaybackState;
 
         /// <summary>
-        /// The currently loaded song
+        ///     The currently loaded song
         /// </summary>
-        public static BmpSong CurrentSong { get; set; } = null;
+        public static BmpSong CurrentSong { get; set; }
 
         /// <summary>
-        /// Loads a midi file into the sequencer
+        ///     Loads a midi file into the sequencer
         /// </summary>
         /// <returns>true if success</returns>
         public static bool LoadSong()
@@ -57,7 +62,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Loads a midi file into the sequencer
+        ///     Loads a midi file into the sequencer
         /// </summary>
         /// <returns>true if success</returns>
         public static bool LoadSong(string filename)
@@ -73,7 +78,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Load a song from the playlist into the sequencer
+        ///     Load a song from the playlist into the sequencer
         /// </summary>
         /// <param name="item"></param>
         public static void LoadSongFromPlaylist(BmpSong item)
@@ -85,7 +90,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Starts the performance
+        ///     Starts the performance
         /// </summary>
         public static void PlaySong(int delay)
         {
@@ -94,7 +99,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Pause the performance
+        ///     Pause the performance
         /// </summary>
         public static void PauseSong()
         {
@@ -103,7 +108,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Stops the performance
+        ///     Stops the performance
         /// </summary>
         public static void StopSong()
         {
@@ -112,7 +117,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Gets the song name from the current song
+        ///     Gets the song name from the current song
         /// </summary>
         /// <returns>song name as string</returns>
         public static string GetSongName()
@@ -123,34 +128,35 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Gets the instrument from the current song and track
+        ///     Gets the instrument from the current song and track
         /// </summary>
         /// <returns>instrument name as string</returns>
         public static string GetInstrumentNameForHostPlayer()
         {
-            int tracknumber = BmpMaestro.Instance.GetHostBardTrack();
+            var tracknumber = BmpMaestro.Instance.GetHostBardTrack();
             if (tracknumber == 0)
-                return "All Tracks";
-            else
             {
-                if (CurrentSong == null)
-                    return "No song loaded";
-                if (tracknumber > CurrentSong.TrackContainers.Count)
-                    return "None";
-                try
-                {
-                    ClassicProcessorConfig classicConfig = (ClassicProcessorConfig)CurrentSong.TrackContainers[tracknumber -1].ConfigContainers[0].ProcessorConfig; // track -1 cuz track 0 isn't in this container
-                    return classicConfig.Instrument.Name;
-                }
-                catch (KeyNotFoundException)
-                {
-                    return "Unknown";
-                }
+                return "All Tracks";
+            }
+
+            if (CurrentSong == null)
+                return "No song loaded";
+            if (tracknumber > CurrentSong.TrackContainers.Count)
+                return "None";
+            try
+            {
+                var classicConfig = (ClassicProcessorConfig)CurrentSong.TrackContainers[tracknumber - 1]
+                    .ConfigContainers[0].ProcessorConfig; // track -1 cuz track 0 isn't in this container
+                return classicConfig.Instrument.Name;
+            }
+            catch (KeyNotFoundException)
+            {
+                return "Unknown";
             }
         }
 
         /// <summary>
-        /// Gets the instrument name from a given song and track
+        ///     Gets the instrument name from a given song and track
         /// </summary>
         /// <param name="song"></param>
         /// <param name="tracknumber"></param>
@@ -158,27 +164,28 @@ namespace BardMusicPlayer.Ui.Functions
         public static string GetInstrumentName(BmpSong song, int tracknumber)
         {
             if (tracknumber == 0)
-                return "All Tracks";
-            else
             {
-                if (song == null)
-                    return "No song loaded";
-                if (tracknumber > CurrentSong.TrackContainers.Count)
-                    return "None";
-                try
-                {
-                    ClassicProcessorConfig classicConfig = (ClassicProcessorConfig)song.TrackContainers[tracknumber-1].ConfigContainers[0].ProcessorConfig;
-                    return classicConfig.Instrument.Name;
-                }
-                catch (KeyNotFoundException)
-                {
-                    return "Unknown";
-                }
+                return "All Tracks";
+            }
+
+            if (song == null)
+                return "No song loaded";
+            if (tracknumber > CurrentSong.TrackContainers.Count)
+                return "None";
+            try
+            {
+                var classicConfig =
+                    (ClassicProcessorConfig)song.TrackContainers[tracknumber - 1].ConfigContainers[0].ProcessorConfig;
+                return classicConfig.Instrument.Name;
+            }
+            catch (KeyNotFoundException)
+            {
+                return "Unknown";
             }
         }
 
         /// <summary>
-        /// Helper to bring the player to front
+        ///     Helper to bring the player to front
         /// </summary>
         public static void BringAmpToFront()
         {
@@ -186,23 +193,19 @@ namespace BardMusicPlayer.Ui.Functions
                 return;
             try
             {
-                System.Windows.Window mainWindow = Application.Current.MainWindow;
-                if (!mainWindow.IsVisible)
-                {
-                    mainWindow.Show();
-                }
+                var mainWindow = Application.Current.MainWindow;
+                if (!mainWindow.IsVisible) mainWindow.Show();
 
-                if (mainWindow.WindowState == WindowState.Minimized)
-                {
-                    mainWindow.WindowState = WindowState.Normal;
-                }
+                if (mainWindow.WindowState == WindowState.Minimized) mainWindow.WindowState = WindowState.Normal;
 
                 mainWindow.Activate();
-                mainWindow.Topmost = true;  // important
+                mainWindow.Topmost = true; // important
                 mainWindow.Topmost = false; // important
-                mainWindow.Focus();         // important
+                mainWindow.Focus(); // important
             }
-            catch { }
+            catch
+            {
+            }
         }
     }
 }

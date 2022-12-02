@@ -1,4 +1,5 @@
-﻿using BardMusicPlayer.Ui.Globals.SkinContainer;
+﻿#region
+
 using System;
 using System.Drawing;
 using System.Linq;
@@ -9,6 +10,10 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using BardMusicPlayer.Ui.Globals.SkinContainer;
+using Image = System.Drawing.Image;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Skinned
 {
@@ -28,17 +33,17 @@ namespace BardMusicPlayer.Ui.Skinned
         }*/
 
         /// <summary>
-        /// draws the bitmaptext from string into SmallOctaveDigit (the Octave field)
+        ///     draws the bitmaptext from string into SmallOctaveDigit (the Octave field)
         /// </summary>
         /// <param name="data"></param>
-        void WriteSmallOctaveDigitField(string data)
+        private void WriteSmallOctaveDigitField(string data)
         {
-            Bitmap bitmap = new Bitmap(30, 8);
+            var bitmap = new Bitmap(30, 8);
             var graphics = Graphics.FromImage(bitmap);
-            int index = 0;
+            var index = 0;
             foreach (var a in data)
             {
-                System.Drawing.Image img;
+                Image img;
                 if (SkinContainer.FONT.ContainsKey(a))
                     img = SkinContainer.FONT[a];
                 else
@@ -46,25 +51,27 @@ namespace BardMusicPlayer.Ui.Skinned
                 graphics.DrawImage(img, 5 * index, 0);
                 index++;
             }
-            SmallOctaveDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+
+            SmallOctaveDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
+                IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
             SmallOctaveDigit.Stretch = Stretch.UniformToFill;
         }
 
         /// <summary>
-        /// draws the bitmaptext from string into WriteSmallDigitField (the Track field)
+        ///     draws the bitmaptext from string into WriteSmallDigitField (the Track field)
         /// </summary>
         /// <param name="data"></param>
-        void WriteSmallDigitField(string data)
+        private void WriteSmallDigitField(string data)
         {
             data = data.Insert(0, "T");
             data = data.Insert(1, ":");
 
-            Bitmap bitmap = new Bitmap(30, 8);
+            var bitmap = new Bitmap(30, 8);
             var graphics = Graphics.FromImage(bitmap);
-            int index = 0;
+            var index = 0;
             foreach (var a in data)
             {
-                System.Drawing.Image img;
+                Image img;
                 if (SkinContainer.FONT.ContainsKey(a))
                     img = SkinContainer.FONT[a];
                 else
@@ -72,17 +79,47 @@ namespace BardMusicPlayer.Ui.Skinned
                 graphics.DrawImage(img, 5 * index, 0);
                 index++;
             }
-            SmallTrackDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+
+            SmallTrackDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
+                IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
             SmallTrackDigit.Stretch = Stretch.UniformToFill;
         }
 
+        /// <summary>
+        ///     draws the bitmaptext from string into InstrumentDigit
+        /// </summary>
+        /// <param name="data"></param>
+        private void WriteInstrumentDigitField(string data)
+        {
+            if (data == null)
+                return;
+            var bitmap = new Bitmap(110, 12);
+            var graphics = Graphics.FromImage(bitmap);
+            var index = 0;
+            foreach (var a in data)
+            {
+                Image img;
+                if (SkinContainer.FONT.ContainsKey(a))
+                    img = SkinContainer.FONT[a];
+                else
+                    img = SkinContainer.FONT[32];
+                graphics.DrawImage(img, 5 * index, 0);
+                index++;
+            }
 
-#region SongField & Scroller
-        private int scrollpos = 0;
+            InstrumentDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
+                IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+        }
+
+
+        #region SongField & Scroller
+
+        private int scrollpos;
         private bool scrolldir = true;
+
         protected async Task UpdateScroller(CancellationToken stoppingToken, string data)
         {
-            string songname = data ;
+            var songname = data;
             scrollpos = 0;
             scrolldir = true;
             while (!stoppingToken.IsCancellationRequested)
@@ -93,24 +130,28 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// draws the bitmaptext from string into SongDigit
+        ///     draws the bitmaptext from string into SongDigit
         /// </summary>
         /// <param name="data"></param>
-        void WriteSongField(string data)
+        private void WriteSongField(string data)
         {
-            Bitmap bitmap = new Bitmap(305, 12);
+            var bitmap = new Bitmap(305, 12);
             var graphics = Graphics.FromImage(bitmap);
-            for (int i = 0; i < 33; i++)
+            for (var i = 0; i < 33; i++)
             {
-                System.Drawing.Image img;
-                char a = ' ';
+                Image img;
+                var a = ' ';
 
-                if ((scrollpos == -1) && !scrolldir)
+                if (scrollpos == -1 && !scrolldir)
+                {
                     scrolldir = true;
+                }
                 else
                 {
                     if (i + scrollpos >= data.Length)
+                    {
                         scrolldir = false;
+                    }
                     else
                     {
                         if (scrollpos == -2)
@@ -131,33 +172,11 @@ namespace BardMusicPlayer.Ui.Skinned
             else
                 scrollpos--;
 
-            SongDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+            SongDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero,
+                Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
             SongDigit.Stretch = Stretch.UniformToFill;
         }
-#endregion
 
-        /// <summary>
-        /// draws the bitmaptext from string into InstrumentDigit
-        /// </summary>
-        /// <param name="data"></param>
-        void WriteInstrumentDigitField(string data)
-        {
-            if (data == null)
-                return;
-            Bitmap bitmap = new Bitmap(110, 12);
-            var graphics = Graphics.FromImage(bitmap);
-            int index = 0;
-            foreach (var a in data)
-            {
-                System.Drawing.Image img;
-                if (SkinContainer.FONT.ContainsKey(a))
-                    img = SkinContainer.FONT[a];
-                else
-                    img = SkinContainer.FONT[32];
-                graphics.DrawImage(img, 5 * index, 0);
-                index++;
-            }
-            InstrumentDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
-        }
+        #endregion
     }
 }

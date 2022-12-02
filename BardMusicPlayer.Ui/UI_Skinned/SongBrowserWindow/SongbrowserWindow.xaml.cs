@@ -1,12 +1,16 @@
-﻿using BardMusicPlayer.Ui.Globals.SkinContainer;
+﻿#region
+
 using System;
 using System.Windows;
 using System.Windows.Input;
+using BardMusicPlayer.Ui.Globals.SkinContainer;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Skinned
 {
     /// <summary>
-    /// Interaktionslogik für SongbrowserWindow.xaml
+    ///     Interaktionslogik für SongbrowserWindow.xaml
     /// </summary>
     public partial class SongbrowserWindow : Window
     {
@@ -20,57 +24,66 @@ namespace BardMusicPlayer.Ui.Skinned
             SongBrowser.OnLoadSongFromBrowser += Instance_SongBrowserLoadedSong;
         }
 
-        #region Skinning
-        private void SkinContainer_OnNewSkinLoaded(object sender, EventArgs e)
-        { ApplySkin(); }
-
-        public void ApplySkin()
-        {
-            this.BARDS_TOP_LEFT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_LEFT_CORNER];
-            this.BARDS_TOP_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_TILE];
-            this.BARDS_TOP_RIGHT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_RIGHT_CORNER];
-
-            this.BARDS_BOTTOM_LEFT_CORNER.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_LEFT_CORNER];
-            this.BARDS_BOTTOM_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_TILE];
-            this.BARDS_BOTTOM_RIGHT_CORNER.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_RIGHT_CORNER];
-
-            this.BARDS_LEFT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_LEFT_TILE];
-            this.BARDS_RIGHT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_RIGHT_TILE];
-
-            this.Close_Button.Background = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_CLOSE_SELECTED];
-            this.Close_Button.Background.Opacity = 0;
-
-        }
-        #endregion
-
-        #region Titlebar functions and buttons
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left)
-                this.DragMove();
-        }
-
-
-        private void Close_Button_Click(object sender, RoutedEventArgs e)
-        {
-            this.Visibility = Visibility.Hidden;
-        }
-        private void Close_Button_Down(object sender, MouseButtonEventArgs e)
-        {
-            this.Close_Button.Background.Opacity = 1;
-        }
-        private void Close_Button_Up(object sender, MouseButtonEventArgs e)
-        {
-            this.Close_Button.Background.Opacity = 0;
-        }
-        #endregion
-
         /// <summary>
-        /// triggered by the songbrowser if a file should be loaded
+        ///     triggered by the songbrowser if a file should be loaded
         /// </summary>
         private void Instance_SongBrowserLoadedSong(object sender, string filename)
         {
             OnLoadSongFromBrowser?.Invoke(this, filename);
         }
+
+        #region Skinning
+
+        private void SkinContainer_OnNewSkinLoaded(object sender, EventArgs e)
+        {
+            ApplySkin();
+        }
+
+        public void ApplySkin()
+        {
+            BARDS_TOP_LEFT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_LEFT_CORNER];
+            BARDS_TOP_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_TILE];
+            BARDS_TOP_RIGHT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_RIGHT_CORNER];
+
+            BARDS_BOTTOM_LEFT_CORNER.Fill =
+                SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_LEFT_CORNER];
+            BARDS_BOTTOM_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_TILE];
+            BARDS_BOTTOM_RIGHT_CORNER.Fill =
+                SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_RIGHT_CORNER];
+
+            BARDS_LEFT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_LEFT_TILE];
+            BARDS_RIGHT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_RIGHT_TILE];
+
+            Close_Button.Background = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_CLOSE_SELECTED];
+            Close_Button.Background.Opacity = 0;
+        }
+
+        #endregion
+
+        #region Titlebar functions and buttons
+
+        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+                DragMove();
+        }
+
+
+        private void Close_Button_Click(object sender, RoutedEventArgs e)
+        {
+            Visibility = Visibility.Hidden;
+        }
+
+        private void Close_Button_Down(object sender, MouseButtonEventArgs e)
+        {
+            Close_Button.Background.Opacity = 1;
+        }
+
+        private void Close_Button_Up(object sender, MouseButtonEventArgs e)
+        {
+            Close_Button.Background.Opacity = 0;
+        }
+
+        #endregion
     }
 }

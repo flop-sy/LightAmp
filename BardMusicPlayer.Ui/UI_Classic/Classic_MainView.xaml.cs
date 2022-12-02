@@ -1,23 +1,29 @@
-﻿using BardMusicPlayer.Seer;
+﻿#region
+
 using System;
 using System.Windows;
 using System.Windows.Controls;
-using BardMusicPlayer.Ui.Functions;
 using BardMusicPlayer.Coffer;
 using BardMusicPlayer.Maestro;
+using BardMusicPlayer.Maestro.Events;
 using BardMusicPlayer.Pigeonhole;
-using BardMusicPlayer.Siren;
 using BardMusicPlayer.Quotidian;
+using BardMusicPlayer.Seer;
+using BardMusicPlayer.Seer.Events;
+using BardMusicPlayer.Siren;
+using BardMusicPlayer.Ui.Functions;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Classic
 {
     /// <summary>
-    /// Interaktionslogik für Classic_MainView.xaml
+    ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
     public partial class Classic_MainView : UserControl
     {
         private int MaxTracks = 1;
-        private bool _directLoaded { get; set; } = false; //indicates if a song was loaded directly or from playlist
+
         //private NetworkPlayWindow _networkWindow = null;
         public Classic_MainView()
         {
@@ -28,27 +34,29 @@ namespace BardMusicPlayer.Ui.Classic
             PlaylistContainer.ItemsSource = BmpCoffer.Instance.GetPlaylistNames();
             Playlist_Header.Header = "Playlists";
 
-            this.SongName.Text = PlaybackFunctions.GetSongName();
-            BmpMaestro.Instance.OnPlaybackTimeChanged   += Instance_PlaybackTimeChanged;
-            BmpMaestro.Instance.OnSongMaxTime           += Instance_PlaybackMaxTime;
-            BmpMaestro.Instance.OnSongLoaded            += Instance_OnSongLoaded;
-            BmpMaestro.Instance.OnPlaybackStarted       += Instance_PlaybackStarted;
-            BmpMaestro.Instance.OnPlaybackStopped       += Instance_PlaybackStopped;
-            BmpMaestro.Instance.OnTrackNumberChanged    += Instance_TrackNumberChanged;
-            BmpMaestro.Instance.OnOctaveShiftChanged    += Instance_OctaveShiftChanged;
-            BmpMaestro.Instance.OnSpeedChanged          += Instance_OnSpeedChange;
-            BmpSeer.Instance.ChatLog                    += Instance_ChatLog;
+            SongName.Text = PlaybackFunctions.GetSongName();
+            BmpMaestro.Instance.OnPlaybackTimeChanged += Instance_PlaybackTimeChanged;
+            BmpMaestro.Instance.OnSongMaxTime += Instance_PlaybackMaxTime;
+            BmpMaestro.Instance.OnSongLoaded += Instance_OnSongLoaded;
+            BmpMaestro.Instance.OnPlaybackStarted += Instance_PlaybackStarted;
+            BmpMaestro.Instance.OnPlaybackStopped += Instance_PlaybackStopped;
+            BmpMaestro.Instance.OnTrackNumberChanged += Instance_TrackNumberChanged;
+            BmpMaestro.Instance.OnOctaveShiftChanged += Instance_OctaveShiftChanged;
+            BmpMaestro.Instance.OnSpeedChanged += Instance_OnSpeedChange;
+            BmpSeer.Instance.ChatLog += Instance_ChatLog;
 
             Siren_Volume.Value = BmpSiren.Instance.GetVolume();
-            BmpSiren.Instance.SynthTimePositionChanged  += Instance_SynthTimePositionChanged;
+            BmpSiren.Instance.SynthTimePositionChanged += Instance_SynthTimePositionChanged;
 
-            SongBrowser.OnLoadSongFromBrowser           += Instance_SongBrowserLoadedSong;
+            SongBrowser.OnLoadSongFromBrowser += Instance_SongBrowserLoadedSong;
 
-            BmpSeer.Instance.MidibardPlaylistEvent      += Instance_MidibardPlaylistEvent;
+            BmpSeer.Instance.MidibardPlaylistEvent += Instance_MidibardPlaylistEvent;
 
-            Globals.Globals.OnConfigReload              += Globals_OnConfigReload;
+            Globals.Globals.OnConfigReload += Globals_OnConfigReload;
             LoadConfig();
         }
+
+        private bool _directLoaded { get; set; } //indicates if a song was loaded directly or from playlist
 
         private void Globals_OnConfigReload(object sender, EventArgs e)
         {
@@ -60,87 +68,120 @@ namespace BardMusicPlayer.Ui.Classic
             KeyHeat.InitUi();
         }
 
+
+        // private void Info_Button_Click(object sender, RoutedEventArgs e)
+        // {
+        // InfoBox _infoBox = new InfoBox();
+        // _infoBox.Show();
+        // }
+
+        // private void Info_Button_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        // {
+        // /*if (_networkWindow == null)
+        // _networkWindow = new NetworkPlayWindow();
+        // _networkWindow.Visibility = Visibility.Visible;*/
+
+        // MacroLaunchpad macroLaunchpad = new MacroLaunchpad();
+        // macroLaunchpad.Visibility = Visibility.Visible;
+        // }
+
+        /// <summary>
+        ///     triggered by the songbrowser if a file should be loaded
+        /// </summary>
+        private void Instance_SongBrowserLoadedSong(object sender, string filename)
+        {
+            if (PlaybackFunctions.LoadSong(filename))
+            {
+                SongName.Text = PlaybackFunctions.GetSongName();
+                InstrumentInfo.Content = PlaybackFunctions.GetInstrumentNameForHostPlayer();
+                _directLoaded = true;
+            }
+        }
+
         #region EventHandler
-        private void Instance_PlaybackTimeChanged(object sender, Maestro.Events.CurrentPlayPositionEvent e)
+
+        private void Instance_PlaybackTimeChanged(object sender, CurrentPlayPositionEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.PlaybackTimeChanged(e)));
+            Dispatcher.BeginInvoke(new Action(() => PlaybackTimeChanged(e)));
         }
 
-        private void Instance_PlaybackMaxTime(object sender, Maestro.Events.MaxPlayTimeEvent e)
+        private void Instance_PlaybackMaxTime(object sender, MaxPlayTimeEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.PlaybackMaxTime(e)));
+            Dispatcher.BeginInvoke(new Action(() => PlaybackMaxTime(e)));
         }
 
-        private void Instance_OnSongLoaded(object sender, Maestro.Events.SongLoadedEvent e)
+        private void Instance_OnSongLoaded(object sender, SongLoadedEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.OnSongLoaded(e)));
+            Dispatcher.BeginInvoke(new Action(() => OnSongLoaded(e)));
         }
 
         private void Instance_PlaybackStarted(object sender, bool e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.PlaybackStarted()));
+            Dispatcher.BeginInvoke(new Action(() => PlaybackStarted()));
         }
 
         private void Instance_PlaybackStopped(object sender, bool e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.PlaybackStopped()));
+            Dispatcher.BeginInvoke(new Action(() => PlaybackStopped()));
         }
 
-        private void Instance_TrackNumberChanged(object sender, Maestro.Events.TrackNumberChangedEvent e)
+        private void Instance_TrackNumberChanged(object sender, TrackNumberChangedEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.TracknumberChanged(e)));
+            Dispatcher.BeginInvoke(new Action(() => TracknumberChanged(e)));
         }
 
-        private void Instance_OctaveShiftChanged(object sender, Maestro.Events.OctaveShiftChangedEvent e)
+        private void Instance_OctaveShiftChanged(object sender, OctaveShiftChangedEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.OctaveShiftChanged(e)));
+            Dispatcher.BeginInvoke(new Action(() => OctaveShiftChanged(e)));
         }
 
-        private void Instance_OnSpeedChange(object sender, Maestro.Events.SpeedShiftEvent e)
+        private void Instance_OnSpeedChange(object sender, SpeedShiftEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.SpeedShiftChange(e)));
+            Dispatcher.BeginInvoke(new Action(() => SpeedShiftChange(e)));
         }
 
-        private void Instance_ChatLog(Seer.Events.ChatLog seerEvent)
+        private void Instance_ChatLog(ChatLog seerEvent)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.AppendChatLog(seerEvent)));
+            Dispatcher.BeginInvoke(new Action(() => AppendChatLog(seerEvent)));
         }
 
-        private void Instance_MidibardPlaylistEvent(Seer.Events.MidibardPlaylistEvent seerEvent)
+        private void Instance_MidibardPlaylistEvent(MidibardPlaylistEvent seerEvent)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.SelectSongByIndex(seerEvent.Song)));
+            Dispatcher.BeginInvoke(new Action(() => SelectSongByIndex(seerEvent.Song)));
         }
 
-        private void Instance_SynthTimePositionChanged(string songTitle, double currentTime, double endTime, int activeVoices)
+        private void Instance_SynthTimePositionChanged(string songTitle, double currentTime, double endTime,
+            int activeVoices)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.Siren_PlaybackTimeChanged(currentTime, endTime)));
+            Dispatcher.BeginInvoke(new Action(() => Siren_PlaybackTimeChanged(currentTime, endTime)));
         }
 
-        private void PlaybackTimeChanged(Maestro.Events.CurrentPlayPositionEvent e)
+        private void PlaybackTimeChanged(CurrentPlayPositionEvent e)
         {
             string time;
-            string Seconds = e.timeSpan.Seconds.ToString();
-            string Minutes = e.timeSpan.Minutes.ToString();
-            time = ((Minutes.Length == 1) ? "0" + Minutes : Minutes) + ":" + ((Seconds.Length == 1) ? "0" + Seconds : Seconds);
+            var Seconds = e.timeSpan.Seconds.ToString();
+            var Minutes = e.timeSpan.Minutes.ToString();
+            time = (Minutes.Length == 1 ? "0" + Minutes : Minutes) + ":" +
+                   (Seconds.Length == 1 ? "0" + Seconds : Seconds);
             ElapsedTime.Content = time;
 
             if (!_Playbar_dragStarted)
                 Playbar_Slider.Value = e.tick;
         }
 
-        private void PlaybackMaxTime(Maestro.Events.MaxPlayTimeEvent e)
+        private void PlaybackMaxTime(MaxPlayTimeEvent e)
         {
             string time;
-            string Seconds = e.timeSpan.Seconds.ToString();
-            string Minutes = e.timeSpan.Minutes.ToString();
-            time = ((Minutes.Length == 1) ? "0" + Minutes : Minutes) + ":" + ((Seconds.Length == 1) ? "0" + Seconds : Seconds);
+            var Seconds = e.timeSpan.Seconds.ToString();
+            var Minutes = e.timeSpan.Minutes.ToString();
+            time = (Minutes.Length == 1 ? "0" + Minutes : Minutes) + ":" +
+                   (Seconds.Length == 1 ? "0" + Seconds : Seconds);
             TotalTime.Content = time;
 
             Playbar_Slider.Maximum = e.tick;
-
         }
 
-        private void OnSongLoaded(Maestro.Events.SongLoadedEvent e)
+        private void OnSongLoaded(SongLoadedEvent e)
         {
             //Statistics update
             UpdateStats(e);
@@ -148,7 +189,7 @@ namespace BardMusicPlayer.Ui.Classic
             KeyHeat.initUI(PlaybackFunctions.CurrentSong, NumValue, OctaveNumValue);
             SpeedNumValue = 1.0f;
             if (PlaybackFunctions.PlaybackState != PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
-                Play_Button_State(false);
+                Play_Button_State();
 
             MaxTracks = e.MaxTracks;
             if (NumValue <= MaxTracks)
@@ -167,7 +208,7 @@ namespace BardMusicPlayer.Ui.Classic
         public void PlaybackStopped()
         {
             PlaybackFunctions.StopSong();
-            Play_Button_State(false);
+            Play_Button_State();
 
             //if this wasn't a song from the playlist, do nothing
             if (_directLoaded)
@@ -176,13 +217,13 @@ namespace BardMusicPlayer.Ui.Classic
             if (BmpPigeonhole.Instance.PlaylistAutoPlay)
             {
                 playNextSong();
-                Random rnd = new Random();
-                PlaybackFunctions.PlaySong(rnd.Next(15, 35)*100);
+                var rnd = new Random();
+                PlaybackFunctions.PlaySong(rnd.Next(15, 35) * 100);
                 Play_Button_State(true);
             }
         }
 
-        public void TracknumberChanged(Maestro.Events.TrackNumberChangedEvent e)
+        public void TracknumberChanged(TrackNumberChangedEvent e)
         {
             if (e.IsHost)
             {
@@ -191,28 +232,27 @@ namespace BardMusicPlayer.Ui.Classic
             }
         }
 
-        public void OctaveShiftChanged(Maestro.Events.OctaveShiftChangedEvent e)
+        public void OctaveShiftChanged(OctaveShiftChangedEvent e)
         {
             if (e.IsHost)
                 OctaveNumValue = e.OctaveShift;
         }
 
-        public void SpeedShiftChange(Maestro.Events.SpeedShiftEvent e)
+        public void SpeedShiftChange(SpeedShiftEvent e)
         {
             if (e.IsHost)
                 SpeedNumValue = e.SpeedShift;
         }
 
-        public void AppendChatLog(Seer.Events.ChatLog ev)
+        public void AppendChatLog(ChatLog ev)
         {
             if (BmpMaestro.Instance.GetHostPid() == ev.ChatLogGame.Pid)
             {
-                BmpChatParser.AppendText(ChatBox, ev);
-                this.ChatBox.ScrollToEnd();
+                ChatBox.AppendText(ev);
+                ChatBox.ScrollToEnd();
             }
 
             if (ev.ChatLogCode == "0039")
-            {
                 if (ev.ChatLogLine.Contains(@"Anzählen beginnt") ||
                     ev.ChatLogLine.Contains("The count-in will now commence.") ||
                     ev.ChatLogLine.Contains("orchestre est pr"))
@@ -224,25 +264,28 @@ namespace BardMusicPlayer.Ui.Classic
                     PlaybackFunctions.PlaySong(3000);
                     Play_Button_State(true);
                 }
-            }
         }
+
         #endregion
 
         #region Track UP/Down
+
         private int _numValue = 1;
+
         public int NumValue
         {
-            get { return _numValue; }
+            get => _numValue;
             set
             {
                 _numValue = value;
-                track_txtNum.Text = "t" + value.ToString();
+                track_txtNum.Text = "t" + value;
 
                 //update heatmap
                 KeyHeat.initUI(PlaybackFunctions.CurrentSong, NumValue, OctaveNumValue);
-                this.InstrumentInfo.Content = PlaybackFunctions.GetInstrumentNameForHostPlayer();
+                InstrumentInfo.Content = PlaybackFunctions.GetInstrumentNameForHostPlayer();
             }
         }
+
         private void track_cmdUp_Click(object sender, RoutedEventArgs e)
         {
             if (NumValue == MaxTracks)
@@ -268,24 +311,28 @@ namespace BardMusicPlayer.Ui.Classic
             {
                 if (_numValue < 0 || _numValue > MaxTracks)
                     return;
-                track_txtNum.Text = "t" + _numValue.ToString();
+                track_txtNum.Text = "t" + _numValue;
                 BmpMaestro.Instance.SetTracknumberOnHost(_numValue);
             }
         }
+
         #endregion
 
         #region Octave UP/Down
+
         private int _octavenumValue = 1;
+
         public int OctaveNumValue
         {
-            get { return _octavenumValue; }
+            get => _octavenumValue;
             set
             {
                 _octavenumValue = value;
-                octave_txtNum.Text = @"ø" + value.ToString();
+                octave_txtNum.Text = @"ø" + value;
                 KeyHeat.initUI(PlaybackFunctions.CurrentSong, NumValue, OctaveNumValue);
             }
         }
+
         private void octave_cmdUp_Click(object sender, RoutedEventArgs e)
         {
             OctaveNumValue++;
@@ -305,21 +352,24 @@ namespace BardMusicPlayer.Ui.Classic
 
             if (int.TryParse(octave_txtNum.Text.Replace(@"ø", ""), out _octavenumValue))
             {
-                octave_txtNum.Text = @"ø" + _octavenumValue.ToString();
+                octave_txtNum.Text = @"ø" + _octavenumValue;
                 BmpMaestro.Instance.SetOctaveshiftOnHost(_octavenumValue);
             }
         }
+
         #endregion
 
         #region Speed shift
+
         private float _speedNumValue = 1.0f;
+
         public float SpeedNumValue
         {
-            get { return _speedNumValue; }
+            get => _speedNumValue;
             set
             {
                 _speedNumValue = value;
-                speed_txtNum.Text = (value*100).ToString()+"%";
+                speed_txtNum.Text = value * 100 + "%";
             }
         }
 
@@ -328,7 +378,7 @@ namespace BardMusicPlayer.Ui.Classic
             if (speed_txtNum == null)
                 return;
 
-            int t = 0;
+            var t = 0;
             if (int.TryParse(speed_txtNum.Text.Replace(@"%", ""), out t))
             {
                 var speedShift = (Convert.ToDouble(t) / 100).Clamp(0.1f, 2.0f);
@@ -338,45 +388,16 @@ namespace BardMusicPlayer.Ui.Classic
 
         private void speed_cmdUp_Click(object sender, RoutedEventArgs e)
         {
-            var speedShift = (SpeedNumValue +0.01);
+            var speedShift = SpeedNumValue + 0.01;
             BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);
         }
 
         private void speed_cmdDown_Click(object sender, RoutedEventArgs e)
         {
-            var speedShift = (SpeedNumValue - 0.01);
+            var speedShift = SpeedNumValue - 0.01;
             BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);
         }
+
         #endregion
-
-
-        // private void Info_Button_Click(object sender, RoutedEventArgs e)
-        // {
-            // InfoBox _infoBox = new InfoBox();
-            // _infoBox.Show();
-        // }
-
-        // private void Info_Button_PreviewMouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        // {
-            // /*if (_networkWindow == null)
-                // _networkWindow = new NetworkPlayWindow();
-            // _networkWindow.Visibility = Visibility.Visible;*/
-
-            // MacroLaunchpad macroLaunchpad = new MacroLaunchpad();
-            // macroLaunchpad.Visibility = Visibility.Visible;
-        // }
-
-        /// <summary>
-        /// triggered by the songbrowser if a file should be loaded
-        /// </summary>
-        private void Instance_SongBrowserLoadedSong(object sender, string filename)
-        {
-            if (PlaybackFunctions.LoadSong(filename))
-            {
-                SongName.Text = PlaybackFunctions.GetSongName();
-                InstrumentInfo.Content = PlaybackFunctions.GetInstrumentNameForHostPlayer();
-                _directLoaded = true;
-            }
-        }
     }
 }

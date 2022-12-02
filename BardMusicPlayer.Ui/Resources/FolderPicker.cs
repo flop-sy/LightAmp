@@ -1,14 +1,21 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows;
 using System.Windows.Interop;
 
+#endregion
+
 namespace UI.Resources
 {
     public class FolderPicker
     {
+#pragma warning disable IDE1006 // Naming Styles
+        private const int ERROR_CANCELLED = unchecked((int)0x800704C7);
+#pragma warning restore IDE1006 // Naming Styles
         public virtual string ResultPath { get; protected set; }
         public virtual string ResultName { get; protected set; }
         public virtual string InputPath { get; set; }
@@ -19,10 +26,7 @@ namespace UI.Resources
 
         protected virtual int SetOptions(int options)
         {
-            if (ForceFileSystem)
-            {
-                options |= (int)FOS.FOS_FORCEFILESYSTEM;
-            }
+            if (ForceFileSystem) options |= (int)FOS.FOS_FORCEFILESYSTEM;
             return options;
         }
 
@@ -39,7 +43,8 @@ namespace UI.Resources
             var dialog = (IFileOpenDialog)new FileOpenDialog();
             if (!string.IsNullOrEmpty(InputPath))
             {
-                if (CheckHr(SHCreateItemFromParsingName(InputPath, null, typeof(IShellItem).GUID, out var item), throwOnError) != 0)
+                if (CheckHr(SHCreateItemFromParsingName(InputPath, null, typeof(IShellItem).GUID, out var item),
+                        throwOnError) != 0)
                     return null;
 
                 dialog.SetFolder(item);
@@ -49,28 +54,16 @@ namespace UI.Resources
             options = (FOS)SetOptions((int)options);
             dialog.SetOptions(options);
 
-            if (Title != null)
-            {
-                dialog.SetTitle(Title);
-            }
+            if (Title != null) dialog.SetTitle(Title);
 
-            if (OkButtonLabel != null)
-            {
-                dialog.SetOkButtonLabel(OkButtonLabel);
-            }
+            if (OkButtonLabel != null) dialog.SetOkButtonLabel(OkButtonLabel);
 
-            if (FileNameLabel != null)
-            {
-                dialog.SetFileName(FileNameLabel);
-            }
+            if (FileNameLabel != null) dialog.SetFileName(FileNameLabel);
 
             if (owner == IntPtr.Zero)
             {
                 owner = Process.GetCurrentProcess().MainWindowHandle;
-                if (owner == IntPtr.Zero)
-                {
-                    owner = GetDesktopWindow();
-                }
+                if (owner == IntPtr.Zero) owner = GetDesktopWindow();
             }
 
             var hr = dialog.Show(owner);
@@ -89,76 +82,134 @@ namespace UI.Resources
             ResultPath = path;
 
             if (CheckHr(result.GetDisplayName(SIGDN.SIGDN_DESKTOPABSOLUTEEDITING, out path), false) == 0)
-            {
                 ResultName = path;
-            }
             return true;
         }
 
         private static int CheckHr(int hr, bool throwOnError)
         {
             if (hr != 0)
-            {
                 if (throwOnError)
                     Marshal.ThrowExceptionForHR(hr);
-            }
             return hr;
         }
 
         [DllImport("shell32")]
-        private static extern int SHCreateItemFromParsingName([MarshalAs(UnmanagedType.LPWStr)] string pszPath, IBindCtx pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, out IShellItem ppv);
+        private static extern int SHCreateItemFromParsingName([MarshalAs(UnmanagedType.LPWStr)] string pszPath,
+            IBindCtx pbc, [MarshalAs(UnmanagedType.LPStruct)] Guid riid, out IShellItem ppv);
 
         [DllImport("user32")]
         private static extern IntPtr GetDesktopWindow();
 
-#pragma warning disable IDE1006 // Naming Styles
-        private const int ERROR_CANCELLED = unchecked((int)0x800704C7);
-#pragma warning restore IDE1006 // Naming Styles
-
-        [ComImport, Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")] // CLSID_FileOpenDialog
+        [ComImport]
+        [Guid("DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7")] // CLSID_FileOpenDialog
         private class FileOpenDialog
         {
         }
 
-        [ComImport, Guid("42f85136-db7e-439c-85f1-e4075d135fc8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [ComImport]
+        [Guid("42f85136-db7e-439c-85f1-e4075d135fc8")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface IFileOpenDialog
         {
-            [PreserveSig] int Show(IntPtr parent); // IModalWindow
-            [PreserveSig] int SetFileTypes();  // not fully defined
-            [PreserveSig] int SetFileTypeIndex(int iFileType);
-            [PreserveSig] int GetFileTypeIndex(out int piFileType);
-            [PreserveSig] int Advise(); // not fully defined
-            [PreserveSig] int Unadvise();
-            [PreserveSig] int SetOptions(FOS fos);
-            [PreserveSig] int GetOptions(out FOS pfos);
-            [PreserveSig] int SetDefaultFolder(IShellItem psi);
-            [PreserveSig] int SetFolder(IShellItem psi);
-            [PreserveSig] int GetFolder(out IShellItem ppsi);
-            [PreserveSig] int GetCurrentSelection(out IShellItem ppsi);
-            [PreserveSig] int SetFileName([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-            [PreserveSig] int GetFileName([MarshalAs(UnmanagedType.LPWStr)] out string pszName);
-            [PreserveSig] int SetTitle([MarshalAs(UnmanagedType.LPWStr)] string pszTitle);
-            [PreserveSig] int SetOkButtonLabel([MarshalAs(UnmanagedType.LPWStr)] string pszText);
-            [PreserveSig] int SetFileNameLabel([MarshalAs(UnmanagedType.LPWStr)] string pszLabel);
-            [PreserveSig] int GetResult(out IShellItem ppsi);
-            [PreserveSig] int AddPlace(IShellItem psi, int alignment);
-            [PreserveSig] int SetDefaultExtension([MarshalAs(UnmanagedType.LPWStr)] string pszDefaultExtension);
-            [PreserveSig] int Close(int hr);
-            [PreserveSig] int SetClientGuid();  // not fully defined
-            [PreserveSig] int ClearClientData();
-            [PreserveSig] int SetFilter([MarshalAs(UnmanagedType.IUnknown)] object pFilter);
-            [PreserveSig] int GetResults([MarshalAs(UnmanagedType.IUnknown)] out object ppenum);
-            [PreserveSig] int GetSelectedItems([MarshalAs(UnmanagedType.IUnknown)] out object ppsai);
+            [PreserveSig]
+            int Show(IntPtr parent); // IModalWindow
+
+            [PreserveSig]
+            int SetFileTypes(); // not fully defined
+
+            [PreserveSig]
+            int SetFileTypeIndex(int iFileType);
+
+            [PreserveSig]
+            int GetFileTypeIndex(out int piFileType);
+
+            [PreserveSig]
+            int Advise(); // not fully defined
+
+            [PreserveSig]
+            int Unadvise();
+
+            [PreserveSig]
+            int SetOptions(FOS fos);
+
+            [PreserveSig]
+            int GetOptions(out FOS pfos);
+
+            [PreserveSig]
+            int SetDefaultFolder(IShellItem psi);
+
+            [PreserveSig]
+            int SetFolder(IShellItem psi);
+
+            [PreserveSig]
+            int GetFolder(out IShellItem ppsi);
+
+            [PreserveSig]
+            int GetCurrentSelection(out IShellItem ppsi);
+
+            [PreserveSig]
+            int SetFileName([MarshalAs(UnmanagedType.LPWStr)] string pszName);
+
+            [PreserveSig]
+            int GetFileName([MarshalAs(UnmanagedType.LPWStr)] out string pszName);
+
+            [PreserveSig]
+            int SetTitle([MarshalAs(UnmanagedType.LPWStr)] string pszTitle);
+
+            [PreserveSig]
+            int SetOkButtonLabel([MarshalAs(UnmanagedType.LPWStr)] string pszText);
+
+            [PreserveSig]
+            int SetFileNameLabel([MarshalAs(UnmanagedType.LPWStr)] string pszLabel);
+
+            [PreserveSig]
+            int GetResult(out IShellItem ppsi);
+
+            [PreserveSig]
+            int AddPlace(IShellItem psi, int alignment);
+
+            [PreserveSig]
+            int SetDefaultExtension([MarshalAs(UnmanagedType.LPWStr)] string pszDefaultExtension);
+
+            [PreserveSig]
+            int Close(int hr);
+
+            [PreserveSig]
+            int SetClientGuid(); // not fully defined
+
+            [PreserveSig]
+            int ClearClientData();
+
+            [PreserveSig]
+            int SetFilter([MarshalAs(UnmanagedType.IUnknown)] object pFilter);
+
+            [PreserveSig]
+            int GetResults([MarshalAs(UnmanagedType.IUnknown)] out object ppenum);
+
+            [PreserveSig]
+            int GetSelectedItems([MarshalAs(UnmanagedType.IUnknown)] out object ppsai);
         }
 
-        [ComImport, Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+        [ComImport]
+        [Guid("43826D1E-E718-42EE-BC55-A1E261C37BFE")]
+        [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         private interface IShellItem
         {
-            [PreserveSig] int BindToHandler(); // not fully defined
-            [PreserveSig] int GetParent(); // not fully defined
-            [PreserveSig] int GetDisplayName(SIGDN sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
-            [PreserveSig] int GetAttributes();  // not fully defined
-            [PreserveSig] int Compare();  // not fully defined
+            [PreserveSig]
+            int BindToHandler(); // not fully defined
+
+            [PreserveSig]
+            int GetParent(); // not fully defined
+
+            [PreserveSig]
+            int GetDisplayName(SIGDN sigdnName, [MarshalAs(UnmanagedType.LPWStr)] out string ppszName);
+
+            [PreserveSig]
+            int GetAttributes(); // not fully defined
+
+            [PreserveSig]
+            int Compare(); // not fully defined
         }
 
 #pragma warning disable CA1712 // Do not prefix enum values with type name

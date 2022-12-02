@@ -1,13 +1,17 @@
-﻿using BardMusicPlayer.Ui.Skinned;
-using BardMusicPlayer.Ui.Classic;
+﻿#region
+
+using System.Reflection;
 using System.Windows;
 using BardMusicPlayer.Pigeonhole;
-using System.Reflection;
+using BardMusicPlayer.Ui.Classic;
+using BardMusicPlayer.Ui.Skinned;
+
+#endregion
 
 namespace BardMusicPlayer.Ui
 {
     /// <summary>
-    /// Interaktionslogik für MainWindow.xaml
+    ///     Interaktionslogik für MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -23,22 +27,22 @@ namespace BardMusicPlayer.Ui
 
         public void SwitchClassicStyle()
         {
-            this.Title = "LightAmp Ver:" + Assembly.GetExecutingAssembly().GetName().Version;
-            this.DataContext = new Classic_MainView();
-            this.AllowsTransparency = false;
-            this.WindowStyle = WindowStyle.SingleBorderWindow;
-            this.Height = 520;
-            this.Width = 830;
-            this.ResizeMode = ResizeMode.CanResizeWithGrip;
+            Title = "LightAmp Ver:" + Assembly.GetExecutingAssembly().GetName().Version;
+            DataContext = new Classic_MainView();
+            AllowsTransparency = false;
+            WindowStyle = WindowStyle.SingleBorderWindow;
+            Height = 520;
+            Width = 830;
+            ResizeMode = ResizeMode.CanResizeWithGrip;
         }
 
         public void SwitchSkinnedStyle()
         {
-            this.DataContext = new Skinned_MainView();
-            this.AllowsTransparency = true;
-            this.Height = 174;
-            this.Width = 412;
-            this.ResizeMode = ResizeMode.NoResize;
+            DataContext = new Skinned_MainView();
+            AllowsTransparency = true;
+            Height = 174;
+            Width = 412;
+            ResizeMode = ResizeMode.NoResize;
         }
     }
 }

@@ -1,24 +1,27 @@
-﻿using System.Windows;
+﻿#region
+
+using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using BardMusicPlayer.Ui.Functions;
 using BardMusicPlayer.Maestro;
 using BardMusicPlayer.Pigeonhole;
-using System.Threading;
-using System.Threading.Tasks;
+using BardMusicPlayer.Ui.Functions;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Classic
 {
     /// <summary>
-    /// Interaktionslogik für Classic_MainView.xaml
+    ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
     public partial class Classic_MainView : UserControl
     {
-        private bool _alltracks = false;
-        private bool _Playbar_dragStarted = false;
-        private bool _Siren_Playbar_dragStarted = false;
+        private bool _alltracks;
+        private bool _Playbar_dragStarted;
+        private bool _Siren_Playbar_dragStarted;
 
         /* Playbuttonstate */
         private void Play_Button_State(bool playing = false)
@@ -35,7 +38,7 @@ namespace BardMusicPlayer.Ui.Classic
             if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
             {
                 PlaybackFunctions.PauseSong();
-                Play_Button_State(false);
+                Play_Button_State();
             }
             else
             {
@@ -45,12 +48,12 @@ namespace BardMusicPlayer.Ui.Classic
         }
 
 
-        private void Play_Button_MouseRightButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Play_Button_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
                 return;
 
-            Task task = Task.Run(() =>
+            var task = Task.Run(() =>
             {
                 BmpMaestro.Instance.EquipInstruments();
                 Task.Delay(2000).Wait();
@@ -62,14 +65,12 @@ namespace BardMusicPlayer.Ui.Classic
         private void SongName_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.LeftButton == MouseButtonState.Pressed)
-            {
                 if (PlaybackFunctions.LoadSong())
                 {
                     SongName.Text = PlaybackFunctions.GetSongName();
                     InstrumentInfo.Content = PlaybackFunctions.GetInstrumentNameForHostPlayer();
                     _directLoaded = true;
                 }
-            }
 
             if (e.RightButton == MouseButtonState.Pressed)
                 SongName.SelectAll();
@@ -94,7 +95,7 @@ namespace BardMusicPlayer.Ui.Classic
                 BmpPigeonhole.Instance.PlayAllTracks = false;
                 BmpMaestro.Instance.SetTracknumberOnHost(1);
                 NumValue = BmpMaestro.Instance.GetHostBardTrack();
-                all_tracks_button.ClearValue(Button.BackgroundProperty);
+                all_tracks_button.ClearValue(BackgroundProperty);
             }
         }
 
@@ -109,13 +110,9 @@ namespace BardMusicPlayer.Ui.Classic
             _directLoaded = !_directLoaded;
 
             if (_directLoaded)
-            {
                 Loop_Button.Background = Brushes.LightSteelBlue;
-            }
             else
-            {
-                Loop_Button.ClearValue(Button.BackgroundProperty);
-            }
+                Loop_Button.ClearValue(BackgroundProperty);
         }
 
         private void Playbar_Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -124,15 +121,13 @@ namespace BardMusicPlayer.Ui.Classic
 
         private void Playbar_Slider_DragStarted(object sender, DragStartedEventArgs e)
         {
-            this._Playbar_dragStarted = true;
+            _Playbar_dragStarted = true;
         }
 
         private void Playbar_Slider_DragCompleted(object sender, DragCompletedEventArgs e)
         {
             BmpMaestro.Instance.SetPlaybackStart((int)((Slider)sender).Value);
-            this._Playbar_dragStarted = false;
+            _Playbar_dragStarted = false;
         }
-
     }
-
 }

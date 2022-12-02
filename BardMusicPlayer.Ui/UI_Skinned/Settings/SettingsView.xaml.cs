@@ -1,45 +1,31 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using BardMusicPlayer.Pigeonhole;
-using BardMusicPlayer.Maestro;
-using System.Collections.Generic;
+﻿#region
+
 using System;
-using BardMusicPlayer.Siren;
-using BardMusicPlayer.Ui.Globals.SkinContainer;
-using System.Windows.Input;
-using System.Windows.Media.Imaging;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using BardMusicPlayer.Maestro;
+using BardMusicPlayer.Maestro.Utils;
+using BardMusicPlayer.Pigeonhole;
+using BardMusicPlayer.Siren;
+using BardMusicPlayer.Ui.Globals.SkinContainer;
 using UI.Resources;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Skinned
 {
     /// <summary>
-    /// Interaktionslogik für Settings.xaml
+    ///     Interaktionslogik für Settings.xaml
     /// </summary>
     public partial class SettingsView : Window
     {
-        /// <summary>
-        /// Helper class to get skin preview working
-        /// </summary>
-        public class SkinData
-        {
-            private string _Title;
-            public string Title
-            {
-                get { return this._Title; }
-                set { this._Title = value; }
-            }
-
-            private BitmapImage _ImageData;
-            public BitmapImage ImageData
-            {
-                get { return this._ImageData; }
-                set { this._ImageData = value; }
-            }
-        }
-
         public SettingsView()
         {
             InitializeComponent();
@@ -50,26 +36,26 @@ namespace BardMusicPlayer.Ui.Skinned
             ClassicSkin.IsChecked = BmpPigeonhole.Instance.ClassicUi;
 
             //Playback Tab
-            this.HoldNotesBox.IsChecked = BmpPigeonhole.Instance.HoldNotes;
-            this.ForcePlaybackBox.IsChecked = BmpPigeonhole.Instance.ForcePlayback;
+            HoldNotesBox.IsChecked = BmpPigeonhole.Instance.HoldNotes;
+            ForcePlaybackBox.IsChecked = BmpPigeonhole.Instance.ForcePlayback;
             MIDI_Input_DeviceBox.Items.Clear();
-            MIDI_Input_DeviceBox.ItemsSource = Maestro.Utils.MidiInput.ReloadMidiInputDevices();
-            this.MIDI_Input_DeviceBox.SelectedIndex = BmpPigeonhole.Instance.MidiInputDev + 1;
+            MIDI_Input_DeviceBox.ItemsSource = MidiInput.ReloadMidiInputDevices();
+            MIDI_Input_DeviceBox.SelectedIndex = BmpPigeonhole.Instance.MidiInputDev + 1;
             AutoPlayBox.IsChecked = BmpPigeonhole.Instance.PlaylistAutoPlay;
             LiveMidiDelay.IsChecked = BmpPigeonhole.Instance.LiveMidiPlayDelay;
 
             //Local Orchestra Tab
-            this.LocalOrchestraBox.IsChecked = BmpPigeonhole.Instance.LocalOrchestra;
-            this.AutoEquipBox.IsChecked = BmpPigeonhole.Instance.AutoEquipBards;
-            this.KeepTrackSettingsBox.IsChecked = BmpPigeonhole.Instance.EnsembleKeepTrackSetting;
+            LocalOrchestraBox.IsChecked = BmpPigeonhole.Instance.LocalOrchestra;
+            AutoEquipBox.IsChecked = BmpPigeonhole.Instance.AutoEquipBards;
+            KeepTrackSettingsBox.IsChecked = BmpPigeonhole.Instance.EnsembleKeepTrackSetting;
 
             //Syncsettings Tab
             Autostart_source.SelectedIndex = BmpPigeonhole.Instance.AutostartMethod;
-            this.MidiBardComp.IsChecked = BmpPigeonhole.Instance.MidiBardCompatMode;
+            MidiBardComp.IsChecked = BmpPigeonhole.Instance.MidiBardCompatMode;
 
             //Misc Tab
             SirenVolume.Value = BmpSiren.Instance.GetVolume();
-            this.AMPInFrontBox.IsChecked = BmpPigeonhole.Instance.BringBMPtoFront;
+            AMPInFrontBox.IsChecked = BmpPigeonhole.Instance.BringBMPtoFront;
 
             //Path Tab
             SongsDir.Text = BmpPigeonhole.Instance.SongDirectory;
@@ -78,94 +64,117 @@ namespace BardMusicPlayer.Ui.Skinned
             //Load the skin previews
             if (Directory.Exists(BmpPigeonhole.Instance.SkinDirectory))
             {
-                string[] files = Directory.EnumerateFiles(BmpPigeonhole.Instance.SkinDirectory, "*.wsz", SearchOption.TopDirectoryOnly).ToArray();
+                var files = Directory
+                    .EnumerateFiles(BmpPigeonhole.Instance.SkinDirectory, "*.wsz", SearchOption.TopDirectoryOnly)
+                    .ToArray();
                 Parallel.ForEach(files, file =>
                 {
-                    string name = Path.GetFileNameWithoutExtension(file);
-                    this.Dispatcher.BeginInvoke(new Action(() =>
+                    var name = Path.GetFileNameWithoutExtension(file);
+                    Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        var bmap = ((Skinned_MainView)System.Windows.Application.Current.MainWindow.DataContext).ExtractBitmapFromZip(file, "Screenshot.png");
+                        var bmap =
+                            ((Skinned_MainView)Application.Current.MainWindow.DataContext).ExtractBitmapFromZip(file,
+                                "Screenshot.png");
                         if (bmap == null)
-                            bmap = ((Skinned_MainView)System.Windows.Application.Current.MainWindow.DataContext).ExtractBitmapFromZip(file, "MAIN.BMP");
-                        this.SkinPreviewBox.Items.Add(new SkinData { Title = name, ImageData = bmap });
+                            bmap = ((Skinned_MainView)Application.Current.MainWindow.DataContext).ExtractBitmapFromZip(
+                                file, "MAIN.BMP");
+                        SkinPreviewBox.Items.Add(new SkinData { Title = name, ImageData = bmap });
                     }));
                 });
             }
         }
 
-        #region Window design and buttons
         /// <summary>
-        /// Triggered by the SkinLoader, if a new skin was loaded
+        ///     Helper class to get skin preview working
+        /// </summary>
+        public class SkinData
+        {
+            public string Title { get; set; }
+
+            public BitmapImage ImageData { get; set; }
+        }
+
+        #region Window design and buttons
+
+        /// <summary>
+        ///     Triggered by the SkinLoader, if a new skin was loaded
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void SkinContainer_OnNewSkinLoaded(object sender, EventArgs e)
-        { ApplySkin(); }
-
-        /// <summary>
-        /// Applies a skin
-        /// </summary>
-        public void ApplySkin()
         {
-            this.BARDS_TOP_LEFT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_LEFT_CORNER];
-            this.BARDS_TOP_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_TILE];
-            this.BARDS_TOP_RIGHT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_RIGHT_CORNER];
-
-            this.BARDS_BOTTOM_LEFT_CORNER.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_LEFT_CORNER];
-            this.BARDS_BOTTOM_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_TILE];
-            this.BARDS_BOTTOM_RIGHT_CORNER.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_RIGHT_CORNER];
-
-            this.BARDS_LEFT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_LEFT_TILE];
-            this.BARDS_RIGHT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_RIGHT_TILE];
-
-            this.Close_Button.Background = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_CLOSE_SELECTED];
-            this.Close_Button.Background.Opacity = 0;
-
+            ApplySkin();
         }
 
         /// <summary>
-        /// if a mousedown event was triggered by the title bar, dragmove the window
+        ///     Applies a skin
+        /// </summary>
+        public void ApplySkin()
+        {
+            BARDS_TOP_LEFT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_LEFT_CORNER];
+            BARDS_TOP_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_TILE];
+            BARDS_TOP_RIGHT.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_TOP_RIGHT_CORNER];
+
+            BARDS_BOTTOM_LEFT_CORNER.Fill =
+                SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_LEFT_CORNER];
+            BARDS_BOTTOM_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_TILE];
+            BARDS_BOTTOM_RIGHT_CORNER.Fill =
+                SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_BOTTOM_RIGHT_CORNER];
+
+            BARDS_LEFT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_LEFT_TILE];
+            BARDS_RIGHT_TILE.Fill = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_RIGHT_TILE];
+
+            Close_Button.Background = SkinContainer.SWINDOW[SkinContainer.SWINDOW_TYPES.SWINDOW_CLOSE_SELECTED];
+            Close_Button.Background.Opacity = 0;
+        }
+
+        /// <summary>
+        ///     if a mousedown event was triggered by the title bar, dragmove the window
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
-                this.DragMove();
+                DragMove();
         }
 
         /// <summary>
-        /// The close button
+        ///     The close button
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Close_Button_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
+
         /// <summary>
-        /// if mouse button down on close button, change bitmap
+        ///     if mouse button down on close button, change bitmap
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Close_Button_Down(object sender, MouseButtonEventArgs e)
         {
-            this.Close_Button.Background.Opacity = 1;
+            Close_Button.Background.Opacity = 1;
         }
+
         /// <summary>
-        /// if mouse button up on close button, change bitmap
+        ///     if mouse button up on close button, change bitmap
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void Close_Button_Up(object sender, MouseButtonEventArgs e)
         {
-            this.Close_Button.Background.Opacity = 0;
+            Close_Button.Background.Opacity = 0;
         }
+
         #endregion
 
         #region DesignTab controls
+
         /// <summary>
-        /// The classic skin checkbox action
+        ///     The classic skin checkbox action
         /// </summary>
         private void ClassicSkin_Checked(object sender, RoutedEventArgs e)
         {
@@ -173,28 +182,30 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// skinpreview doubleclick: change skin
+        ///     skinpreview doubleclick: change skin
         /// </summary>
         private void SkinPreviewBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            SkinData d = SkinPreviewBox.SelectedItem as SkinData;
+            var d = SkinPreviewBox.SelectedItem as SkinData;
             if (d == null)
                 return;
-            string fileName = BmpPigeonhole.Instance.SkinDirectory + d.Title + ".wsz";
-            ((Skinned_MainView)System.Windows.Application.Current.MainWindow.DataContext).LoadSkin(fileName);
+            var fileName = BmpPigeonhole.Instance.SkinDirectory + d.Title + ".wsz";
+            ((Skinned_MainView)Application.Current.MainWindow.DataContext).LoadSkin(fileName);
             BmpPigeonhole.Instance.LastSkin = fileName;
         }
+
         #endregion
 
         #region PlaybackTab controls
+
         private void Hold_Notes_Checked(object sender, RoutedEventArgs e)
         {
-            BmpPigeonhole.Instance.HoldNotes = (HoldNotesBox.IsChecked ?? false);
+            BmpPigeonhole.Instance.HoldNotes = HoldNotesBox.IsChecked ?? false;
         }
 
         private void Force_Playback_Checked(object sender, RoutedEventArgs e)
         {
-            BmpPigeonhole.Instance.ForcePlayback = (ForcePlaybackBox.IsChecked ?? false);
+            BmpPigeonhole.Instance.ForcePlayback = ForcePlaybackBox.IsChecked ?? false;
         }
 
         private void MIDI_Input_Device_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -212,17 +223,18 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void AutoPlay_Checked(object sender, RoutedEventArgs e)
         {
-            BmpPigeonhole.Instance.PlaylistAutoPlay = (AutoPlayBox.IsChecked ?? false);
+            BmpPigeonhole.Instance.PlaylistAutoPlay = AutoPlayBox.IsChecked ?? false;
         }
 
         private void LiveMidiDelay_Checked(object sender, RoutedEventArgs e)
         {
-            BmpPigeonhole.Instance.LiveMidiPlayDelay = (LiveMidiDelay.IsChecked ?? false);
+            BmpPigeonhole.Instance.LiveMidiPlayDelay = LiveMidiDelay.IsChecked ?? false;
         }
 
         #endregion
 
         #region Local orchestra controls
+
         private void LocalOrchestraBox_Checked(object sender, RoutedEventArgs e)
         {
             BmpPigeonhole.Instance.LocalOrchestra = LocalOrchestraBox.IsChecked ?? false;
@@ -241,18 +253,22 @@ namespace BardMusicPlayer.Ui.Skinned
         #endregion
 
         #region SyncsettingsTab controls
+
         private void Autostart_source_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            int d = Autostart_source.SelectedIndex;
-            BmpPigeonhole.Instance.AutostartMethod = (int)d;
+            var d = Autostart_source.SelectedIndex;
+            BmpPigeonhole.Instance.AutostartMethod = d;
         }
+
         private void MidiBard_Checked(object sender, RoutedEventArgs e)
         {
             BmpPigeonhole.Instance.MidiBardCompatMode = MidiBardComp.IsChecked ?? false;
         }
+
         #endregion
 
         #region Miscsettings Tab controls
+
         private void SirenVolume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             var g = SirenVolume.Value;
@@ -263,12 +279,14 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             BmpPigeonhole.Instance.BringBMPtoFront = AMPInFrontBox.IsChecked ?? false;
         }
+
         #endregion
 
         #region PathTab controls
+
         private void SongsDir_TextChanged(object sender, TextChangedEventArgs e)
         {
-            BmpPigeonhole.Instance.SongDirectory = SongsDir.Text+ (SongsDir.Text.EndsWith("\\") ? "" : "\\");
+            BmpPigeonhole.Instance.SongDirectory = SongsDir.Text + (SongsDir.Text.EndsWith("\\") ? "" : "\\");
         }
 
         private void SongsDir_Button_Click(object sender, RoutedEventArgs e)
@@ -278,11 +296,11 @@ namespace BardMusicPlayer.Ui.Skinned
             if (Directory.Exists(BmpPigeonhole.Instance.SongDirectory))
                 dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory);
             else
-                dlg.InputPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             if (dlg.ShowDialog() == true)
             {
-                string path = dlg.ResultPath;
+                var path = dlg.ResultPath;
                 if (!Directory.Exists(path))
                     return;
 
@@ -304,11 +322,11 @@ namespace BardMusicPlayer.Ui.Skinned
             if (Directory.Exists(BmpPigeonhole.Instance.SkinDirectory))
                 dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SkinDirectory);
             else
-                dlg.InputPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             if (dlg.ShowDialog() == true)
             {
-                string path = dlg.ResultPath;
+                var path = dlg.ResultPath;
                 if (!Directory.Exists(path))
                     return;
 
@@ -317,6 +335,7 @@ namespace BardMusicPlayer.Ui.Skinned
                 BmpPigeonhole.Instance.SkinDirectory = path;
             }
         }
+
         #endregion
     }
 }

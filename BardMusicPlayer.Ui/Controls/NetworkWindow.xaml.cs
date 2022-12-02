@@ -1,18 +1,17 @@
-﻿using BardMusicPlayer.Jamboree;
-using BardMusicPlayer.Jamboree.Events;
-using BardMusicPlayer.Pigeonhole;
+﻿#region
+
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using UI.Resources;
+using BardMusicPlayer.Jamboree;
+using BardMusicPlayer.Jamboree.Events;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Controls
 {
     /// <summary>
-    /// The songbrowser but much faster than the BMP 1.x had
+    ///     The songbrowser but much faster than the BMP 1.x had
     /// </summary>
     public partial class NetworkControl : UserControl
     {
@@ -26,19 +25,19 @@ namespace BardMusicPlayer.Ui.Controls
 
         private void Instance_PartyCreated(object sender, PartyCreatedEvent e)
         {
-            string Token = e.Token;
-            this.Dispatcher.BeginInvoke(new Action(() => PartyToken_Text.Text = Token));
+            var Token = e.Token;
+            Dispatcher.BeginInvoke(new Action(() => PartyToken_Text.Text = Token));
         }
 
         private void Instance_PartyDebugLog(object sender, PartyDebugLogEvent e)
         {
-            string logtext = e.LogString;
-            this.Dispatcher.BeginInvoke(new Action(() => this.PartyLog_Text.Text = this.PartyLog_Text.Text + logtext));
+            var logtext = e.LogString;
+            Dispatcher.BeginInvoke(new Action(() => PartyLog_Text.Text = PartyLog_Text.Text + logtext));
         }
 
         private void Join_Click(object sender, RoutedEventArgs e)
         {
-            string token = PartyToken_Text.Text;
+            var token = PartyToken_Text.Text;
             PartyToken_Text.Text = "Please wait...";
             BmpJamboree.Instance.JoinParty(token, 0, "Test Player"); // BmpMaestro.Instance.GetHostGame().PlayerName);
         }
@@ -47,11 +46,10 @@ namespace BardMusicPlayer.Ui.Controls
         {
             BmpJamboree.Instance.LeaveParty();
         }
+
         private void ForcePlay_Click(object sender, RoutedEventArgs e)
         {
             BmpJamboree.Instance.SendPerformanceStart();
         }
-
-
     }
 }

@@ -1,24 +1,30 @@
-﻿using BardMusicPlayer.Coffer;
-using BardMusicPlayer.Transmogrify.Song;
+﻿#region
+
 using System.Windows;
+using BardMusicPlayer.Coffer;
+using BardMusicPlayer.Transmogrify.Song;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Controls
 {
     /// <summary>
-    /// Interaktionslogik für SongEditWindow.xaml
+    ///     Interaktionslogik für SongEditWindow.xaml
     /// </summary>
     public partial class SongEditWindow : Window
     {
-        BmpSong _song;
+        private readonly BmpSong _song;
+
         public SongEditWindow(BmpSong song)
         {
             InitializeComponent();
             if (song == null)
             {
-                this.Close();
+                Close();
                 return;
             }
-            this.Visibility = Visibility.Visible;
+
+            Visibility = Visibility.Visible;
 
             _song = song;
             Internal_TrackName.Text = _song.Title;
@@ -38,7 +44,7 @@ namespace BardMusicPlayer.Ui.Controls
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
     }
 }

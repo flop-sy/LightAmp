@@ -1,11 +1,18 @@
-﻿using BardMusicPlayer.Script;
-using BardMusicPlayer.Ui.Controls;
-using Newtonsoft.Json;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using BardMusicPlayer.Script;
+using BardMusicPlayer.Ui.Controls;
+using Microsoft.Win32;
+using Newtonsoft.Json;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Classic
 {
@@ -17,40 +24,40 @@ namespace BardMusicPlayer.Ui.Classic
 
     public partial class MacroLaunchpad : Window
     {
-        public List<Macro> _Macros { get; private set; }
-        public Macro SelectedMacro { get; set; }
-
         public MacroLaunchpad()
         {
             InitializeComponent();
             BmpScript.Instance.OnRunningStateChanged += Instance_OnRunningStateChanged;
 
 
-            this.DataContext = this;
+            DataContext = this;
             _Macros = new List<Macro>();
             MacroList.ItemsSource = _Macros;
         }
 
+        public List<Macro> _Macros { get; }
+        public Macro SelectedMacro { get; set; }
+
         private void Instance_OnRunningStateChanged(object sender, bool e)
         {
             if (e)
-                this.Dispatcher.BeginInvoke(new Action(() => StopIndicator.Content = "Stop" ));
+                Dispatcher.BeginInvoke(new Action(() => StopIndicator.Content = "Stop"));
             else
-                this.Dispatcher.BeginInvoke(new Action(() => StopIndicator.Content = "Idle"));
+                Dispatcher.BeginInvoke(new Action(() => StopIndicator.Content = "Idle"));
         }
 
         private void Macros_CollectionChanged()
         {
             MacroList.ItemsSource = _Macros;
-            this.MacroList.Items.Refresh();
+            MacroList.Items.Refresh();
         }
 
-        private void MacroList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void MacroList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SelectedMacro = MacroList.SelectedItem as Macro;
         }
 
-        private void MacroList_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void MacroList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (SelectedMacro == null)
                 return;
@@ -58,16 +65,16 @@ namespace BardMusicPlayer.Ui.Classic
             SelectedMacro = MacroList.SelectedItem as Macro;
             if (!File.Exists(SelectedMacro.File))
                 return;
-            
-            Script.BmpScript.Instance.LoadAndRun(SelectedMacro.File);
+
+            BmpScript.Instance.LoadAndRun(SelectedMacro.File);
         }
 
-        private void TextBlock_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void TextBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (SelectedMacro == null)
                 return;
 
-            MacroEditWindow macroEdit = new MacroEditWindow(SelectedMacro);
+            var macroEdit = new MacroEditWindow(SelectedMacro);
             macroEdit.Visibility = Visibility.Visible;
             macroEdit.Closed += MacroEdit_Closed;
         }
@@ -76,7 +83,7 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var newMacro = new Macro();
 
-            MacroEditWindow macroEdit = new MacroEditWindow(newMacro);
+            var macroEdit = new MacroEditWindow(newMacro);
             macroEdit.Visibility = Visibility.Visible;
             macroEdit.Closed += MacroEdit_Closed;
             _Macros.Add(newMacro);
@@ -94,7 +101,7 @@ namespace BardMusicPlayer.Ui.Classic
 
         private void Load_Click(object sender, RoutedEventArgs e)
         {
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            var openFileDialog = new OpenFileDialog
             {
                 Filter = "Macrolist | *.cfg",
                 Multiselect = true
@@ -103,8 +110,8 @@ namespace BardMusicPlayer.Ui.Classic
             if (openFileDialog.ShowDialog() != true)
                 return;
 
-            MemoryStream memoryStream = new MemoryStream();
-            FileStream fileStream = File.Open(openFileDialog.FileName, FileMode.Open);
+            var memoryStream = new MemoryStream();
+            var fileStream = File.Open(openFileDialog.FileName, FileMode.Open);
             fileStream.CopyTo(memoryStream);
             fileStream.Close();
 
@@ -122,7 +129,7 @@ namespace BardMusicPlayer.Ui.Classic
             if (_Macros.Count <= 0)
                 return;
 
-            var openFileDialog = new Microsoft.Win32.SaveFileDialog
+            var openFileDialog = new SaveFileDialog
             {
                 Filter = "Macrolist | *.cfg"
             };
@@ -131,18 +138,18 @@ namespace BardMusicPlayer.Ui.Classic
                 return;
 
             var t = JsonConvert.SerializeObject(_Macros);
-            byte[] content = new UTF8Encoding(true).GetBytes(t);
+            var content = new UTF8Encoding(true).GetBytes(t);
 
-            FileStream fileStream = File.Create(openFileDialog.FileName);
+            var fileStream = File.Create(openFileDialog.FileName);
             fileStream.Write(content, 0, content.Length);
             fileStream.Close();
 
             Macros_CollectionChanged();
         }
 
-        private void MacroEdit_Closed(object sender, System.EventArgs e)
+        private void MacroEdit_Closed(object sender, EventArgs e)
         {
-            this.MacroList.Items.Refresh();
+            MacroList.Items.Refresh();
         }
 
         private void StopIndicator_Click(object sender, RoutedEventArgs e)

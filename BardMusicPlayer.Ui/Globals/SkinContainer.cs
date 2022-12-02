@@ -1,22 +1,44 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Media;
+using Color = System.Drawing.Color;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Globals.SkinContainer
 {
     public static class SkinContainer
     {
+        public static Dictionary<CBUTTON_TYPES, ImageBrush> CBUTTONS = new();
+        public static Dictionary<NUMBER_TYPES, ImageBrush> NUMBERS = new();
+        public static Dictionary<TITLEBAR_TYPES, ImageBrush> TITLEBAR = new();
+        public static Dictionary<VOLUME_TYPES, ImageBrush> VOLUME = new();
+        public static Dictionary<BALANCE_TYPES, ImageBrush> BALANCE = new();
+        public static Dictionary<PLAYLIST_TYPES, ImageBrush> PLAYLIST = new();
+        public static Dictionary<SWINDOW_TYPES, ImageBrush> SWINDOW = new();
+        public static Dictionary<EQ_TYPES, ImageBrush> EQUALIZER = new();
+        public static Dictionary<SHUFREP_TYPES, ImageBrush> SHUFREP = new();
+        public static Dictionary<MEDIABROWSER_TYPES, ImageBrush> MEDIABROWSER = new();
+        public static Dictionary<GENEX_TYPES, ImageBrush> GENEX = new();
+        public static Dictionary<VISCOLOR_TYPES, Color> VISCOLOR = new();
+        public static Dictionary<PLAYLISTCOLOR_TYPES, Color> PLAYLISTCOLOR = new();
+        public static string PLAYLIST_FONT;
+        public static Dictionary<int, Image> FONT = new();
         public static event EventHandler OnNewSkinLoaded;
+
         public static void NewSkinLoaded()
         {
             OnNewSkinLoaded?.Invoke(null, null);
         }
 
         #region ENUMS
+
         public enum CBUTTON_TYPES
         {
-            MAIN_PREVIOUS_BUTTON =0,
+            MAIN_PREVIOUS_BUTTON = 0,
             MAIN_PREVIOUS_BUTTON_ACTIVE,
             MAIN_PLAY_BUTTON,
             MAIN_PLAY_BUTTON_ACTIVE,
@@ -29,6 +51,7 @@ namespace BardMusicPlayer.Ui.Globals.SkinContainer
             MAIN_EJECT_BUTTON,
             MAIN_EJECT_BUTTON_ACTIVE
         }
+
         public enum TITLEBAR_TYPES
         {
             MAIN_TITLE_BAR = 0,
@@ -169,7 +192,7 @@ namespace BardMusicPlayer.Ui.Globals.SkinContainer
             PLAYLIST_CLOSE_SELECTED,
             PLAYLIST_COLLAPSE_SELECTED,
             PLAYLIST_EXPAND_SELECTED
-        };
+        }
 
         public enum SWINDOW_TYPES
         {
@@ -182,11 +205,11 @@ namespace BardMusicPlayer.Ui.Globals.SkinContainer
             SWINDOW_BOTTOM_TILE,
             SWINDOW_BOTTOM_RIGHT_CORNER,
             SWINDOW_CLOSE_SELECTED
-        };
+        }
 
         public enum EQ_TYPES
         {
-            EQ_WINDOW_BACKGROUND =0,
+            EQ_WINDOW_BACKGROUND = 0,
             EQ_TITLE_BAR,
             EQ_TITLE_BAR_SELECTED,
             EQ_SLIDER_BACKGROUND,
@@ -212,7 +235,7 @@ namespace BardMusicPlayer.Ui.Globals.SkinContainer
 
         public enum SHUFREP_TYPES
         {
-            MAIN_SHUFFLE_BUTTON =0,
+            MAIN_SHUFFLE_BUTTON = 0,
             MAIN_SHUFFLE_BUTTON_DEPRESSED,
             MAIN_SHUFFLE_BUTTON_SELECTED,
             MAIN_SHUFFLE_BUTTON_SELECTED_DEPRESSED,
@@ -232,7 +255,7 @@ namespace BardMusicPlayer.Ui.Globals.SkinContainer
 
         public enum MEDIABROWSER_TYPES
         {
-            MEDIABROWSER_TOP_LEFT =0,
+            MEDIABROWSER_TOP_LEFT = 0,
             MEDIABROWSER_TOP_TITLE,
             MEDIABROWSER_TOP_TILE,
             MEDIABROWSER_TOP_RIGHT,
@@ -291,22 +314,7 @@ namespace BardMusicPlayer.Ui.Globals.SkinContainer
             PLAYLISTCOLOR_MBBG,
             PLAYLISTCOLOR_MBFG
         }
-        #endregion
 
-        public static Dictionary<CBUTTON_TYPES,     ImageBrush> CBUTTONS =      new Dictionary<CBUTTON_TYPES, ImageBrush> { };
-        public static Dictionary<NUMBER_TYPES,      ImageBrush>  NUMBERS  =     new Dictionary<NUMBER_TYPES, ImageBrush> { };
-        public static Dictionary<TITLEBAR_TYPES,    ImageBrush> TITLEBAR =      new Dictionary<TITLEBAR_TYPES, ImageBrush> { };
-        public static Dictionary<VOLUME_TYPES,      ImageBrush> VOLUME =        new Dictionary<VOLUME_TYPES, ImageBrush> { };
-        public static Dictionary<BALANCE_TYPES,     ImageBrush> BALANCE =       new Dictionary<BALANCE_TYPES, ImageBrush> { };
-        public static Dictionary<PLAYLIST_TYPES,    ImageBrush> PLAYLIST =      new Dictionary<PLAYLIST_TYPES, ImageBrush> { };
-        public static Dictionary<SWINDOW_TYPES,     ImageBrush> SWINDOW =       new Dictionary<SWINDOW_TYPES, ImageBrush> { };
-        public static Dictionary<EQ_TYPES,          ImageBrush> EQUALIZER =     new Dictionary<EQ_TYPES, ImageBrush> { };
-        public static Dictionary<SHUFREP_TYPES,     ImageBrush> SHUFREP =       new Dictionary<SHUFREP_TYPES, ImageBrush> { };
-        public static Dictionary<MEDIABROWSER_TYPES,ImageBrush> MEDIABROWSER =  new Dictionary<MEDIABROWSER_TYPES, ImageBrush> { };
-        public static Dictionary<GENEX_TYPES,       ImageBrush> GENEX =         new Dictionary<GENEX_TYPES, ImageBrush> { };
-        public static Dictionary<VISCOLOR_TYPES, System.Drawing.Color> VISCOLOR = new Dictionary<VISCOLOR_TYPES, System.Drawing.Color> { };
-        public static Dictionary<PLAYLISTCOLOR_TYPES, System.Drawing.Color> PLAYLISTCOLOR = new Dictionary<PLAYLISTCOLOR_TYPES, System.Drawing.Color> { };
-        public static string PLAYLIST_FONT;
-        public static Dictionary<int, Image> FONT = new Dictionary<int, Image> { };
+        #endregion
     }
 }

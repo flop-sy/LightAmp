@@ -1,13 +1,14 @@
-﻿using BardMusicPlayer.Coffer;
-using BardMusicPlayer.Transmogrify.Song;
-using BardMusicPlayer.Ui.Functions;
-using Newtonsoft.Json;
+﻿#region
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Text;
+using Newtonsoft.Json;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Functions
 {
@@ -21,10 +22,10 @@ namespace BardMusicPlayer.Ui.Functions
     {
         public static List<SongContainer> Load(string filename)
         {
-            List<SongContainer> songs = new List<SongContainer>();
+            var songs = new List<SongContainer>();
 
-            MemoryStream memoryStream = new MemoryStream();
-            FileStream compressedFileStream = File.Open(filename, FileMode.Open);
+            var memoryStream = new MemoryStream();
+            var compressedFileStream = File.Open(filename, FileMode.Open);
             var compressor = new GZipStream(compressedFileStream, CompressionMode.Decompress);
             compressor.CopyTo(memoryStream);
             compressor.Close();
@@ -39,9 +40,9 @@ namespace BardMusicPlayer.Ui.Functions
         public static void Save(string filename, List<SongContainer> sc)
         {
             var t = JsonConvert.SerializeObject(sc);
-            byte[] content = new UTF8Encoding(true).GetBytes(t);
+            var content = new UTF8Encoding(true).GetBytes(t);
 
-            FileStream compressedFileStream = File.Create(filename);
+            var compressedFileStream = File.Create(filename);
             var compressor = new GZipStream(compressedFileStream, CompressionMode.Compress);
             compressor.Write(content, 0, content.Length);
             compressor.Close();
@@ -50,7 +51,8 @@ namespace BardMusicPlayer.Ui.Functions
 
     public static class PlaylistImporter
     {
-        static List<KeyValuePair<string, string>> songs_url = new List<KeyValuePair<string, string>>();
+        private static readonly List<KeyValuePair<string, string>> songs_url = new();
+
         public static void ImportPlaylist()
         {
             var httpClient = new HttpClient();
@@ -58,14 +60,11 @@ namespace BardMusicPlayer.Ui.Functions
             var nextPageToken = "";
             do
             {
-                var folderContentsUri = $"https://drive.google.com/drive/folders/"+publicFolderId+ "?usp=sharing";
+                var folderContentsUri = "https://drive.google.com/drive/folders/" + publicFolderId + "?usp=sharing";
                 Console.WriteLine(folderContentsUri);
-                if (!String.IsNullOrEmpty(nextPageToken))
-                {
-                    folderContentsUri += $"&pageToken={nextPageToken}";
-                }
+                if (!string.IsNullOrEmpty(nextPageToken)) folderContentsUri += $"&pageToken={nextPageToken}";
                 var contentsJson = httpClient.GetStringAsync(folderContentsUri).Result;
-                var content = contentsJson.Split( new string[] { "aria-label=" }, StringSplitOptions.RemoveEmptyEntries);
+                var content = contentsJson.Split(new[] { "aria-label=" }, StringSplitOptions.RemoveEmptyEntries);
 
 
                 foreach (var data in content)
@@ -78,26 +77,30 @@ namespace BardMusicPlayer.Ui.Functions
                     if (data.Contains("jsdata"))
                     {
                         var name = data.Split('"')[1];
-                        var path = data.Split(new string[] { "jsdata" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(';')[3];
+                        var path =
+                            data.Split(new[] { "jsdata" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(';')[3];
                         songs_url.Add(new KeyValuePair<string, string>(name, path));
                         Console.WriteLine(data);
                     }
                 }
+
                 Console.WriteLine(songs_url.ToString());
-            } while (!String.IsNullOrEmpty(nextPageToken));
+            } while (!string.IsNullOrEmpty(nextPageToken));
+
             httpClient.Dispose();
         }
 
-        static public byte[] DownloadFile(string name)
+        public static byte[] DownloadFile(string name)
         {
             var foundSong = songs_url.Find(x => x.Key.ToLower().Contains(name.ToLower()));
 
             var httpClient = new HttpClient();
-            var file = httpClient.GetByteArrayAsync("https://drive.google.com/uc?export=download&id=" + foundSong.Value).Result;
+            var file = httpClient.GetByteArrayAsync("https://drive.google.com/uc?export=download&id=" + foundSong.Value)
+                .Result;
             using (var stream = File.Open("output.mid", FileMode.Create))
             {
-                foreach(var data in file)
-                stream.WriteByte(data);
+                foreach (var data in file)
+                    stream.WriteByte(data);
             }
 
             return file;

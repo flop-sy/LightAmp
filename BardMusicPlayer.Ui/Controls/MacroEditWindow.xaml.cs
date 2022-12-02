@@ -1,17 +1,19 @@
-﻿using BardMusicPlayer.Ui.Classic;
-using Microsoft.Win32;
+﻿#region
+
 using System.Windows;
+using System.Windows.Controls;
+using BardMusicPlayer.Ui.Classic;
+using Microsoft.Win32;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Controls
 {
     /// <summary>
-    /// Interaktionslogik für MacroEditWindow.xaml
+    ///     Interaktionslogik für MacroEditWindow.xaml
     /// </summary>
     public partial class MacroEditWindow : Window
     {
-        Macro _macro { get; set; } = null;
-
-
         public MacroEditWindow(Macro macro)
         {
             InitializeComponent();
@@ -19,6 +21,8 @@ namespace BardMusicPlayer.Ui.Controls
             MacroName.Text = _macro.DisplayedText;
             MacroFileName.Content = _macro.File;
         }
+
+        private Macro _macro { get; }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
@@ -38,12 +42,9 @@ namespace BardMusicPlayer.Ui.Controls
             MacroFileName.Content = openFileDialog.FileName;
         }
 
-        private void MacroName_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        private void MacroName_TextChanged(object sender, TextChangedEventArgs e)
         {
             _macro.DisplayedText = MacroName.Text;
         }
-
-        
-
     }
 }

@@ -1,45 +1,41 @@
-using BardMusicPlayer.Seer;
-using BardMusicPlayer.Ui.Globals.SkinContainer;
-using Melanchall.DryWetMidi.Interaction;
+#region
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using BardMusicPlayer.Ui.Functions;
 using BardMusicPlayer.Maestro;
+using BardMusicPlayer.Maestro.Events;
 using BardMusicPlayer.Pigeonhole;
+using BardMusicPlayer.Seer;
+using BardMusicPlayer.Seer.Events;
 using BardMusicPlayer.Transmogrify.Song;
-using BardMusicPlayer.Jamboree;
+using BardMusicPlayer.Ui.Functions;
+using BardMusicPlayer.Ui.Globals.SkinContainer;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Skinned
 {
     /// <summary>
-    /// Interaktionslogik für Skinned_MainView.xaml
+    ///     Interaktionslogik für Skinned_MainView.xaml
     /// </summary>
     public partial class Skinned_MainView : UserControl
     {
-        private int MaxTracks { get; set; } = 1;
-        private bool _Playbar_dragStarted = false;
-        private bool _Trackbar_dragStarted { get; set; } = false;
-        private bool _Octavebar_dragStarted { get; set; } = false;
+        public BardsWindow _BardListView;
+        public Skinned_MainView_Ex _MainView_Ex;
 
         private TimeSpan _maxTime;
-        private bool _showLapTime { get; set; } = true;
+        public NetworkPlayWindow _Networkplaywindow;
+        private bool _Playbar_dragStarted;
 
         public Skinned_PlaylistView _PlaylistView;
         public SongbrowserWindow _SongbrowserView;
-        public BardsWindow _BardListView;
-        public NetworkPlayWindow _Networkplaywindow;
-        public Skinned_MainView_Ex _MainView_Ex;
 
-        private CancellationTokenSource Scroller = new CancellationTokenSource();
+        private CancellationTokenSource Scroller = new();
+
         public Skinned_MainView()
         {
             InitializeComponent();
@@ -52,23 +48,24 @@ namespace BardMusicPlayer.Ui.Skinned
             //init the songbrowser
             _SongbrowserView = new SongbrowserWindow();
             _SongbrowserView.Show();
-            this._SongbrowserView.Visibility = Visibility.Hidden;
-            this._SongbrowserView.OnLoadSongFromBrowser += OnLoadSongFromSongbrowser;
+            _SongbrowserView.Visibility = Visibility.Hidden;
+            _SongbrowserView.OnLoadSongFromBrowser += OnLoadSongFromSongbrowser;
 
 
             //open the bards window
             _BardListView = new BardsWindow();
             _BardListView.Show();
-            this._BardListView.Visibility = Visibility.Hidden;
+            _BardListView.Visibility = Visibility.Hidden;
 
             _Networkplaywindow = new NetworkPlayWindow();
             _Networkplaywindow.Show();
-            this._Networkplaywindow.Visibility = Visibility.Hidden;
+            _Networkplaywindow.Visibility = Visibility.Hidden;
 
             //open the playlist and bind the event
             _PlaylistView = new Skinned_PlaylistView();
             _PlaylistView.Show();
-            _PlaylistView.Top = ((MainWindow)Application.Current.MainWindow).Top + ((MainWindow)Application.Current.MainWindow).ActualHeight;
+            _PlaylistView.Top = ((MainWindow)Application.Current.MainWindow).Top +
+                                ((MainWindow)Application.Current.MainWindow).ActualHeight;
             _PlaylistView.Left = ((MainWindow)Application.Current.MainWindow).Left;
             _PlaylistView.OnLoadSongFromPlaylist += OnLoadSongFromPlaylist;
 
@@ -85,33 +82,226 @@ namespace BardMusicPlayer.Ui.Skinned
             BmpSeer.Instance.ChatLog += Instance_ChatLog;
 
             //Set the *bar params
-            this.Trackbar_Slider.Maximum = 8;
-            this.Trackbar_Slider.Value = 1;
-            this.Octavebar_Slider.Maximum = 8;
-            this.Octavebar_Slider.Minimum = 0;
-            this.Octavebar_Slider.Value = 4;
+            Trackbar_Slider.Maximum = 8;
+            Trackbar_Slider.Value = 1;
+            Octavebar_Slider.Maximum = 8;
+            Octavebar_Slider.Minimum = 0;
+            Octavebar_Slider.Value = 4;
 
             //if we have selected all tracks in the config use it
             if (BmpPigeonhole.Instance.PlayAllTracks)
                 BmpMaestro.Instance.SetTracknumberOnHost(0);
 
-            int track = BmpMaestro.Instance.GetHostBardTrack();
+            var track = BmpMaestro.Instance.GetHostBardTrack();
             WriteSmallDigitField(track.ToString());
         }
+
+        private int MaxTracks { get; set; } = 1;
+        private bool _Trackbar_dragStarted { get; set; }
+        private bool _Octavebar_dragStarted { get; set; }
+        private bool _showLapTime { get; set; } = true;
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             SetWindowPositions();
         }
 
+
+        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                var oLeft = Application.Current.MainWindow.Left;
+                var oTop = Application.Current.MainWindow.Top;
+
+                ((MainWindow)Application.Current.MainWindow).DragMove();
+                oLeft = Application.Current.MainWindow.Left - oLeft;
+                oTop = Application.Current.MainWindow.Top - oTop;
+
+
+                if (_MainView_Ex.Visibility == Visibility.Visible)
+                {
+                    var mainWindow = Application.Current.MainWindow;
+                    _MainView_Ex.Width = mainWindow.Width;
+                    _MainView_Ex.Top = mainWindow.Top + mainWindow.Height;
+                    _MainView_Ex.Left = mainWindow.Left;
+
+                    _PlaylistView.Width = mainWindow.Width;
+                    _PlaylistView.Left = _PlaylistView.Left + oLeft;
+                    _PlaylistView.Top = _PlaylistView.Top + oTop;
+                    mainWindow = null;
+                }
+                else
+                {
+                    var mainWindow = Application.Current.MainWindow;
+                    _PlaylistView.Left = _PlaylistView.Left + oLeft;
+                    _PlaylistView.Top = _PlaylistView.Top + oTop;
+                }
+            }
+        }
+
+        private void MainLostFocus(object sender, EventArgs e)
+        {
+            //TitleBar.Fill = _titlebar_image[1];
+        }
+
+
+        private void Playbar_Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+        }
+
+        private void Playbar_Slider_DragStarted(object sender, DragStartedEventArgs e)
+        {
+            _Playbar_dragStarted = true;
+        }
+
+        private void Playbar_Slider_DragCompleted(object sender, DragCompletedEventArgs e)
+        {
+            BmpMaestro.Instance.SetPlaybackStart((int)Playbar_Slider.Value);
+            _Playbar_dragStarted = false;
+        }
+
+        private void DisplayPlayTime(TimeSpan t)
+        {
+            //Display the lap time or the remaining time
+            if (!_showLapTime)
+                t = _maxTime - t;
+
+            var Seconds = t.ToString().Split(':')[2];
+            Second_Last.Dispatcher.BeginInvoke(new Action(() =>
+                Second_Last.Fill =
+                    SkinContainer.NUMBERS[
+                        (SkinContainer.NUMBER_TYPES)(Seconds.Length == 1
+                            ? Convert.ToInt32(Seconds)
+                            : Convert.ToInt32(Seconds.Substring(1, 1)))]));
+            Second_First.Dispatcher.BeginInvoke(new Action(() =>
+                Second_First.Fill =
+                    SkinContainer.NUMBERS[
+                        (SkinContainer.NUMBER_TYPES)(Seconds.Length == 1
+                            ? 0
+                            : Convert.ToInt32(Seconds.Substring(0, 1)))]));
+
+            var Minutes = t.ToString().Split(':')[1];
+            Minutes_Last.Dispatcher.BeginInvoke(new Action(() =>
+                Minutes_Last.Fill =
+                    SkinContainer.NUMBERS[
+                        (SkinContainer.NUMBER_TYPES)(Minutes.Length == 1
+                            ? Convert.ToInt32(Minutes)
+                            : Convert.ToInt32(Minutes.Substring(1, 1)))]));
+            Minutes_First.Dispatcher.BeginInvoke(new Action(() =>
+                Minutes_First.Fill =
+                    SkinContainer.NUMBERS[
+                        (SkinContainer.NUMBER_TYPES)(Minutes.Length == 1
+                            ? 0
+                            : Convert.ToInt32(Minutes.Substring(0, 1)))]));
+        }
+
+        private void ShowSongBrowserWindow_Click(object sender, RoutedEventArgs e)
+        {
+            _SongbrowserView.Visibility = Visibility.Visible;
+        }
+
+        private void ShowBardsWindow_Click(object sender, RoutedEventArgs e)
+        {
+            _BardListView.Visibility = Visibility.Visible;
+        }
+
+        private void ShowNetworkWindow_Click(object sender, RoutedEventArgs e)
+        {
+            _Networkplaywindow.Visibility = Visibility.Visible;
+        }
+
+        private void ShowPlaylistWindow_Click(object sender, RoutedEventArgs e)
+        {
+            _PlaylistView.Visibility = Visibility.Visible;
+        }
+
+        private void ShowExtendedView_Click(object sender, RoutedEventArgs e)
+        {
+            if (_MainView_Ex.IsVisible)
+            {
+                _MainView_Ex.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                _MainView_Ex.Visibility = Visibility.Visible;
+                var mainWindow = Application.Current.MainWindow;
+                _MainView_Ex.Width = mainWindow.Width;
+                _MainView_Ex.Top = mainWindow.Top + mainWindow.Height;
+                _MainView_Ex.Left = mainWindow.Left;
+            }
+
+            BmpPigeonhole.Instance.SkinnedUi_UseExtendedView =
+                _MainView_Ex.Visibility == Visibility.Visible ? true : false;
+        }
+
+        /// <summary>
+        ///     Set the exview and playlist position to the main window
+        /// </summary>
+        private void SetWindowPositions()
+        {
+            if (_MainView_Ex.Visibility == Visibility.Visible)
+            {
+                var mainWindow = Application.Current.MainWindow;
+                _MainView_Ex.Top = mainWindow.Top + mainWindow.Height;
+                _MainView_Ex.Left = mainWindow.Left;
+
+                _PlaylistView.Top = mainWindow.Top + mainWindow.Height + 172;
+                _PlaylistView.Left = mainWindow.Left;
+                mainWindow = null;
+            }
+            else
+            {
+                var mainWindow = Application.Current.MainWindow;
+                _PlaylistView.Top = mainWindow.Top + mainWindow.Height;
+                _PlaylistView.Left = mainWindow.Left;
+            }
+        }
+
+        /// <summary>
+        ///     Set the exview and playlist position to the main window
+        /// </summary>
+        private void ResethWindowPositions_Click(object sender, RoutedEventArgs e)
+        {
+            if (_MainView_Ex.Visibility == Visibility.Visible)
+            {
+                var mainWindow = Application.Current.MainWindow;
+                _MainView_Ex.Width = mainWindow.Width;
+                _MainView_Ex.Top = mainWindow.Top + mainWindow.Height;
+                _MainView_Ex.Left = mainWindow.Left;
+
+                _PlaylistView.Width = mainWindow.Width;
+                _PlaylistView.Top = mainWindow.Top + mainWindow.Height + 172;
+                _PlaylistView.Left = mainWindow.Left;
+                mainWindow = null;
+            }
+            else
+            {
+                var mainWindow = Application.Current.MainWindow;
+                _PlaylistView.Width = mainWindow.Width;
+                _PlaylistView.Top = mainWindow.Top + mainWindow.Height;
+                _PlaylistView.Left = mainWindow.Left;
+            }
+        }
+
+        /// <summary>
+        ///     when clicked on the time digits, toggle between lap and remaining time
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Time_Display_Clicked(object sender, MouseButtonEventArgs e)
+        {
+            _showLapTime = !_showLapTime;
+        }
+
         #region EventCallbacks
 
         /// <summary>
-        /// triggered by the songbrowser if a file should be loaded
+        ///     triggered by the songbrowser if a file should be loaded
         /// </summary>
         private void OnLoadSongFromSongbrowser(object sender, string filename)
         {
-            this.Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.BeginInvoke(new Action(() =>
             {
                 if (PlaybackFunctions.LoadSong(filename))
                 {
@@ -124,11 +314,11 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// called from playlist if a song should be loaded
+        ///     called from playlist if a song should be loaded
         /// </summary>
         private void OnLoadSongFromPlaylist(object sender, BmpSong e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.BeginInvoke(new Action(() =>
             {
                 //Cancel and rebuild the scroller
                 Scroller.Cancel();
@@ -141,46 +331,51 @@ namespace BardMusicPlayer.Ui.Skinned
                     PlaybackFunctions.PlaySong(0);
             }));
         }
-        private void Instance_OnSongLoaded(object sender, Maestro.Events.SongLoadedEvent e)
+
+        private void Instance_OnSongLoaded(object sender, SongLoadedEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.OnSongLoaded(e)));
+            Dispatcher.BeginInvoke(new Action(() => OnSongLoaded(e)));
         }
-        private void Instance_PlaybackMaxTime(object sender, Maestro.Events.MaxPlayTimeEvent e)
+
+        private void Instance_PlaybackMaxTime(object sender, MaxPlayTimeEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.PlaybackMaxTime(e)));
+            Dispatcher.BeginInvoke(new Action(() => PlaybackMaxTime(e)));
         }
-        private void Instance_PlaybackTimeChanged(object sender, Maestro.Events.CurrentPlayPositionEvent e)
+
+        private void Instance_PlaybackTimeChanged(object sender, CurrentPlayPositionEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.PlaybackTimeChanged(e)));
+            Dispatcher.BeginInvoke(new Action(() => PlaybackTimeChanged(e)));
         }
-        private void Instance_TrackNumberChanged(object sender, Maestro.Events.TrackNumberChangedEvent e)
+
+        private void Instance_TrackNumberChanged(object sender, TrackNumberChangedEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.UpdateTrackNumberAndInstrument(e)));
+            Dispatcher.BeginInvoke(new Action(() => UpdateTrackNumberAndInstrument(e)));
         }
-        private void Instance_OctaveShiftChanged(object sender, Maestro.Events.OctaveShiftChangedEvent e)
+
+        private void Instance_OctaveShiftChanged(object sender, OctaveShiftChangedEvent e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.UpdateOctaveShift(e)));
+            Dispatcher.BeginInvoke(new Action(() => UpdateOctaveShift(e)));
         }
 
         private void Instance_PlaybackStarted(object sender, bool e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.OnSongStarted()));
+            Dispatcher.BeginInvoke(new Action(() => OnSongStarted()));
         }
 
         private void Instance_PlaybackStopped(object sender, bool e)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.OnSongStopped()));
+            Dispatcher.BeginInvoke(new Action(() => OnSongStopped()));
         }
 
-        private void Instance_ChatLog(Seer.Events.ChatLog seerEvent)
+        private void Instance_ChatLog(ChatLog seerEvent)
         {
-            this.Dispatcher.BeginInvoke(new Action(() => this.AppendChatLog(seerEvent.ChatLogCode, seerEvent.ChatLogLine)));
+            Dispatcher.BeginInvoke(new Action(() => AppendChatLog(seerEvent.ChatLogCode, seerEvent.ChatLogLine)));
         }
 
         /// <summary>
-        /// triggered if a song was loaded into maestro
+        ///     triggered if a song was loaded into maestro
         /// </summary>
-        private void OnSongLoaded(Maestro.Events.SongLoadedEvent e)
+        private void OnSongLoaded(SongLoadedEvent e)
         {
             MaxTracks = e.MaxTracks;
             if (Trackbar_Slider.Value > MaxTracks)
@@ -192,9 +387,9 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// triggered if we know the max time from meastro
+        ///     triggered if we know the max time from meastro
         /// </summary>
-        private void PlaybackMaxTime(Maestro.Events.MaxPlayTimeEvent e)
+        private void PlaybackMaxTime(MaxPlayTimeEvent e)
         {
             DisplayPlayTime(e.timeSpan);
             Playbar_Slider.Dispatcher.BeginInvoke(new Action(() => Playbar_Slider.Maximum = e.tick));
@@ -202,9 +397,9 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// triggered via maestro
+        ///     triggered via maestro
         /// </summary>
-        private void PlaybackTimeChanged(Maestro.Events.CurrentPlayPositionEvent e)
+        private void PlaybackTimeChanged(CurrentPlayPositionEvent e)
         {
             if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
                 DisplayPlayTime(e.timeSpan);
@@ -213,30 +408,30 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// update the track and instrument if a track was changed
+        ///     update the track and instrument if a track was changed
         /// </summary>
-        private void UpdateTrackNumberAndInstrument(Maestro.Events.TrackNumberChangedEvent e)
+        private void UpdateTrackNumberAndInstrument(TrackNumberChangedEvent e)
         {
             if (!e.IsHost)
                 return;
-            int track = BmpMaestro.Instance.GetHostBardTrack();
-            this.Trackbar_Slider.Value = track;
+            var track = BmpMaestro.Instance.GetHostBardTrack();
+            Trackbar_Slider.Value = track;
             WriteSmallDigitField(e.TrackNumber.ToString());
             WriteInstrumentDigitField(PlaybackFunctions.GetInstrumentNameForHostPlayer());
         }
 
         /// <summary>
-        /// update the octaveshift slider and displayed value
+        ///     update the octaveshift slider and displayed value
         /// </summary>
-        private void UpdateOctaveShift(Maestro.Events.OctaveShiftChangedEvent e)
+        private void UpdateOctaveShift(OctaveShiftChangedEvent e)
         {
             if (!e.IsHost)
                 return;
-            this.Octavebar_Slider.Value = e.OctaveShift+4;
+            Octavebar_Slider.Value = e.OctaveShift + 4;
         }
 
         /// <summary>
-        /// triggered if playback was started
+        ///     triggered if playback was started
         /// </summary>
         private void OnSongStarted()
         {
@@ -244,7 +439,7 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// triggered if playback was stopped
+        ///     triggered if playback was stopped
         /// </summary>
         private void OnSongStopped()
         {
@@ -255,7 +450,7 @@ namespace BardMusicPlayer.Ui.Skinned
         }
 
         /// <summary>
-        /// triggered if a chatmsg is comming
+        ///     triggered if a chatmsg is comming
         /// </summary>
         /// <param name="code"></param>
         /// <param name="line"></param>
@@ -263,7 +458,6 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             //The old autostart method with the chat
             if (code == "0039")
-            {
                 if (line.Contains(@"Anzählen beginnt") ||
                     line.Contains("The count-in will now commence.") ||
                     line.Contains("orchestre est pr"))
@@ -275,173 +469,8 @@ namespace BardMusicPlayer.Ui.Skinned
                         return;
                     PlaybackFunctions.PlaySong(3000);
                 }
-            }
         }
+
         #endregion
-
-
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Left)
-            {
-                double oLeft = Application.Current.MainWindow.Left;
-                double oTop = Application.Current.MainWindow.Top;
-
-                ((MainWindow)System.Windows.Application.Current.MainWindow).DragMove();
-                oLeft = (Application.Current.MainWindow.Left - oLeft);
-                oTop = (Application.Current.MainWindow.Top - oTop);
-
-
-                if (this._MainView_Ex.Visibility == Visibility.Visible)
-                {
-                    Window mainWindow = Application.Current.MainWindow;
-                    _MainView_Ex.Width = mainWindow.Width;
-                    _MainView_Ex.Top = (mainWindow.Top + mainWindow.Height);
-                    _MainView_Ex.Left = mainWindow.Left;
-
-                    _PlaylistView.Width = mainWindow.Width;
-                    _PlaylistView.Left = _PlaylistView.Left + oLeft;
-                    _PlaylistView.Top = _PlaylistView.Top + oTop;
-                    mainWindow = null;
-                }
-                else
-                {
-                    Window mainWindow = Application.Current.MainWindow;
-                    _PlaylistView.Left = _PlaylistView.Left + oLeft;
-                    _PlaylistView.Top = _PlaylistView.Top + oTop;
-                }
-            }
-        }
-
-        private void MainLostFocus(object sender, System.EventArgs e)
-        {
-            //TitleBar.Fill = _titlebar_image[1];
-        }
-
-
-        private void Playbar_Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-        }
-
-        private void Playbar_Slider_DragStarted(object sender, DragStartedEventArgs e)
-        {
-            this._Playbar_dragStarted = true;
-        }
-
-        private void Playbar_Slider_DragCompleted(object sender, DragCompletedEventArgs e)
-        {
-            BmpMaestro.Instance.SetPlaybackStart((int)Playbar_Slider.Value);
-            this._Playbar_dragStarted = false;
-        }
-
-        private void DisplayPlayTime(TimeSpan t)
-        {
-            //Display the lap time or the remaining time
-            if (!_showLapTime)
-                t = _maxTime - t;
-
-            string Seconds = t.ToString().Split(':')[2];
-            this.Second_Last.Dispatcher.BeginInvoke(new Action(() => Second_Last.Fill = SkinContainer.NUMBERS[(SkinContainer.NUMBER_TYPES)((Seconds.Length == 1) ? Convert.ToInt32(Seconds) : Convert.ToInt32(Seconds.Substring(1, 1)))]));
-            this.Second_First.Dispatcher.BeginInvoke(new Action(() => Second_First.Fill = SkinContainer.NUMBERS[(SkinContainer.NUMBER_TYPES)((Seconds.Length == 1) ? 0 : Convert.ToInt32(Seconds.Substring(0, 1)))]));
-
-            string Minutes = t.ToString().Split(':')[1];
-            this.Minutes_Last.Dispatcher.BeginInvoke(new Action(() => Minutes_Last.Fill = SkinContainer.NUMBERS[(SkinContainer.NUMBER_TYPES)((Minutes.Length == 1) ? Convert.ToInt32(Minutes) : Convert.ToInt32(Minutes.Substring(1, 1)))]));
-            this.Minutes_First.Dispatcher.BeginInvoke(new Action(() => Minutes_First.Fill = SkinContainer.NUMBERS[(SkinContainer.NUMBER_TYPES)((Minutes.Length == 1) ? 0 : Convert.ToInt32(Minutes.Substring(0, 1)))]));
-        }
-
-        private void ShowSongBrowserWindow_Click(object sender, RoutedEventArgs e)
-        {
-            this._SongbrowserView.Visibility = Visibility.Visible;
-        }
-
-        private void ShowBardsWindow_Click(object sender, RoutedEventArgs e)
-        {
-            this._BardListView.Visibility = Visibility.Visible;
-        }
-
-        private void ShowNetworkWindow_Click(object sender, RoutedEventArgs e)
-        {
-            this._Networkplaywindow.Visibility = Visibility.Visible;
-        }
-
-        private void ShowPlaylistWindow_Click(object sender, RoutedEventArgs e)
-        {
-            this._PlaylistView.Visibility = Visibility.Visible;
-        }
-
-        private void ShowExtendedView_Click(object sender, RoutedEventArgs e)
-        {
-            if (_MainView_Ex.IsVisible)
-                this._MainView_Ex.Visibility = Visibility.Hidden;
-            else
-            {
-                this._MainView_Ex.Visibility = Visibility.Visible;
-                Window mainWindow = Application.Current.MainWindow;
-                _MainView_Ex.Width = mainWindow.Width;
-                _MainView_Ex.Top = (mainWindow.Top + mainWindow.Height);
-                _MainView_Ex.Left = mainWindow.Left;
-            }
-            BmpPigeonhole.Instance.SkinnedUi_UseExtendedView = this._MainView_Ex.Visibility == Visibility.Visible ? true : false;
-        }
-
-        /// <summary>
-        /// Set the exview and playlist position to the main window
-        /// </summary>
-        private void SetWindowPositions()
-        {
-            if (this._MainView_Ex.Visibility == Visibility.Visible)
-            {
-                Window mainWindow = Application.Current.MainWindow;
-                _MainView_Ex.Top = (mainWindow.Top + mainWindow.Height);
-                _MainView_Ex.Left = mainWindow.Left;
-
-                _PlaylistView.Top = (mainWindow.Top + mainWindow.Height) + 172;
-                _PlaylistView.Left = mainWindow.Left;
-                mainWindow = null;
-            }
-            else
-            {
-                Window mainWindow = Application.Current.MainWindow;
-                _PlaylistView.Top = (mainWindow.Top + mainWindow.Height);
-                _PlaylistView.Left = mainWindow.Left;
-            }
-        }
-
-        /// <summary>
-        /// Set the exview and playlist position to the main window
-        /// </summary>
-        private void ResethWindowPositions_Click(object sender, RoutedEventArgs e)
-        {
-            if (this._MainView_Ex.Visibility == Visibility.Visible)
-            {
-                Window mainWindow = Application.Current.MainWindow;
-                _MainView_Ex.Width = mainWindow.Width;
-                _MainView_Ex.Top = (mainWindow.Top + mainWindow.Height);
-                _MainView_Ex.Left = mainWindow.Left;
-
-                _PlaylistView.Width = mainWindow.Width;
-                _PlaylistView.Top = (mainWindow.Top + mainWindow.Height) + 172;
-                _PlaylistView.Left = mainWindow.Left;
-                mainWindow = null;
-            }
-            else
-            {
-                Window mainWindow = Application.Current.MainWindow;
-                _PlaylistView.Width = mainWindow.Width;
-                _PlaylistView.Top = (mainWindow.Top + mainWindow.Height);
-                _PlaylistView.Left = mainWindow.Left;
-            }
-        }
-
-        /// <summary>
-        /// when clicked on the time digits, toggle between lap and remaining time
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Time_Display_Clicked(object sender, MouseButtonEventArgs e)
-        {
-            _showLapTime = !_showLapTime;
-        }
-
     }
 }

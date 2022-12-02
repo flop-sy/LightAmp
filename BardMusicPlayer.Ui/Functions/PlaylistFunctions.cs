@@ -1,26 +1,33 @@
-﻿using BardMusicPlayer.Coffer;
-using BardMusicPlayer.Transmogrify.Song;
-using BardMusicPlayer.Ui.Functions;
+﻿#region
+
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
+using BardMusicPlayer.Coffer;
+using BardMusicPlayer.Pigeonhole;
+using BardMusicPlayer.Transmogrify.Song;
+using Microsoft.Win32;
+using UI.Resources;
+
+#endregion
 
 namespace BardMusicPlayer.Ui.Functions
 {
     /// <summary>
-    /// simplyfied functions both Ui are using
+    ///     simplyfied functions both Ui are using
     /// </summary>
     public static class PlaylistFunctions
     {
         /// <summary>
-        /// Add file(s) to the playlist
+        ///     Add file(s) to the playlist
         /// </summary>
         /// <param name="currentPlaylist"></param>
         /// <returns>true if success</returns>
         public static bool AddFilesToPlaylist(IPlaylist currentPlaylist)
         {
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            var openFileDialog = new OpenFileDialog
             {
                 Filter = Globals.Globals.FileFilters,
                 Multiselect = true
@@ -31,54 +38,58 @@ namespace BardMusicPlayer.Ui.Functions
 
             foreach (var d in openFileDialog.FileNames)
             {
-                BmpSong song = BmpSong.OpenFile(d).Result;
+                var song = BmpSong.OpenFile(d).Result;
 
-                if(currentPlaylist.SingleOrDefault(x => x.Title.Equals(song.Title)) == null)
+                if (currentPlaylist.SingleOrDefault(x => x.Title.Equals(song.Title)) == null)
                     currentPlaylist.Add(song);
 
                 BmpCoffer.Instance.SaveSong(song);
             }
+
             BmpCoffer.Instance.SavePlaylist(currentPlaylist);
             return true;
         }
 
         /// <summary>
-        /// Add a folder + subfolders to the playlist
+        ///     Add a folder + subfolders to the playlist
         /// </summary>
         /// <param name="currentPlaylist"></param>
         /// <returns>true if success</returns>
         public static bool AddFolderToPlaylist(IPlaylist currentPlaylist)
         {
-            var dlg = new UI.Resources.FolderPicker();
+            var dlg = new FolderPicker();
 
-            if (System.IO.Directory.Exists(Pigeonhole.BmpPigeonhole.Instance.SongDirectory))
-                dlg.InputPath = System.IO.Path.GetFullPath(Pigeonhole.BmpPigeonhole.Instance.SongDirectory);
+            if (Directory.Exists(BmpPigeonhole.Instance.SongDirectory))
+                dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory);
             else
-                dlg.InputPath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
             if (dlg.ShowDialog() == true)
             {
-                string path = dlg.ResultPath;
+                var path = dlg.ResultPath;
 
-                if (!System.IO.Directory.Exists(path))
+                if (!Directory.Exists(path))
                     return false;
 
-                string[] files = System.IO.Directory.EnumerateFiles(path, "*.*", System.IO.SearchOption.AllDirectories).Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
+                var files = Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories)
+                    .Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
                 foreach (var d in files)
                 {
-                    BmpSong song = BmpSong.OpenFile(d).Result;
+                    var song = BmpSong.OpenFile(d).Result;
                     if (currentPlaylist.SingleOrDefault(x => x.Title.Equals(song.Title)) == null)
                         currentPlaylist.Add(song);
                     BmpCoffer.Instance.SaveSong(song);
                 }
+
                 BmpCoffer.Instance.SavePlaylist(currentPlaylist);
                 return true;
             }
+
             return false;
         }
 
         /// <summary>
-        /// gets the first playlist or null if none was found
+        ///     gets the first playlist or null if none was found
         /// </summary>
         /// <param name="playlistname"></param>
         public static IPlaylist GetFirstPlaylist()
@@ -89,7 +100,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Creates and return a new playlist or return the existing one with the given name
+        ///     Creates and return a new playlist or return the existing one with the given name
         /// </summary>
         /// <param name="playlistname"></param>
         public static IPlaylist CreatePlaylist(string playlistname)
@@ -100,7 +111,7 @@ namespace BardMusicPlayer.Ui.Functions
         }
 
         /// <summary>
-        /// Get a song fromt the playlist
+        ///     Get a song fromt the playlist
         /// </summary>
         /// <param name="playlist"></param>
         /// <param name="songname"></param>
@@ -110,21 +121,19 @@ namespace BardMusicPlayer.Ui.Functions
                 return null;
 
             foreach (var item in playlist)
-            {
                 if (item.Title == songname)
                     return item;
-            }
             return null;
         }
 
         /// <summary>
-        /// get the songnames as list
+        ///     get the songnames as list
         /// </summary>
         /// <param name="playlist"></param>
         /// used: classic view
         public static List<string> GetCurrentPlaylistItems(IPlaylist playlist)
         {
-            List<string> data = new List<string>();
+            var data = new List<string>();
             if (playlist == null)
                 return data;
 
@@ -135,7 +144,7 @@ namespace BardMusicPlayer.Ui.Functions
 
         public static List<string> GetCurrentPlaylistItems(IPlaylist playlist, bool withupselector = false)
         {
-            List<string> data = new List<string>();
+            var data = new List<string>();
             if (playlist == null)
                 return data;
             if (withupselector)
@@ -147,11 +156,9 @@ namespace BardMusicPlayer.Ui.Functions
 
         public static TimeSpan GetTotalTime(IPlaylist playlist)
         {
-            TimeSpan totalTime = new TimeSpan(0);
-            foreach (var p in playlist)
-            {
-                totalTime += p.Duration;
-            };
+            var totalTime = new TimeSpan(0);
+            foreach (var p in playlist) totalTime += p.Duration;
+            ;
             return totalTime;
         }
     }
