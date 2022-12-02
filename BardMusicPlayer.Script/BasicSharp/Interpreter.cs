@@ -21,26 +21,27 @@ namespace BasicSharp
 
         public delegate void SelectedBardAsString(string name);
 
-        private bool exit; // do we need to exit?
         private readonly Dictionary<string, BasicFunction> funcs; // all maped functions
 
         private readonly int ifcounter; // counter used for matching "if" with "else"
-
-        public InputFunction inputHandler;
         private readonly Dictionary<string, Marker> labels; // already seen labels 
-        private Token lastToken; // last seen token
 
         private readonly Lexer lex;
+        private readonly Dictionary<string, Marker> loops; // for loops
+
+        private readonly Dictionary<string, Value> vars; // all variables are stored here
+
+        private bool exit; // do we need to exit?
+
+        public InputFunction inputHandler;
+        private Token lastToken; // last seen token
 
         private Marker lineMarker; // current line marker
-        private readonly Dictionary<string, Marker> loops; // for loops
         private Token prevToken; // token before last one
 
         public PrintFunction printHandler;
         public SelectedBardAsString selectedBardAsStringHandler;
         public SelectedBard selectedBardHandler;
-
-        private readonly Dictionary<string, Value> vars; // all variables are stored here
 
         public Interpreter(string input)
         {
