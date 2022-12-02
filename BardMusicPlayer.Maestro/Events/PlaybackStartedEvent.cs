@@ -1,20 +1,18 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
-
-namespace BardMusicPlayer.Maestro.Events
+﻿namespace BardMusicPlayer.Maestro.Events
 {
     public sealed class PlaybackStartedEvent : MaestroEvent
     {
+        public bool Started;
 
-        internal PlaybackStartedEvent() : base(0, false)
+        internal PlaybackStartedEvent()
         {
             EventType = GetType();
             Started = true;
         }
 
-        public bool Started;
-        public override bool IsValid() => true;
+        public override bool IsValid()
+        {
+            return true;
+        }
     }
 }

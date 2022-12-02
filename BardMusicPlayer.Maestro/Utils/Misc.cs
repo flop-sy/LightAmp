@@ -1,39 +1,38 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
+﻿#region
 
 using Sanford.Multimedia.Midi;
-using System.Collections.Generic;
+
+#endregion
 
 namespace BardMusicPlayer.Maestro.Utils
 {
     public class NoteEvent
     {
-        public Track track;
-        public int trackNum;
         public int note;
         public int origNote;
-    };
+        public Track track;
+        public int trackNum;
+    }
+
     public class ProgChangeEvent
     {
         public Track track;
         public int trackNum;
         public int voice;
-    };
+    }
 
     public class ChannelAfterTouchEvent
     {
+        public int command;
         public Track track;
         public int trackNum;
-        public int command;
-    };
+    }
 
     public static class NoteHelper
     {
         public static int ApplyOctaveShift(int note, int octave)
         {
-            return (note - (12 * 4)) + (12 * octave);
+            return note - 12 * 4 + 12 * octave;
         }
     }
 }

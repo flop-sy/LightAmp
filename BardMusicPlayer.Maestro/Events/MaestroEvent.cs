@@ -1,10 +1,9 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
+﻿#region
 
-using BardMusicPlayer.Quotidian.UtcMilliTime;
 using System;
+using BardMusicPlayer.Quotidian.UtcMilliTime;
+
+#endregion
 
 namespace BardMusicPlayer.Maestro.Events
 {
@@ -26,8 +25,8 @@ namespace BardMusicPlayer.Maestro.Events
         public Type EventType { get; protected set; }
 
         /// <summary>
-        /// Used to determine if the Reader was able to successfully obtain the
-        /// data it was expecting to grab, and the Event is safe to use.
+        ///     Used to determine if the Reader was able to successfully obtain the
+        ///     data it was expecting to grab, and the Event is safe to use.
         /// </summary>
         /// <returns>True, if the Event should be used to update data.</returns>
         public abstract bool IsValid();

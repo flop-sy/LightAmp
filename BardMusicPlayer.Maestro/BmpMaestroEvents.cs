@@ -1,31 +1,31 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
+﻿#region
 
-using BardMusicPlayer.Maestro.Events;
-using Melanchall.DryWetMidi.Interaction;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using BardMusicPlayer.Maestro.Events;
+
+#endregion
 
 namespace BardMusicPlayer.Maestro
 {
     public partial class BmpMaestro
     {
-        public EventHandler<CurrentPlayPositionEvent> OnPlaybackTimeChanged;
-        public EventHandler<MaxPlayTimeEvent> OnSongMaxTime;
-        public EventHandler<SongLoadedEvent> OnSongLoaded;
-        public EventHandler<bool> OnPlaybackStarted;
-        public EventHandler<bool> OnPlaybackStopped;
-        public EventHandler<bool> OnPerformerChanged;
-        public EventHandler<TrackNumberChangedEvent> OnTrackNumberChanged;
-        public EventHandler<OctaveShiftChangedEvent> OnOctaveShiftChanged;
-        public EventHandler<SpeedShiftEvent> OnSpeedChanged;
-        public EventHandler<PerformerUpdate> OnPerformerUpdate;
         private ConcurrentQueue<MaestroEvent> _eventQueue;
         private bool _eventQueueOpen;
+
+        private CancellationTokenSource _eventsTokenSource;
+        public EventHandler<OctaveShiftChangedEvent> OnOctaveShiftChanged;
+        public EventHandler<bool> OnPerformerChanged;
+        public EventHandler<PerformerUpdate> OnPerformerUpdate;
+        public EventHandler<bool> OnPlaybackStarted;
+        public EventHandler<bool> OnPlaybackStopped;
+        public EventHandler<CurrentPlayPositionEvent> OnPlaybackTimeChanged;
+        public EventHandler<SongLoadedEvent> OnSongLoaded;
+        public EventHandler<MaxPlayTimeEvent> OnSongMaxTime;
+        public EventHandler<SpeedShiftEvent> OnSpeedChanged;
+        public EventHandler<TrackNumberChangedEvent> OnTrackNumberChanged;
 
         private async Task RunEventsHandler(CancellationToken token)
         {
@@ -86,17 +86,18 @@ namespace BardMusicPlayer.Maestro
                                     break;
                                 OnPerformerUpdate(this, performerUpdate);
                                 break;
+                        }
 
-                        };
+                        ;
                     }
                     catch
-                    { }
+                    {
+                    }
                 }
-                await Task.Delay(25, token).ContinueWith(tsk=> { });
+
+                await Task.Delay(25, token).ContinueWith(tsk => { });
             }
         }
-
-        private CancellationTokenSource _eventsTokenSource;
 
         private void StartEventsHandler()
         {

@@ -1,15 +1,14 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
+﻿#region
 
 using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.Maestro.Events
 {
     public sealed class TrackNumberChangedEvent : MaestroEvent
     {
-        internal TrackNumberChangedEvent(Game g, int trackNumber, bool isHost=false) : base(0, false)
+        internal TrackNumberChangedEvent(Game g, int trackNumber, bool isHost = false)
         {
             EventType = GetType();
             TrackNumber = trackNumber;
@@ -20,7 +19,10 @@ namespace BardMusicPlayer.Maestro.Events
         public Game game { get; }
         public int TrackNumber { get; }
         public bool IsHost { get; }
-        public override bool IsValid() => true;
-    }
 
+        public override bool IsValid()
+        {
+            return true;
+        }
+    }
 }

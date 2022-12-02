@@ -1,15 +1,14 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
+﻿#region
 
 using System;
+
+#endregion
 
 namespace BardMusicPlayer.Maestro.Events
 {
     public sealed class MaxPlayTimeEvent : MaestroEvent
     {
-        internal MaxPlayTimeEvent(TimeSpan inTimeSpan, int inTick) : base(0, false)
+        internal MaxPlayTimeEvent(TimeSpan inTimeSpan, int inTick)
         {
             EventType = GetType();
             timeSpan = inTimeSpan;
@@ -20,7 +19,9 @@ namespace BardMusicPlayer.Maestro.Events
 
         public int tick { get; }
 
-        public override bool IsValid() => true;
+        public override bool IsValid()
+        {
+            return true;
+        }
     }
-
 }
