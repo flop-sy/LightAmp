@@ -1,27 +1,28 @@
-﻿/*
- * Copyright(c) 2019 John Kusumi
- * Licensed under the MIT license. See https://github.com/JPKusumi/UtcMilliTime/blob/master/LICENSE for full license information.
- */
+﻿#region
 
 using System.Diagnostics;
 using System.Net.Sockets;
+
+#endregion
 
 namespace BardMusicPlayer.Quotidian.UtcMilliTime
 {
     public class NTPCallState
     {
-        public bool priorSyncState;
         public byte[] buffer = new byte[Constants.bytes_per_buffer];
-        public short methodsCompleted;
-        public Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         public Stopwatch latency;
-        public Stopwatch timer;
+        public short methodsCompleted;
+        public bool priorSyncState;
         public string serverResolved;
+        public Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        public Stopwatch timer;
+
         public NTPCallState()
         {
             latency = Stopwatch.StartNew();
             buffer[0] = 0x1B;
         }
+
         public void OrderlyShutdown()
         {
             if (timer != null)
@@ -29,6 +30,7 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
                 if (timer.IsRunning) timer.Stop();
                 timer = null;
             }
+
             socket.Shutdown(SocketShutdown.Both);
             socket.Close();
             socket = null;

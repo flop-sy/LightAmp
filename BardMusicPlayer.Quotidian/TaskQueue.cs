@@ -1,17 +1,16 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Threading.Tasks;
+
+#endregion
 
 namespace BardMusicPlayer.Quotidian
 {
     public class TaskQueue
     {
-        private Task previous = Task.FromResult(false);
         private readonly object key = new();
+        private Task previous = Task.FromResult(false);
 
         public Task<T> Enqueue<T>(Func<Task<T>> taskGenerator)
         {

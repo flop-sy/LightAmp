@@ -1,10 +1,9 @@
-﻿/*
- * Copyright(c) 2019 John Kusumi
- * Licensed under the MIT license. See https://github.com/JPKusumi/UtcMilliTime/blob/master/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Threading.Tasks;
+
+#endregion
 
 namespace BardMusicPlayer.Quotidian.UtcMilliTime
 {

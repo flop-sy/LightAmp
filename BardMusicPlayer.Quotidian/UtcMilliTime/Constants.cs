@@ -1,9 +1,4 @@
-﻿/*
- * Copyright(c) 2019 John Kusumi
- * Licensed under the MIT license. See https://github.com/JPKusumi/UtcMilliTime/blob/master/LICENSE for full license information.
- */
-
-namespace BardMusicPlayer.Quotidian.UtcMilliTime
+﻿namespace BardMusicPlayer.Quotidian.UtcMilliTime
 {
     public static class Constants
     {
