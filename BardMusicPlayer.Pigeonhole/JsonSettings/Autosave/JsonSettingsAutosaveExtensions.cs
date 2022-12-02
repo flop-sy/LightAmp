@@ -1,12 +1,11 @@
-﻿/*
- * Copyright(c) 2017 Eli Belash
- * Licensed under the MIT license. See https://github.com/Nucs/JsonSettings/blob/master/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Diagnostics;
 using System.Linq;
 using Castle.DynamicProxy;
+
+#endregion
 
 namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
 {
@@ -19,7 +18,7 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
         /// <summary>
         ///     Enables automatic saving when changing any <b>virtual properties</b>.
         /// </summary>
-        /// <typeparam name="TSettings">A settings class implementing <see cref="JsonSettings"/></typeparam>
+        /// <typeparam name="TSettings">A settings class implementing <see cref="JsonSettings" /></typeparam>
         /// <param name="settings">The settings class to wrap in a proxy.</param>
         /// <returns></returns>
         public static TSettings EnableAutosave<TSettings>(this TSettings settings) where TSettings : JsonSettings
@@ -28,9 +27,12 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
                 throw new ArgumentNullException(nameof(settings));
 
             //if it doesn't contain any virtual methods, notify developer about it.
-            if (!settings.GetType().GetProperties().Where(p => _jsonSettingsAbstractionVirtuals.All(av => !p.Name.Equals(av))).Any(p => p.GetGetMethod().IsVirtual))
+            if (!settings.GetType().GetProperties()
+                    .Where(p => _jsonSettingsAbstractionVirtuals.All(av => !p.Name.Equals(av)))
+                    .Any(p => p.GetGetMethod().IsVirtual))
             {
-                var msg = $"JsonSettings: During proxy creation of {settings.GetType().Name}, no virtual properties were found which will make Autosaving redundant.";
+                var msg =
+                    $"JsonSettings: During proxy creation of {settings.GetType().Name}, no virtual properties were found which will make Autosaving redundant.";
                 Debug.WriteLine(msg);
                 if (Debugger.IsAttached)
                     Console.Error.WriteLine(msg);
@@ -38,11 +40,11 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
             }
 
             _generator = _generator ?? new ProxyGenerator();
-            return _generator.CreateClassProxyWithTarget<TSettings>(settings, new JsonSettingsInterceptor((JsonSettings)(object)settings));
+            return _generator.CreateClassProxyWithTarget(settings, new JsonSettingsInterceptor((JsonSettings)settings));
         }
 
         /// <summary>
-        ///     Intercepts 
+        ///     Intercepts
         /// </summary>
         [Serializable]
         public class JsonSettingsInterceptor : IInterceptor

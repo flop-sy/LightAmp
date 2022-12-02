@@ -1,10 +1,9 @@
-﻿/*
- * Copyright(c) 2017 Eli Belash
- * Licensed under the MIT license. See https://github.com/Nucs/JsonSettings/blob/master/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.IO;
+
+#endregion
 
 namespace BardMusicPlayer.Pigeonhole.JsonSettings.Inline
 {
@@ -19,16 +18,18 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Inline
         /// <param name="fileshare"></param>
         /// <param name="throw">Should this be silent and return null on exception or throw?</param>
         /// <returns>The filestream. null if UnauthorizedAccess or IOException</returns>
-        internal static FileStream AttemptOpenFile(string file, FileMode filemode = FileMode.Open, FileAccess fileaccess = FileAccess.Read, FileShare fileshare = FileShare.None, bool @throw = false)
+        internal static FileStream AttemptOpenFile(string file, FileMode filemode = FileMode.Open,
+            FileAccess fileaccess = FileAccess.Read, FileShare fileshare = FileShare.None, bool @throw = false)
         {
             if (string.IsNullOrEmpty(file)) throw new ArgumentException("message", nameof(file));
-            
+
             //if file doesnt exist and filemode won't create one - return null.
-            if (File.Exists(file) == false && filemode != FileMode.Create && filemode != FileMode.CreateNew && filemode != FileMode.OpenOrCreate)
+            if (File.Exists(file) == false && filemode != FileMode.Create && filemode != FileMode.CreateNew &&
+                filemode != FileMode.OpenOrCreate)
                 return null;
 
             //ensure if theres a parent folder - to create it.
-            string parent = Path.GetDirectoryName(file);
+            var parent = Path.GetDirectoryName(file);
 
             try
             {

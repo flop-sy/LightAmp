@@ -1,15 +1,19 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
+
+#endregion
 
 namespace BardMusicPlayer.Pigeonhole
 {
     public class BmpPigeonholeException : Exception
     {
-        public BmpPigeonholeException(string message) : base(message) { }
-        public BmpPigeonholeException(string message, Exception inner) : base(message, inner) { }
+        public BmpPigeonholeException(string message) : base(message)
+        {
+        }
+
+        public BmpPigeonholeException(string message, Exception inner) : base(message, inner)
+        {
+        }
     }
 }
