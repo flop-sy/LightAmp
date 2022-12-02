@@ -1,11 +1,10 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using BardMusicPlayer.DalamudBridge.Helper.Dalamud;
 using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.DalamudBridge
 {
@@ -13,34 +12,34 @@ namespace BardMusicPlayer.DalamudBridge
     {
         private static readonly Lazy<DalamudBridge> LazyInstance = new(() => new DalamudBridge());
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool Started { get; private set; }
-
         internal DalamudServer DalamudServer;
 
         private DalamudBridge()
         {
         }
 
+        /// <summary>
+        /// </summary>
+        public bool Started { get; private set; }
+
         public static DalamudBridge Instance => LazyInstance.Value;
 
         /// <summary>
-        /// Start Grunt.
+        ///     Start Grunt.
         /// </summary>
         public void Start()
         {
-            if (Started) 
+            if (Started)
                 return;
-            if (!BmpSeer.Instance.Started) throw new DalamudBridgeException("DalamudBridge requires Seer to be running.");
+            if (!BmpSeer.Instance.Started)
+                throw new DalamudBridgeException("DalamudBridge requires Seer to be running.");
             DalamudServer = new DalamudServer();
             StartEventsHandler();
             Started = true;
         }
 
         /// <summary>
-        /// Stop Grunt.
+        ///     Stop Grunt.
         /// </summary>
         public void Stop()
         {
@@ -59,7 +58,11 @@ namespace BardMusicPlayer.DalamudBridge
         }
 
 
-        ~DalamudBridge() => Dispose();
+        ~DalamudBridge()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
             Stop();

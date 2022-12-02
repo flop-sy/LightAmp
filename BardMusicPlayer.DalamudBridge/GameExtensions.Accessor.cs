@@ -1,14 +1,17 @@
-﻿using System.Threading;
+﻿#region
+
+using System.Threading;
 using System.Threading.Tasks;
-using BardMusicPlayer.DalamudBridge.Helper.Dalamud;
 using BardMusicPlayer.Quotidian.Structs;
 using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.DalamudBridge
 {
     public static partial class GameExtensions
     {
-        private static readonly SemaphoreSlim LyricSemaphoreSlim = new (1,1);
+        private static readonly SemaphoreSlim LyricSemaphoreSlim = new(1, 1);
 
         public static bool IsConnected(int pid)
         {
@@ -16,7 +19,7 @@ namespace BardMusicPlayer.DalamudBridge
         }
 
         /// <summary>
-        /// Sends a lyric line via say
+        ///     Sends a lyric line via say
         /// </summary>
         /// <param name="game"></param>
         /// <param name="text"></param>
@@ -26,12 +29,13 @@ namespace BardMusicPlayer.DalamudBridge
             if (!DalamudBridge.Instance.Started) throw new DalamudBridgeException("DalamudBridge not started.");
 
             if (DalamudBridge.Instance.DalamudServer.IsConnected(game.Pid))
-                return Task.FromResult(DalamudBridge.Instance.DalamudServer.SendChat(game.Pid, ChatMessageChannelType.Say, text));
+                return Task.FromResult(
+                    DalamudBridge.Instance.DalamudServer.SendChat(game.Pid, ChatMessageChannelType.Say, text));
             return Task.FromResult(false);
         }
 
         /// <summary>
-        /// sends a text in chat without interrupting playback
+        ///     sends a text in chat without interrupting playback
         /// </summary>
         /// <param name="game"></param>
         /// <param name="type"></param>
@@ -47,7 +51,7 @@ namespace BardMusicPlayer.DalamudBridge
         }
 
         /// <summary>
-        /// Open or close an instrument
+        ///     Open or close an instrument
         /// </summary>
         /// <param name="game"></param>
         /// <param name="instrumentID"></param>
@@ -62,7 +66,7 @@ namespace BardMusicPlayer.DalamudBridge
         }
 
         /// <summary>
-        /// Accept the ens request
+        ///     Accept the ens request
         /// </summary>
         /// <param name="game"></param>
         /// <param name="arg"></param>
@@ -77,7 +81,7 @@ namespace BardMusicPlayer.DalamudBridge
         }
 
         /// <summary>
-        /// Sets the objects to low or max
+        ///     Sets the objects to low or max
         /// </summary>
         /// <param name="game"></param>
         /// <param name="low"></param>
@@ -92,7 +96,7 @@ namespace BardMusicPlayer.DalamudBridge
         }
 
         /// <summary>
-        /// starts the ensemble check
+        ///     starts the ensemble check
         /// </summary>
         /// <param name="game"></param>
         /// <param name="low"></param>

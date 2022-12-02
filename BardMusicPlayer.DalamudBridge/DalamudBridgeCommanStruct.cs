@@ -1,11 +1,10 @@
-﻿using BardMusicPlayer.DalamudBridge.Helper.Dalamud;
+﻿#region
+
+using BardMusicPlayer.DalamudBridge.Helper.Dalamud;
 using BardMusicPlayer.Quotidian.Structs;
 using BardMusicPlayer.Seer;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+#endregion
 
 namespace BardMusicPlayer.DalamudBridge
 {

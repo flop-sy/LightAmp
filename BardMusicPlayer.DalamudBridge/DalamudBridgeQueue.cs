@@ -1,13 +1,11 @@
-﻿using BardMusicPlayer.Quotidian.Structs;
-using BardMusicPlayer.Seer;
-using System;
+﻿#region
+
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
+using BardMusicPlayer.DalamudBridge.Helper.Dalamud;
+
+#endregion
 
 namespace BardMusicPlayer.DalamudBridge
 {
@@ -15,6 +13,8 @@ namespace BardMusicPlayer.DalamudBridge
     {
         private ConcurrentQueue<DalamudBridgeCommandStruct> _eventQueue;
         private bool _eventQueueOpen;
+
+        private CancellationTokenSource _eventsTokenSource;
 
         private async Task RunEventsHandler(CancellationToken token)
         {
@@ -29,25 +29,27 @@ namespace BardMusicPlayer.DalamudBridge
                     {
                         switch (d_event.messageType)
                         {
-                            case Helper.Dalamud.MessageType.Chat:
-                                await GameExtensions.SendText(d_event.game, d_event.chatType, d_event.TextData);
+                            case MessageType.Chat:
+                                await d_event.game.SendText(d_event.chatType, d_event.TextData);
                                 break;
-                            case Helper.Dalamud.MessageType.Instrument:
-                                await GameExtensions.OpenInstrument(d_event.game, d_event.IntData);
+                            case MessageType.Instrument:
+                                await d_event.game.OpenInstrument(d_event.IntData);
                                 break;
-                            case Helper.Dalamud.MessageType.AcceptReply:
-                                await GameExtensions.AcceptEnsemble(d_event.game, d_event.BoolData);
+                            case MessageType.AcceptReply:
+                                await d_event.game.AcceptEnsemble(d_event.BoolData);
                                 break;
-                        };
+                        }
+
+                        ;
                     }
                     catch
-                    { }
+                    {
+                    }
                 }
+
                 await Task.Delay(25, token).ContinueWith(tsk => { });
             }
         }
-
-        private CancellationTokenSource _eventsTokenSource;
 
         private void StartEventsHandler()
         {

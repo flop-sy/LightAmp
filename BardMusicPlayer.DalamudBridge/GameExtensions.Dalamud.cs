@@ -1,11 +1,14 @@
-﻿using BardMusicPlayer.Seer;
+﻿#region
+
+using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.DalamudBridge
 {
     public static partial class GameExtensions
     {
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="game"></param>
         /// <returns></returns>
