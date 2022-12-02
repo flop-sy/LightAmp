@@ -149,6 +149,10 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
     public class MidiMessage
     {
+        private readonly byte code;
+
+        private readonly bool is_major = true;
+
         //instrument_name 0x04 -> track_name
         //lyrics 0x05 -> text
         //marker 0x06 -> text
@@ -158,15 +162,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public int channel;
         public int clocks_per_click = 24;
 
-        private readonly byte code;
-
         //control_change 0xb0 (channel, control, value)
         public int control;
 
         //sysex 0xf0 (data)
         public byte[] data;
         public int denominator = 2;
-        private readonly bool is_major = true;
 
         public bool is_meta;
 

@@ -10,6 +10,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
     public class NativeFormat
     {
         public static bool[] availableChannels = new bool[16];
+
+
+        private readonly List<int> notesInMeasures = new();
         public string album = "";
         public List<Annotation> annotations = new();
         public string artist = "";
@@ -18,9 +21,6 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         public List<DirectionSign> directions = new();
         public List<Lyrics> lyrics = new();
         public string music = "";
-
-
-        private readonly List<int> notesInMeasures = new();
         public string subtitle = "";
         public List<Tempo> tempos = new();
 
