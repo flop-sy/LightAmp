@@ -21,11 +21,11 @@ namespace BardMusicPlayer.Siren.AlphaTab
         private const int PreferredSampleRate = 48000;
         private readonly byte _bufferCount;
         private readonly int _bufferCountSize;
+
+        private readonly WasapiOut _context;
         private readonly MMDevice _device;
         private readonly byte _latency;
         private CircularSampleBuffer _circularBuffer;
-
-        private readonly WasapiOut _context;
         private bool _finished;
 
         /// <summary>

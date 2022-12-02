@@ -14,9 +14,9 @@ namespace BardMusicPlayer.Siren.AlphaTab
     {
         private readonly ManualResetEventSlim _threadStartedEvent;
         private readonly Action<Action> _uiInvoke;
-        private readonly Thread _workerThread;
         private readonly CancellationTokenSource _workerCancellationToken;
         private readonly BlockingCollection<Action> _workerQueue;
+        private readonly Thread _workerThread;
 
         public ManagedThreadAlphaSynthWorkerApi(ISynthOutput output, LogLevel logLevel, Action<Action> uiInvoke)
             : base(output, logLevel)

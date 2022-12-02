@@ -1,5 +1,3 @@
-// This file contains alphaTab specific extensions to the TinySoundFont audio synthesis
-
 #region
 
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds;

@@ -1,7 +1,4 @@
-﻿// The SoundFont loading and Audio Synthesis is based on TinySoundFont, licensed under MIT,
-// developed by Bernhard Schelling (https://github.com/schellingb/TinySoundFont)
-
-// C# port for alphaTab: (C) 2019 by Daniel Kuschny
+﻿// C# port for alphaTab: (C) 2019 by Daniel Kuschny
 // Licensed under: MPL-2.0
 
 /*
