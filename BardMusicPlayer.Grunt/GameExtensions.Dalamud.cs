@@ -1,16 +1,14 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.Grunt
 {
     public static partial class GameExtensions
     {
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="game"></param>
         /// <returns></returns>

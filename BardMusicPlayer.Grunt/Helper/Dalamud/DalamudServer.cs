@@ -1,9 +1,7 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#nullable enable
 
-#nullable enable
+#region
+
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -13,15 +11,16 @@ using H.Pipes;
 using H.Pipes.AccessControl;
 using H.Pipes.Args;
 
+#endregion
+
 namespace BardMusicPlayer.Grunt.Helper.Dalamud
 {
     internal class DalamudServer : IDisposable
     {
-        private readonly PipeServer<string> _pipe;
         private readonly ConcurrentDictionary<int, string> _clients;
+        private readonly PipeServer<string> _pipe;
 
         /// <summary>
-        /// 
         /// </summary>
         internal DalamudServer()
         {
@@ -32,6 +31,24 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
             _pipe.MessageReceived += OnMessage;
             _pipe.AllowUsersReadWrite();
             Start();
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                Stop();
+                _pipe.MessageReceived -= OnMessage;
+                _pipe.ClientConnected -= OnDisconnected;
+                _pipe.ClientDisconnected -= OnConnected;
+                _pipe.DisposeAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Dalamud error: {ex.Message}");
+            }
+
+            _clients.Clear();
         }
 
         internal async void Start()
@@ -47,14 +64,16 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
         }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="pid"></param>
         /// <returns></returns>
-        internal bool IsConnected(int pid) => _clients.ContainsKey(pid) && _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected) is not null;
+        internal bool IsConnected(int pid)
+        {
+            return _clients.ContainsKey(pid) &&
+                   _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected) is not null;
+        }
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="pid"></param>
         /// <param name="text"></param>
@@ -62,7 +81,8 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
         internal bool SendChat(int pid, string text)
         {
             if (!IsConnected(pid)) return false;
-            _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected)?.WriteAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes(text)));
+            _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected)
+                ?.WriteAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes(text)));
             return true;
         }
 
@@ -90,30 +110,14 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
 
         private void OnDisconnected(object sender, ConnectionEventArgs<string> e)
         {
-            if (_clients.Values.Contains(e.Connection.PipeName)) _clients.TryRemove(_clients.FirstOrDefault(x => x.Value == e.Connection.PipeName).Key, out _);
+            if (_clients.Values.Contains(e.Connection.PipeName))
+                _clients.TryRemove(_clients.FirstOrDefault(x => x.Value == e.Connection.PipeName).Key, out _);
             Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} disconnected");
         }
 
         private void OnConnected(object sender, ConnectionEventArgs<string> e)
         {
             Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} connected");
-        }
-
-        public void Dispose()
-        {
-            try
-            {
-                Stop();
-                _pipe.MessageReceived -= OnMessage;
-                _pipe.ClientConnected -= OnDisconnected;
-                _pipe.ClientDisconnected -= OnConnected;
-                _pipe.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Dalamud error: {ex.Message}");
-            }
-            _clients.Clear();
         }
     }
 }

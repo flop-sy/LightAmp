@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Threading;
@@ -10,14 +7,15 @@ using BardMusicPlayer.Grunt.Helper.Utilities;
 using BardMusicPlayer.Quotidian.Enums;
 using BardMusicPlayer.Seer;
 
+#endregion
+
 namespace BardMusicPlayer.Grunt
 {
     public static partial class GameExtensions
     {
-        private static readonly SemaphoreSlim LyricSemaphoreSlim = new (1,1);
+        private static readonly SemaphoreSlim LyricSemaphoreSlim = new(1, 1);
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="game"></param>
         /// <param name="text"></param>
@@ -55,7 +53,8 @@ namespace BardMusicPlayer.Grunt
 
         private static void SendLyricLineClipBoardTask(TaskCompletionSource<bool> tcs, Game game, string text)
         {
-            try {
+            try
+            {
                 if (!game.ChatStatus && !SyncTapKey(game, Keys.Enter).GetAwaiter().GetResult())
                 {
                     tcs.SetResult(false);
@@ -66,19 +65,15 @@ namespace BardMusicPlayer.Grunt
 
                 var result = true;
 
-                if (!SyncTapKey(game, (int) Keys.Control + Keys.V).GetAwaiter().GetResult())
-                {
+                if (!SyncTapKey(game, (int)Keys.Control + Keys.V).GetAwaiter().GetResult())
                     result = false;
-                }
 
-                else if (!SyncTapKey(game, Keys.Enter).GetAwaiter().GetResult())
-                {
-                    result = false;
-                }
+                else if (!SyncTapKey(game, Keys.Enter).GetAwaiter().GetResult()) result = false;
 
                 tcs.SetResult(result);
             }
-            catch(Exception) {
+            catch (Exception)
+            {
                 // TODO: Log errors
                 tcs.SetResult(false);
             }

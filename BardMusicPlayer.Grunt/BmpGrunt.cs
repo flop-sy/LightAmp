@@ -1,12 +1,11 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using BardMusicPlayer.Grunt.Helper.Dalamud;
 using BardMusicPlayer.Pigeonhole;
 using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.Grunt
 {
@@ -14,21 +13,20 @@ namespace BardMusicPlayer.Grunt
     {
         private static readonly Lazy<BmpGrunt> LazyInstance = new(() => new BmpGrunt());
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool Started { get; private set; }
-
         internal DalamudServer DalamudServer;
 
         private BmpGrunt()
         {
         }
 
+        /// <summary>
+        /// </summary>
+        public bool Started { get; private set; }
+
         public static BmpGrunt Instance => LazyInstance.Value;
 
         /// <summary>
-        /// Start Grunt.
+        ///     Start Grunt.
         /// </summary>
         public void Start()
         {
@@ -40,7 +38,7 @@ namespace BardMusicPlayer.Grunt
         }
 
         /// <summary>
-        /// Stop Grunt.
+        ///     Stop Grunt.
         /// </summary>
         public void Stop()
         {
@@ -50,7 +48,11 @@ namespace BardMusicPlayer.Grunt
             Started = false;
         }
 
-        ~BmpGrunt() => Dispose();
+        ~BmpGrunt()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
             Stop();

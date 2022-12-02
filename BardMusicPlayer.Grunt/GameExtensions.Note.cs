@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe, 2018-2020 parulina
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System.Threading.Tasks;
 using BardMusicPlayer.Pigeonhole;
@@ -9,12 +6,14 @@ using BardMusicPlayer.Quotidian.Enums;
 using BardMusicPlayer.Quotidian.Structs;
 using BardMusicPlayer.Seer;
 
+#endregion
+
 namespace BardMusicPlayer.Grunt
 {
     public static partial class GameExtensions
     {
         /// <summary>
-        /// Pushes a note in OctaveRange.C3toC6
+        ///     Pushes a note in OctaveRange.C3toC6
         /// </summary>
         /// <param name="game"></param>
         /// <param name="note"></param>
@@ -38,11 +37,11 @@ namespace BardMusicPlayer.Grunt
             // TODO: Tone select for global region here
             // if (game.GameRegion == GameRegion.Global && !await SyncTapKey(game, game.InstrumentToneMenuKeys[(InstrumentToneMenuKey) channel], BmpPigeonhole.Instance.ToneKeyDelay, BmpPigeonhole.Instance.ToneKeyDelay)) return false;
 
-            return await SyncPushKey(game, game.NoteKeys[(NoteKey) note], BmpPigeonhole.Instance.NoteKeyDelay);
+            return await SyncPushKey(game, game.NoteKeys[(NoteKey)note], BmpPigeonhole.Instance.NoteKeyDelay);
         }
 
         /// <summary>
-        /// Releases a note in OctaveRange.C3toC6
+        ///     Releases a note in OctaveRange.C3toC6
         /// </summary>
         /// <param name="game"></param>
         /// <param name="note"></param>
@@ -62,7 +61,7 @@ namespace BardMusicPlayer.Grunt
 
             note -= 48;
 
-            return await SyncReleaseKey(game, game.NoteKeys[(NoteKey) note], BmpPigeonhole.Instance.NoteKeyDelay);
+            return await SyncReleaseKey(game, game.NoteKeys[(NoteKey)note], BmpPigeonhole.Instance.NoteKeyDelay);
         }
     }
 }

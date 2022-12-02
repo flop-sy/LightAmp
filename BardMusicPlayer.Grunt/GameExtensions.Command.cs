@@ -1,18 +1,17 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System.Threading.Tasks;
 using BardMusicPlayer.Quotidian.Enums;
 using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.Grunt
 {
     public static partial class GameExtensions
     {
         /// <summary>
-        /// Blindly pushes buttons to request ensemble mode. Task takes approximately 700 milliseconds to complete.
+        ///     Blindly pushes buttons to request ensemble mode. Task takes approximately 700 milliseconds to complete.
         /// </summary>
         /// <param name="game"></param>
         /// <returns></returns>
@@ -35,7 +34,7 @@ namespace BardMusicPlayer.Grunt
         }
 
         /// <summary>
-        /// Blindly pushes buttons to accept ensemble mode. Task takes approximately 450 milliseconds to complete.
+        ///     Blindly pushes buttons to accept ensemble mode. Task takes approximately 450 milliseconds to complete.
         /// </summary>
         /// <param name="game"></param>
         /// <returns></returns>

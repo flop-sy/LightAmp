@@ -1,20 +1,18 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe, 2018-2020 parulina
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using BardMusicPlayer.Quotidian.Enums;
 using BardMusicPlayer.Quotidian.Structs;
 using BardMusicPlayer.Seer;
+
+#endregion
 
 namespace BardMusicPlayer.Grunt
 {
     public static partial class GameExtensions
     {
         /// <summary>
-        /// Equips an instrument
+        ///     Equips an instrument
         /// </summary>
         /// <param name="game"></param>
         /// <param name="instrumentWanted"></param>
@@ -58,7 +56,7 @@ namespace BardMusicPlayer.Grunt
         }
 
         /// <summary>
-        /// Equips an instrument tone
+        ///     Equips an instrument tone
         /// </summary>
         /// <param name="game"></param>
         /// <param name="instrumentToneWanted"></param>
@@ -70,7 +68,7 @@ namespace BardMusicPlayer.Grunt
             if (!game.IsBard) return false;
 
             // TODO for 5.55
-            if ((int) game.GameRegion < 4)
+            if ((int)game.GameRegion < 4)
                 throw new BmpGruntException("Equipping a Tone is not supported in region " + game.GameRegion);
 
             var exitLock = 5;
