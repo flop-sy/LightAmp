@@ -71,15 +71,15 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
 
     public class SocketRx
     {
+        private readonly byte[] bytes = new byte[255];
+
+        private readonly BackgroundWorker worker;
         public string Address = "";
         public string BCAddress = "";
-        private readonly byte[] bytes = new byte[255];
         public bool disposing;
         public IPEndPoint iPEndPoint;
         public int ServerPort = 0;
         public string version = "";
-
-        private readonly BackgroundWorker worker;
 
         public SocketRx(ref BackgroundWorker w, string address, string ver)
         {

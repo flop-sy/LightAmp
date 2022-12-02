@@ -70,14 +70,14 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
     {
         private readonly PartyClientInfo _clientInfo = new();
         private readonly Dictionary<string, KeyValuePair<long, ZeroTierExtendedSocket>> _pushBacklist = new();
-        public bool disposing;
-        public IPEndPoint iPEndPoint;
-        private ZeroTierExtendedSocket listener;
         private readonly List<NetworkSocket> removed_sessions = new();
-        public int ServerPort = 0;
 
         private readonly List<NetworkSocket> sessions = new();
         private readonly BackgroundWorker worker;
+        public bool disposing;
+        public IPEndPoint iPEndPoint;
+        private ZeroTierExtendedSocket listener;
+        public int ServerPort = 0;
 
         public SocketServer(ref BackgroundWorker w, IPEndPoint localEndPoint, byte type, string name)
         {
