@@ -370,10 +370,7 @@ namespace BardMusicPlayer.Maestro.Performance
 
             if (!game.InstrumentHeld.Equals(Instrument.None))
             {
-                if (game.InstrumentHeld.Equals(Instrument.Parse(TrackInstrument)))
-                {
-                    return 0;
-                }
+                if (game.InstrumentHeld.Equals(Instrument.Parse(TrackInstrument))) return 0;
 
                 _hook.ClearLastPerformanceKeybinds();
 

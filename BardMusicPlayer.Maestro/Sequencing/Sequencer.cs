@@ -23,6 +23,11 @@ namespace BardMusicPlayer.Maestro.Sequencing
             BmpSong = 1
         }
 
+        private readonly Dictionary<Track, Instrument> preferredInstruments = new();
+        private readonly Dictionary<Track, int> preferredOctaveShift = new();
+
+        private readonly Timer secondTimer = new(200);
+
         private int _maxTracks;
         public EventHandler<ChannelMessageEventArgs> ChannelAfterTouch;
         private int intendedTrack;
@@ -42,12 +47,7 @@ namespace BardMusicPlayer.Maestro.Sequencing
         public EventHandler<int> OnTempoChange;
         public EventHandler<int> OnTick;
         public EventHandler<string> OnTrackNameChange;
-
-        private readonly Dictionary<Track, Instrument> preferredInstruments = new();
-        private readonly Dictionary<Track, int> preferredOctaveShift = new();
         public EventHandler<ChannelMessageEventArgs> ProgChange;
-
-        private readonly Timer secondTimer = new(200);
 
         public Sequencer()
         {

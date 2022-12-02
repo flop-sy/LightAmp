@@ -11,19 +11,18 @@ namespace BardMusicPlayer.Maestro.Sequencing.Internal
 {
     public class Sequencer_Internal : IComponent
     {
-        private readonly object lockObject = new();
-
         private readonly ChannelChaser chaser = new();
 
         private readonly MessageDispatcher dispatcher = new();
 
-        private bool disposed;
-
         private readonly List<IEnumerator<int>> enumerators = new();
-
-        private Sequence sequence;
+        private readonly object lockObject = new();
 
         private readonly ChannelStopper stopper = new();
+
+        private bool disposed;
+
+        private Sequence sequence;
 
         private int tracksPlayingCount;
 
