@@ -134,10 +134,7 @@ namespace BardMusicPlayer.Ui.Functions
         public static string GetInstrumentNameForHostPlayer()
         {
             var tracknumber = BmpMaestro.Instance.GetHostBardTrack();
-            if (tracknumber == 0)
-            {
-                return "All Tracks";
-            }
+            if (tracknumber == 0) return "All Tracks";
 
             if (CurrentSong == null)
                 return "No song loaded";
@@ -163,10 +160,7 @@ namespace BardMusicPlayer.Ui.Functions
         /// <returns>instrument name as string</returns>
         public static string GetInstrumentName(BmpSong song, int tracknumber)
         {
-            if (tracknumber == 0)
-            {
-                return "All Tracks";
-            }
+            if (tracknumber == 0) return "All Tracks";
 
             if (song == null)
                 return "No song loaded";

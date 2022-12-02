@@ -282,7 +282,7 @@ namespace BardMusicPlayer.Ui.Controls
                 if (p.game.GfxSettingsLow != GfxLow_CheckBox.IsChecked)
                 {
                     p.game.GfxSettingsLow = GfxLow_CheckBox.IsChecked ?? false;
-                    GameExtensions.GfxSetLow(p.game, GfxLow_CheckBox.IsChecked ?? false);
+                    p.game.GfxSetLow(GfxLow_CheckBox.IsChecked ?? false);
                 }
         }
 
