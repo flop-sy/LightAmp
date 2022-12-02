@@ -1,12 +1,11 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, isaki, GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using BardMusicPlayer.Transmogrify.Song;
+
+#endregion
 
 namespace BardMusicPlayer.Coffer
 {
@@ -15,69 +14,75 @@ namespace BardMusicPlayer.Coffer
         private readonly BmpPlaylist target;
 
         /// <summary>
-        /// Constructor.
+        ///     Constructor.
         /// </summary>
         /// <param name="target"></param>
-        internal BmpPlaylistDecorator(BmpPlaylist target) => this.target = target ?? throw new NullReferenceException();
+        internal BmpPlaylistDecorator(BmpPlaylist target)
+        {
+            this.target = target ?? throw new NullReferenceException();
+        }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         void IPlaylist.Add(BmpSong song)
         {
-            this.target.Songs.Add(song);
+            target.Songs.Add(song);
         }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         void IPlaylist.Add(int idx, BmpSong song)
         {
-            this.target.Songs.Insert(idx, song);
+            target.Songs.Insert(idx, song);
         }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         IEnumerator<BmpSong> IEnumerable<BmpSong>.GetEnumerator()
         {
-            return this.target.Songs.GetEnumerator();
+            return target.Songs.GetEnumerator();
         }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.target.Songs.GetEnumerator();
+            return target.Songs.GetEnumerator();
         }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         string IPlaylist.GetName()
         {
-            return this.target.Name;
+            return target.Name;
         }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         void IPlaylist.Move(int sourceIdx, int targetIdx)
         {
-            List<BmpSong> contents = this.target.Songs;
-            BmpSong moveMe = contents[sourceIdx];
+            var contents = target.Songs;
+            var moveMe = contents[sourceIdx];
             contents.RemoveAt(sourceIdx);
             contents.Insert(targetIdx, moveMe);
         }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         void IPlaylist.Remove(int idx)
         {
-            this.target.Songs.RemoveAt(idx);
+            target.Songs.RemoveAt(idx);
         }
 
         /// <inheritdoc />
         void IPlaylist.Remove(BmpSong song)
         {
-            this.target.Songs.Remove(song);
+            target.Songs.Remove(song);
         }
 
-        ///<inheritdoc/>
+        /// <inheritdoc />
         void IPlaylist.SetName(string name)
         {
-            this.target.Name = name ?? throw new ArgumentNullException();
+            target.Name = name ?? throw new ArgumentNullException();
         }
 
-        ///<inheritdoc/>
-        internal BmpPlaylist GetBmpPlaylist() => this.target;
+        /// <inheritdoc />
+        internal BmpPlaylist GetBmpPlaylist()
+        {
+            return target;
+        }
     }
 }
