@@ -1,20 +1,25 @@
-using BardMusicPlayer.Transmogrify.Song.Utilities;
-using Melanchall.DryWetMidi.Core;
-using System.Collections.Generic;
+#region
+
 using System.Diagnostics;
 using System.IO;
+using BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native;
+using BardMusicPlayer.Transmogrify.Song.Utilities;
+using Melanchall.DryWetMidi.Core;
+
+#endregion
 
 namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 {
     public static class ImportGuitarPro
     {
         private static GPFile gpfile;
+
         public static MidiFile OpenGTPSongFile(string path)
         {
             var loader = File.ReadAllBytes(path);
             //Detect Version by Filename
-            int version = 7;
-            string fileEnding = Path.GetExtension(path);
+            var version = 7;
+            var fileEnding = Path.GetExtension(path);
             if (fileEnding.Equals(".gp3")) version = 3;
             if (fileEnding.Equals(".gp4")) version = 4;
             if (fileEnding.Equals(".gp5")) version = 5;
@@ -67,14 +72,15 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                     Debug.WriteLine("Unknown File Format");
                     break;
             }
+
             Debug.WriteLine("Done");
 
-            var song = new Native.NativeFormat(gpfile);
+            var song = new NativeFormat(gpfile);
             var midi = song.toMidi();
-            List<byte> data = midi.createBytes();
+            var data = midi.createBytes();
             var dataArray = data.ToArray();
 
-            MemoryStream memoryStream = new MemoryStream();
+            var memoryStream = new MemoryStream();
             memoryStream.Write(dataArray, 0, dataArray.Length);
             memoryStream.Position = 0;
             var midiFile = memoryStream.ReadAsMidiFile();

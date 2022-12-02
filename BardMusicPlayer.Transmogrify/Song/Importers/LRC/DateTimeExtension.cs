@@ -1,12 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region
+
+using System;
 using System.Runtime.CompilerServices;
-using System.Text;
+
+#endregion
 
 namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
 {
     internal static class DateTimeExtension
     {
+        public const long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
+        public const long TICKS_PER_SECOND = TICKS_PER_MILLISECOND * 1000;
+        public const long TICKS_PER_MILLISECOND = 10_000;
+
+        private static readonly DateTime ONE_YEAR = new(2, 1, 1, 0, 0, 0);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string ToString(this DateTime dateTime, string mFormat, string smSep, string sFormat)
         {
@@ -18,16 +26,25 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         }
 
         public static string ToLrcString(this DateTime dateTime, int minDecimalDigits, int maxDecimalDigits)
-            => dateTime.ToString("D2", ":", "00." + new string('0', minDecimalDigits) + new string('#', maxDecimalDigits - minDecimalDigits));
+        {
+            return dateTime.ToString("D2", ":",
+                "00." + new string('0', minDecimalDigits) + new string('#', maxDecimalDigits - minDecimalDigits));
+        }
 
         public static string ToLrcString(this DateTime dateTime)
-            => dateTime.ToString("D2", ":", "00.00");
+        {
+            return dateTime.ToString("D2", ":", "00.00");
+        }
 
         public static string ToLrcStringRaw(this DateTime dateTime)
-            => dateTime.ToString("D2", ":", "00.00######");
+        {
+            return dateTime.ToString("D2", ":", "00.00######");
+        }
 
         public static string ToLrcStringShort(this DateTime dateTime)
-            => dateTime.ToString("D2", ":", "00");
+        {
+            return dateTime.ToString("D2", ":", "00");
+        }
 
         public static bool TryParseLrcString(string value, int start, int end, out DateTime result)
         {
@@ -40,7 +57,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             {
                 var v = value[i] - '0';
                 if (v >= 0 && v <= 9)
+                {
                     m = m * 10 + v;
+                }
                 else if (value[i] == ':')
                 {
                     i++;
@@ -48,7 +67,6 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 }
                 else if (char.IsWhiteSpace(value, i))
                 {
-                    continue;
                 }
                 else
                 {
@@ -60,7 +78,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             {
                 var v = value[i] - '0';
                 if (v >= 0 && v <= 9)
+                {
                     s = s * 10 + v;
+                }
                 else if (value[i] == '.')
                 {
                     i++;
@@ -68,7 +88,6 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 }
                 else if (char.IsWhiteSpace(value, i))
                 {
-                    continue;
                 }
                 else
                 {
@@ -87,7 +106,6 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 }
                 else if (char.IsWhiteSpace(value, i))
                 {
-                    continue;
                 }
                 else
                 {
@@ -102,12 +120,6 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             result = default;
             return false;
         }
-
-        public const long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
-        public const long TICKS_PER_SECOND = TICKS_PER_MILLISECOND * 1000;
-        public const long TICKS_PER_MILLISECOND = 10_000;
-
-        private static DateTime ONE_YEAR = new DateTime(2, 1, 1, 0, 0, 0);
 
         /// <exception cref="ArgumentException">Kind of value should be DateTimeKind.Unspecified.</exception>
         public static DateTime ToTimestamp(this DateTime dateTime)

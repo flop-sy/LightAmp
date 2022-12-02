@@ -1,18 +1,16 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System.IO;
 using System.Text;
 using Melanchall.DryWetMidi.Core;
+
+#endregion
 
 namespace BardMusicPlayer.Transmogrify.Song.Utilities
 {
     public static class ExtensionMethods
     {
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
@@ -24,7 +22,8 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
                 InvalidChunkSizePolicy = InvalidChunkSizePolicy.Ignore,
                 InvalidMetaEventParameterValuePolicy = InvalidMetaEventParameterValuePolicy.SnapToLimits,
                 InvalidChannelEventParameterValuePolicy = InvalidChannelEventParameterValuePolicy.SnapToLimits,
-                InvalidSystemCommonEventParameterValuePolicy = InvalidSystemCommonEventParameterValuePolicy.SnapToLimits,
+                InvalidSystemCommonEventParameterValuePolicy =
+                    InvalidSystemCommonEventParameterValuePolicy.SnapToLimits,
                 MissedEndOfTrackPolicy = MissedEndOfTrackPolicy.Ignore,
                 NotEnoughBytesPolicy = NotEnoughBytesPolicy.Ignore,
                 UnexpectedTrackChunksCountPolicy = UnexpectedTrackChunksCountPolicy.Ignore,

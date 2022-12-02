@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System.Collections.Generic;
 using System.Linq;
@@ -11,20 +8,24 @@ using BardMusicPlayer.Transmogrify.Song.Config;
 using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Interaction;
 
+#endregion
+
 namespace BardMusicPlayer.Transmogrify.Processor
 {
     internal class LyricProcessor : BaseProcessor
     {
-        public LyricProcessorConfig ProcessorConfig { get; set; }
-
         internal LyricProcessor(LyricProcessorConfig processorConfig, BmpSong song) : base(song)
         {
             ProcessorConfig = processorConfig;
         }
 
+        public LyricProcessorConfig ProcessorConfig { get; set; }
+
         public override Task<List<TrackChunk>> Process()
         {
-            var trackChunk = new List<TrackChunk> { Song.TrackContainers[ProcessorConfig.Track].SourceTrackChunk }.Concat(ProcessorConfig.IncludedTracks.Select(track => Song.TrackContainers[track].SourceTrackChunk)).Merge();
+            var trackChunk = new List<TrackChunk> { Song.TrackContainers[ProcessorConfig.Track].SourceTrackChunk }
+                .Concat(ProcessorConfig.IncludedTracks.Select(track => Song.TrackContainers[track].SourceTrackChunk))
+                .Merge();
 
             var lyricEvents = new List<TimedEvent>();
 
@@ -45,7 +46,8 @@ namespace BardMusicPlayer.Transmogrify.Processor
             {
                 trackChunk = new TrackChunk();
                 trackChunk.AddObjects(lyricEvents);
-                trackChunk.AddObjects(new List<ITimedObject>{new TimedEvent(new SequenceTrackNameEvent("lyric:"+lyricLineCount))});
+                trackChunk.AddObjects(new List<ITimedObject>
+                    { new TimedEvent(new SequenceTrackNameEvent("lyric:" + lyricLineCount)) });
                 trackChunks.Add(trackChunk);
             }
 

@@ -1,13 +1,12 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BardMusicPlayer.Transmogrify.Song;
 using Melanchall.DryWetMidi.Core;
+
+#endregion
 
 namespace BardMusicPlayer.Transmogrify.Processor
 {
@@ -20,12 +19,16 @@ namespace BardMusicPlayer.Transmogrify.Processor
 
         protected BmpSong Song { get; set; }
 
-        public abstract Task<List<TrackChunk>> Process();
-
-        ~BaseProcessor() => Dispose();
         public virtual void Dispose()
         {
             GC.SuppressFinalize(this);
+        }
+
+        public abstract Task<List<TrackChunk>> Process();
+
+        ~BaseProcessor()
+        {
+            Dispose();
         }
     }
 }
