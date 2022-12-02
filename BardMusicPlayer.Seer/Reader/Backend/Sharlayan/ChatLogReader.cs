@@ -47,7 +47,8 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 
         private List<byte> ResolveEntry(int offset, int length)
         {
-            return new(_memoryHandler.GetByteArray(new IntPtr(ChatLogPointers.LogStart + offset), length - offset));
+            return new List<byte>(_memoryHandler.GetByteArray(new IntPtr(ChatLogPointers.LogStart + offset),
+                length - offset));
         }
     }
 }

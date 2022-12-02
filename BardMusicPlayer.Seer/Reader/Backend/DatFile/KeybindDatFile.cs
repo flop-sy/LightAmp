@@ -15,8 +15,8 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
 {
     internal class KeybindDatFile : IDisposable
     {
-        public readonly Dictionary<string, Keybind> KeybindList = new();
         private readonly string _filePath;
+        public readonly Dictionary<string, Keybind> KeybindList = new();
         internal bool Fresh = true;
 
         internal KeybindDatFile(string filePath)

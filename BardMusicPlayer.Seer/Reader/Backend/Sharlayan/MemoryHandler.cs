@@ -115,7 +115,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 
         public IntPtr GetStaticAddress(long offset)
         {
-            return new(ProcessModel.Process.MainModule.BaseAddress.ToInt64() + offset);
+            return new IntPtr(ProcessModel.Process.MainModule.BaseAddress.ToInt64() + offset);
         }
 
         public string GetString(IntPtr address, long offset = 0L, int size = 256)

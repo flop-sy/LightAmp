@@ -14,8 +14,8 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
 {
     internal class HotbarDatFile : IDisposable
     {
-        private readonly HotbarData _hotbarData = new();
         private readonly string _filePath;
+        private readonly HotbarData _hotbarData = new();
 
         internal bool Fresh = true;
 

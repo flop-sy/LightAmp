@@ -14,9 +14,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
         private readonly string _filePath;
 
         private readonly List<BarInfo> _hotbarBarInformation = new();
+        private readonly int startingByte = 1360; // Shared hotbar information starts here
 
         internal bool Fresh = true;
-        private readonly int startingByte = 1360; // Shared hotbar information starts here
 
         internal CommonDatFile(string filePath)
         {
