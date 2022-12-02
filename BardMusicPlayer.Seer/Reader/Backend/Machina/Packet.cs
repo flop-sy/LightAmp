@@ -1,27 +1,40 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Collections.Generic;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Machina
 {
     internal partial class Packet : IDisposable
     {
-        private MachinaReaderBackend _machinaReader;
+        private readonly Dictionary<ulong, uint> _contentId2ActorId = new();
+        private readonly MachinaReaderBackend _machinaReader;
 
-        internal Packet(MachinaReaderBackend machinaReader) { _machinaReader = machinaReader; }
+        internal Packet(MachinaReaderBackend machinaReader)
+        {
+            _machinaReader = machinaReader;
+        }
 
-        private static bool ValidTimeSig(byte timeSig) => timeSig > 1 && timeSig < 8;
+        public void Dispose()
+        {
+            _contentId2ActorId.Clear();
+        }
 
-        private static bool ValidTempo(byte tempo) => tempo > 29 && tempo < 201;
+        private static bool ValidTimeSig(byte timeSig)
+        {
+            return timeSig > 1 && timeSig < 8;
+        }
 
-        private Dictionary<ulong, uint> _contentId2ActorId = new();
+        private static bool ValidTempo(byte tempo)
+        {
+            return tempo > 29 && tempo < 201;
+        }
 
-        ~Packet() { Dispose(); }
-
-        public void Dispose() { _contentId2ActorId.Clear(); }
+        ~Packet()
+        {
+            Dispose();
+        }
     }
 }

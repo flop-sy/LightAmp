@@ -1,38 +1,49 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, trotlinebeercan, GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using BardMusicPlayer.Quotidian;
 using BardMusicPlayer.Seer.Events;
+
+#endregion
 
 namespace BardMusicPlayer.Seer
 {
     public class BmpSeerException : BmpException
     {
-        internal BmpSeerException() : base() { }
+        internal BmpSeerException()
+        {
+        }
 
-        internal BmpSeerException(string message) : base(message) { }
+        internal BmpSeerException(string message) : base(message)
+        {
+        }
     }
 
     public class BmpSeerGamePathException : BmpSeerException
     {
-        internal BmpSeerGamePathException(string message) : base(message) { }
+        internal BmpSeerGamePathException(string message) : base(message)
+        {
+        }
     }
 
     public class BmpSeerEnvironmentTypeException : BmpSeerException
     {
-        internal BmpSeerEnvironmentTypeException(string message) : base(message) { }
+        internal BmpSeerEnvironmentTypeException(string message) : base(message)
+        {
+        }
     }
 
     public class BmpSeerGameRegionException : BmpSeerException
     {
-        internal BmpSeerGameRegionException(string message) : base(message) { }
+        internal BmpSeerGameRegionException(string message) : base(message)
+        {
+        }
     }
 
     public class BmpSeerConfigPathException : BmpSeerException
     {
-        internal BmpSeerConfigPathException(string message) : base(message) { }
+        internal BmpSeerConfigPathException(string message) : base(message)
+        {
+        }
     }
 
     public class BmpSeerBackendAlreadyRunningException : BmpSeerException
@@ -45,6 +56,8 @@ namespace BardMusicPlayer.Seer
 
     public class BmpSeerMachinaException : BmpSeerException
     {
-        internal BmpSeerMachinaException(string message) : base(message) { }
+        internal BmpSeerMachinaException(string message) : base(message)
+        {
+        }
     }
 }

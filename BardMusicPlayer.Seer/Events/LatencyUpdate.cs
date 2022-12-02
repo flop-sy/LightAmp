@@ -1,9 +1,4 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
-*/
-
-namespace BardMusicPlayer.Seer.Events
+﻿namespace BardMusicPlayer.Seer.Events
 {
     public sealed class LatencyUpdate : SeerEvent
     {
@@ -14,6 +9,10 @@ namespace BardMusicPlayer.Seer.Events
         }
 
         public long LatencyMilis { get; }
-        public override bool IsValid() => true;
+
+        public override bool IsValid()
+        {
+            return true;
+        }
     }
 }

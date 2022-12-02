@@ -1,13 +1,12 @@
-/*
- * Copyright(c) 2007-2020 Ryan Wilson syndicated.life@gmail.com (http://syndicated.life/)
- * Licensed under the MIT license. See https://github.com/FFXIVAPP/sharlayan/blob/master/LICENSE.md for full license information.
- */
+#region
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 {
@@ -32,12 +31,10 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
                 if (list.Any())
                 {
                     foreach (var item in list)
-                    {
                         if (item.Value == string.Empty)
                             Locations[item.Key] = item;
                         else
                             item.Value = item.Value.Replace("*", "?");
-                    }
 
                     list.RemoveAll(a => Locations.ContainsKey(a.Key));
                     FindExtendedSignatures(list);
@@ -67,14 +64,13 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             var list = new List<Signature>();
             var num = 0;
             while (searchStart.ToInt64() < searchEnd.ToInt64())
-            {
                 try
                 {
                     var regionSize = new IntPtr(4608);
                     if (IntPtr.Add(searchStart, 4608).ToInt64() > searchEnd.ToInt64())
-                        regionSize = (IntPtr) (searchEnd.ToInt64() - searchStart.ToInt64());
+                        regionSize = (IntPtr)(searchEnd.ToInt64() - searchStart.ToInt64());
                     if (UnsafeNativeMethods.ReadProcessMemory(MemoryHandler.ProcessHandle, searchStart, array,
-                        regionSize, out var _))
+                            regionSize, out var _))
                     {
                         foreach (var item in notFound)
                         {
@@ -85,7 +81,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
                                 continue;
                             }
 
-                            var pointer = new IntPtr((long) (baseAddress + num * 4096));
+                            var pointer = new IntPtr((long)(baseAddress + num * 4096));
                             item.SigScanAddress = new IntPtr(IntPtr.Add(pointer, num2 + item.Offset).ToInt64());
                             if (!Locations.ContainsKey(item.Key)) Locations.Add(item.Key, item);
                         }
@@ -101,7 +97,6 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
                 {
                     MemoryHandler?.RaiseException(ex);
                 }
-            }
         }
 
         private static int FindSuperSignature(IReadOnlyList<byte> buffer, IReadOnlyList<byte> pattern)
@@ -121,12 +116,10 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             {
                 int position;
                 for (position = last;
-                    pattern[position] == buffer[position + offset] || pattern[position] == 63;
-                    position--)
-                {
+                     pattern[position] == buffer[position + offset] || pattern[position] == 63;
+                     position--)
                     if (position == 0)
                         return offset;
-                }
 
                 offset += badShift[buffer[offset + last]];
             }
@@ -170,10 +163,8 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
                     if (signature[num2] == wildcard)
                         array[num] = wildcard;
                     else
-                    {
-                        array[num] = (byte) ((array2[char.ToUpper(signature[num2]) - 48] << 4) |
-                                             array2[char.ToUpper(signature[num2 + 1]) - 48]);
-                    }
+                        array[num] = (byte)((array2[char.ToUpper(signature[num2]) - 48] << 4) |
+                                            array2[char.ToUpper(signature[num2 + 1]) - 48]);
 
                     num2 += 2;
                     num++;

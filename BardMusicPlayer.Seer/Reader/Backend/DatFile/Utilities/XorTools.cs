@@ -1,16 +1,18 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, 2018-2020 parulina
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.IO;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities
 {
     internal static class XorTools
     {
-        internal static byte ReadXorByte(BinaryReader reader, int xor = 0) => (byte) (reader.ReadByte() ^ (byte) xor);
+        internal static byte ReadXorByte(BinaryReader reader, int xor = 0)
+        {
+            return (byte)(reader.ReadByte() ^ (byte)xor);
+        }
 
         internal static short ReadXorInt16(BinaryReader reader, int xor = 0)
         {
@@ -18,7 +20,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities
             if (xor != 0)
             {
                 Array.Reverse(data);
-                for (var i = 0; i < data.Length; i++) data[i] ^= (byte) xor;
+                for (var i = 0; i < data.Length; i++) data[i] ^= (byte)xor;
             }
 
             return BitConverter.ToInt16(data, 0);
@@ -30,7 +32,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities
             if (xor != 0)
             {
                 Array.Reverse(data);
-                for (var i = 0; i < data.Length; i++) data[i] ^= (byte) xor;
+                for (var i = 0; i < data.Length; i++) data[i] ^= (byte)xor;
             }
 
             return BitConverter.ToInt32(data, 0);
@@ -42,7 +44,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities
             if (xor != 0)
             {
                 Array.Reverse(data);
-                for (var i = 0; i < data.Length; i++) data[i] ^= (byte) xor;
+                for (var i = 0; i < data.Length; i++) data[i] ^= (byte)xor;
             }
 
             return BitConverter.ToUInt32(data, 0);
@@ -54,7 +56,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities
             if (xor != 0)
             {
                 Array.Reverse(data);
-                for (var i = 0; i < data.Length; i++) data[i] ^= (byte) xor;
+                for (var i = 0; i < data.Length; i++) data[i] ^= (byte)xor;
             }
 
             return data;

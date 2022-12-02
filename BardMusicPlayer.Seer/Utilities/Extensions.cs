@@ -1,18 +1,17 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 
+#endregion
+
 namespace BardMusicPlayer.Seer.Utilities
 {
     internal static class SeerExtensions
     {
-        private static uint TOKEN_QUERY = 0x0008;
+        private static readonly uint TOKEN_QUERY = 0x0008;
 
         internal static WindowsIdentity WindowsIdentity(this Process process)
         {

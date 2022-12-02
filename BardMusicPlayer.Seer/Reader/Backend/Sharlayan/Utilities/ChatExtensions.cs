@@ -1,12 +1,11 @@
-﻿/*
- * Copyright(c) 2021 MoogleTroupe, 2018-2020 parulina
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities
 {
@@ -21,7 +20,10 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities
 
         private static readonly Regex CleanSpaces = new("[ ]+", RegexOptions.Compiled);
 
-        internal static string TrimAndCleanSpaces(this string source) => CleanSpaces.Replace(source, " ").Trim();
+        internal static string TrimAndCleanSpaces(this string source)
+        {
+            return CleanSpaces.Replace(source, " ").Trim();
+        }
 
         internal static string FromHex(this string source)
         {

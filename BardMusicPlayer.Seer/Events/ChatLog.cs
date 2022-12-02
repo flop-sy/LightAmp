@@ -1,15 +1,15 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/GiR-Zippo/LightAmp/blob/main/LICENSE for full license information.
- */
+﻿#region
 
 using System;
+using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Events
 {
     public sealed class ChatLog : SeerEvent
     {
-        internal ChatLog(EventSource readerBackendType, Game game, Reader.Backend.Sharlayan.Core.ChatLogItem item) : base(readerBackendType, 0, false)
+        internal ChatLog(EventSource readerBackendType, Game game, ChatLogItem item) : base(readerBackendType)
         {
             EventType = GetType();
             ChatLogGame = game;
@@ -23,6 +23,9 @@ namespace BardMusicPlayer.Seer.Events
         public string ChatLogCode { get; }
         public string ChatLogLine { get; }
 
-        public override bool IsValid() => true;
+        public override bool IsValid()
+        {
+            return true;
+        }
     }
 }

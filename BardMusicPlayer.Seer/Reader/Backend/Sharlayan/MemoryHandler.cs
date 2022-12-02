@@ -1,7 +1,4 @@
-/*
- * Copyright(c) 2007-2020 Ryan Wilson syndicated.life@gmail.com (http://syndicated.life/)
- * Licensed under the MIT license. See https://github.com/FFXIVAPP/sharlayan/blob/master/LICENSE.md for full license information.
- */
+#region
 
 using System;
 using System.Collections.Generic;
@@ -15,11 +12,20 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models;
 using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.Structures;
 using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities;
 
+#endregion
+
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 {
     internal class MemoryHandler
     {
         private bool _isNewInstance = true;
+
+        public MemoryHandler(Scanner scanner, GameRegion gameRegion)
+        {
+            GameRegion = gameRegion;
+            Scanner = scanner;
+            Scanner.MemoryHandler = this;
+        }
 
         internal Scanner Scanner { get; }
 
@@ -41,13 +47,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 
         public event EventHandler<SignaturesFoundEvent> SignaturesFoundEvent = delegate { };
 
-        ~MemoryHandler() { UnsetProcess(); }
-
-        public MemoryHandler(Scanner scanner, GameRegion gameRegion)
+        ~MemoryHandler()
         {
-            GameRegion            = gameRegion;
-            Scanner               = scanner;
-            Scanner.MemoryHandler = this;
+            UnsetProcess();
         }
 
         public byte GetByte(IntPtr address, long offset = 0L)
@@ -94,7 +96,10 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             return GetPlatformIntFromBytes(array);
         }
 
-        public long GetPlatformIntFromBytes(byte[] source, int index = 0) => SBitConverter.TryToInt64(source, index);
+        public long GetPlatformIntFromBytes(byte[] source, int index = 0)
+        {
+            return SBitConverter.TryToInt64(source, index);
+        }
 
         public long GetPlatformUInt(IntPtr address, long offset = 0L)
         {
@@ -103,11 +108,15 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             return GetPlatformUIntFromBytes(array);
         }
 
-        public long GetPlatformUIntFromBytes(byte[] source, int index = 0) =>
-            (long) SBitConverter.TryToUInt64(source, index);
+        public long GetPlatformUIntFromBytes(byte[] source, int index = 0)
+        {
+            return (long)SBitConverter.TryToUInt64(source, index);
+        }
 
-        public IntPtr GetStaticAddress(long offset) =>
-            new(ProcessModel.Process.MainModule.BaseAddress.ToInt64() + offset);
+        public IntPtr GetStaticAddress(long offset)
+        {
+            return new(ProcessModel.Process.MainModule.BaseAddress.ToInt64() + offset);
+        }
 
         public string GetString(IntPtr address, long offset = 0L, int size = 256)
         {
@@ -150,7 +159,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             var intPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(T)));
             UnsafeNativeMethods.ReadProcessMemory(ProcessModel.Process.Handle, address + offset, intPtr,
                 new IntPtr(Marshal.SizeOf(typeof(T))), out var _);
-            var result = (T) Marshal.PtrToStructure(intPtr, typeof(T));
+            var result = (T)Marshal.PtrToStructure(intPtr, typeof(T));
             Marshal.FreeCoTaskMem(intPtr);
             return result;
         }
@@ -176,8 +185,11 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             return SBitConverter.TryToUInt32(array, 0);
         }
 
-        public bool Peek(IntPtr address, byte[] buffer) =>
-            UnsafeNativeMethods.ReadProcessMemory(ProcessHandle, address, buffer, new IntPtr(buffer.Length), out _);
+        public bool Peek(IntPtr address, byte[] buffer)
+        {
+            return UnsafeNativeMethods.ReadProcessMemory(ProcessHandle, address, buffer, new IntPtr(buffer.Length),
+                out _);
+        }
 
         public IntPtr ReadPointer(IntPtr address, long offset = 0L)
         {
@@ -190,7 +202,6 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
         {
             var intPtr = baseAddress;
             foreach (var item in path)
-            {
                 try
                 {
                     baseAddress = new IntPtr(intPtr.ToInt64() + item);
@@ -198,17 +209,18 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 
                     if (IsASMSignature)
                     {
-                        intPtr         = baseAddress + GetInt32(new IntPtr(baseAddress.ToInt64()), 0L) + 4;
+                        intPtr = baseAddress + GetInt32(new IntPtr(baseAddress.ToInt64())) + 4;
                         IsASMSignature = false;
                     }
                     else
-                        intPtr = ReadPointer(baseAddress, 0L);
+                    {
+                        intPtr = ReadPointer(baseAddress);
+                    }
                 }
                 catch
                 {
                     return IntPtr.Zero;
                 }
-            }
 
             return baseAddress;
         }
@@ -221,7 +233,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             try
             {
                 ProcessHandle = UnsafeNativeMethods.OpenProcess(UnsafeNativeMethods.ProcessAccessFlags.PROCESS_VM_ALL,
-                    false, (uint) ProcessModel.ProcessID);
+                    false, (uint)ProcessModel.ProcessID);
             }
             catch (Exception)
             {
@@ -257,7 +269,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             finally
             {
                 ProcessHandle = IntPtr.Zero;
-                IsAttached    = false;
+                IsAttached = false;
             }
         }
 
@@ -267,7 +279,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             {
                 return (from processModule in SystemModules
                     let num = processModule.BaseAddress.ToInt64()
-                    where num <= (long) address && num + processModule.ModuleMemorySize >= (long) address
+                    where num <= (long)address && num + processModule.ModuleMemorySize >= (long)address
                     select processModule).FirstOrDefault();
             }
             catch (Exception)
@@ -276,7 +288,10 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             }
         }
 
-        internal void ResolveMemoryStructures() { Structures = new APIHelper(this).GetStructures(); }
+        internal void ResolveMemoryStructures()
+        {
+            Structures = new APIHelper(this).GetStructures();
+        }
 
         protected internal virtual void RaiseException(Exception ex)
         {

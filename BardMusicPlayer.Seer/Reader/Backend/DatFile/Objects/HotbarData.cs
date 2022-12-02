@@ -1,10 +1,9 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, 2018-2020 parulina
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Collections.Generic;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 {
@@ -22,18 +21,18 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
             set => Rows[i] = value;
         }
 
-        ~HotbarData() { Dispose(); }
-
         public void Dispose()
         {
             if (Rows == null) return;
 
-            foreach (var slot in Rows.Values)
-            {
-                slot?.Dispose();
-            }
+            foreach (var slot in Rows.Values) slot?.Dispose();
 
             Rows.Clear();
+        }
+
+        ~HotbarData()
+        {
+            Dispose();
         }
     }
 }

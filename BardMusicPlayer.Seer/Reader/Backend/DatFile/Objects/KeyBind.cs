@@ -1,11 +1,10 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, 2018-2020 parulina
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using BardMusicPlayer.Quotidian.Enums;
 using BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 {
@@ -19,18 +18,31 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 
         public int ModKey2 { get; set; } = 0;
 
-        public Keys GetKey() => GetKey1() != Keys.None ? GetKey1() : GetKey2();
+        public void Dispose()
+        {
+        }
 
-        public Keys GetKey1() => GetMain(MainKey1) | GetMod(ModKey1);
+        public Keys GetKey()
+        {
+            return GetKey1() != Keys.None ? GetKey1() : GetKey2();
+        }
 
-        public Keys GetKey2() => GetMain(MainKey2) | GetMod(ModKey2);
+        public Keys GetKey1()
+        {
+            return GetMain(MainKey1) | GetMod(ModKey1);
+        }
+
+        public Keys GetKey2()
+        {
+            return GetMain(MainKey2) | GetMod(ModKey2);
+        }
 
         private static Keys GetMain(int key)
         {
-            if (key < 130) 
-                return (Keys) key;
-            if (KeyDictionary.MainKeyMap.ContainsKey(key)) 
-                return (Keys) KeyDictionary.MainKeyMap[key];
+            if (key < 130)
+                return (Keys)key;
+            if (KeyDictionary.MainKeyMap.ContainsKey(key))
+                return (Keys)KeyDictionary.MainKeyMap[key];
 
             return Keys.None;
         }
@@ -54,8 +66,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
             return str;
         }
 
-        ~Keybind() { Dispose(); }
-
-        public void Dispose() { }
+        ~Keybind()
+        {
+            Dispose();
+        }
     }
 }

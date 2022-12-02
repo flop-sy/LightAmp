@@ -1,12 +1,11 @@
-/*
- * Copyright(c) 2007-2020 Ryan Wilson syndicated.life@gmail.com (http://syndicated.life/)
- * Licensed under the MIT license. See https://github.com/FFXIVAPP/sharlayan/blob/master/LICENSE.md for full license information.
- */
+#region
 
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
+
+#endregion
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models
 {
@@ -16,11 +15,11 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models
 
         public Signature()
         {
-            Key            = string.Empty;
-            Value          = string.Empty;
+            Key = string.Empty;
+            Value = string.Empty;
             RegularExpress = null;
             SigScanAddress = IntPtr.Zero;
-            PointerPath    = null;
+            PointerPath = null;
         }
 
         internal MemoryHandler MemoryHandler { get; set; }
@@ -46,7 +45,10 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models
 
         public string Value { get; set; }
 
-        public static implicit operator IntPtr(Signature signature) => signature.GetAddress();
+        public static implicit operator IntPtr(Signature signature)
+        {
+            return signature.GetAddress();
+        }
 
         public IntPtr GetAddress()
         {

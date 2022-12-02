@@ -1,11 +1,10 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, trotlinebeercan, GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using BardMusicPlayer.Quotidian;
 using BardMusicPlayer.Seer.Events;
+
+#endregion
 
 namespace BardMusicPlayer.Seer
 {
@@ -16,7 +15,7 @@ namespace BardMusicPlayer.Seer
             try
             {
                 // make sure it's valid to begin with and from a backend.
-                if (!seerEvent.IsValid() || 10 > (int) seerEvent.EventSource) return;
+                if (!seerEvent.IsValid() || 10 > (int)seerEvent.EventSource) return;
 
                 seerEvent.Game = this;
 
@@ -58,6 +57,7 @@ namespace BardMusicPlayer.Seer
                             ChatStatus = chatStatus.ChatStatus;
                             BmpSeer.Instance.PublishEvent(chatStatus);
                         }
+
                         break;
 
                     case ConfigIdChanged configId:
@@ -99,6 +99,7 @@ namespace BardMusicPlayer.Seer
                             IsLoggedIn = isLoggedIn.IsLoggedIn;
                             BmpSeer.Instance.PublishEvent(isLoggedIn);
                         }
+
                         break;
                     case IsBardChanged isBard:
                         if (IsBard != isBard.IsBard)
@@ -116,11 +117,11 @@ namespace BardMusicPlayer.Seer
                             !InstrumentToneKeys.Equals(keyMap.InstrumentToneKeys) ||
                             !NoteKeys.Equals(keyMap.NoteKeys))
                         {
-                            NavigationMenuKeys     = keyMap.NavigationMenuKeys;
+                            NavigationMenuKeys = keyMap.NavigationMenuKeys;
                             InstrumentToneMenuKeys = keyMap.InstrumentToneMenuKeys;
-                            InstrumentKeys         = keyMap.InstrumentKeys;
-                            InstrumentToneKeys     = keyMap.InstrumentToneKeys;
-                            NoteKeys               = keyMap.NoteKeys;
+                            InstrumentKeys = keyMap.InstrumentKeys;
+                            InstrumentToneKeys = keyMap.InstrumentToneKeys;
+                            NoteKeys = keyMap.NoteKeys;
                             BmpSeer.Instance.PublishEvent(keyMap);
                         }
 

@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Diagnostics;
@@ -11,6 +8,8 @@ using System.Threading.Tasks;
 using BardMusicPlayer.Pigeonhole;
 using BardMusicPlayer.Quotidian.UtcMilliTime;
 using BardMusicPlayer.Seer.Events;
+
+#endregion
 
 namespace BardMusicPlayer.Seer
 {
@@ -52,19 +51,22 @@ namespace BardMusicPlayer.Seer
                             break;
 
                         // Add new games.
-                        if (process is null || _games.ContainsKey(process.Id) || process.HasExited || !process.Responding)
+                        if (process is null || _games.ContainsKey(process.Id) || process.HasExited ||
+                            !process.Responding)
                             continue;
 
                         // Adding a game spikes the cpu when sharlayan scans memory.
                         var timeNow = Clock.Time.Now;
-                        if (coolDown + BmpPigeonhole.Instance.SeerGameScanCooldown > timeNow) 
+                        if (coolDown + BmpPigeonhole.Instance.SeerGameScanCooldown > timeNow)
                             continue;
 
                         coolDown = timeNow;
 
                         var game = new Game(process);
                         if (!game.Initialize())
+                        {
                             game.Dispose();
+                        }
                         else
                         {
                             if (!_games.TryAdd(process.Id, game))
@@ -81,6 +83,9 @@ namespace BardMusicPlayer.Seer
             }
         }
 
-        private void StopProcessWatcher() { _watcherTokenSource.Cancel(); }
+        private void StopProcessWatcher()
+        {
+            _watcherTokenSource.Cancel();
+        }
     }
 }

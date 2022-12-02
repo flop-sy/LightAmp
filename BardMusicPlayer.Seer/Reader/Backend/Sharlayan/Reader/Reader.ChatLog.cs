@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2007-2020 Ryan Wilson syndicated.life@gmail.com (http://syndicated.life/)
- * Licensed under the MIT license. See https://github.com/FFXIVAPP/sharlayan/blob/master/LICENSE.md for full license information.
- */
+﻿#region
 
 using System;
 using System.Collections.Generic;
@@ -11,25 +8,31 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core;
 using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models;
 using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.ReadResults;
 
+#endregion
+
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
 {
     internal partial class Reader
     {
-        public bool CanGetChatLog() => Scanner.Locations.ContainsKey(Signatures.ChatLogKey);
+        private readonly ChatLogReader _chatLogReader;
 
         private bool _chatLogFirstRun = true;
-        private readonly ChatLogReader _chatLogReader;
+
+        public bool CanGetChatLog()
+        {
+            return Scanner.Locations.ContainsKey(Signatures.ChatLogKey);
+        }
 
         public ChatLogResult GetChatLog(int previousArrayIndex = 0, int previousOffset = 0)
         {
             var result = new ChatLogResult();
 
-            if ((MemoryHandler==null) || !CanGetChatLog() || !MemoryHandler.IsAttached) return result;
+            if (MemoryHandler == null || !CanGetChatLog() || !MemoryHandler.IsAttached) return result;
 
             _chatLogReader.PreviousArrayIndex = previousArrayIndex;
-            _chatLogReader.PreviousOffset     = previousOffset;
+            _chatLogReader.PreviousOffset = previousOffset;
 
-            var chatPointerMap = (IntPtr) Scanner.Locations[Signatures.ChatLogKey];
+            var chatPointerMap = (IntPtr)Scanner.Locations[Signatures.ChatLogKey];
 
             if (chatPointerMap.ToInt64() <= 20) return result;
 
@@ -39,7 +42,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
             {
                 _chatLogReader.ChatLogPointers = new ChatLogPointers
                 {
-                    LineCount = (uint) MemoryHandler.GetPlatformUInt(chatPointerMap),
+                    LineCount = (uint)MemoryHandler.GetPlatformUInt(chatPointerMap),
                     OffsetArrayStart = MemoryHandler.GetPlatformUInt(chatPointerMap,
                         MemoryHandler.Structures.ChatLogPointers.OffsetArrayStart),
                     OffsetArrayPos = MemoryHandler.GetPlatformUInt(chatPointerMap,
@@ -62,36 +65,36 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
                     _chatLogReader.EnsureArrayIndexes();
 
                     if (currentArrayIndex - 1 > 0 && _chatLogReader.Indexes.Count >= currentArrayIndex - 1)
-                        _chatLogReader.PreviousOffset = _chatLogReader.Indexes[(int) currentArrayIndex - 1];
+                    {
+                        _chatLogReader.PreviousOffset = _chatLogReader.Indexes[(int)currentArrayIndex - 1];
+                    }
                     else
                     {
-                        _chatLogReader.PreviousOffset     = 0;
+                        _chatLogReader.PreviousOffset = 0;
                         _chatLogReader.PreviousArrayIndex = 0;
-                        result.PreviousArrayIndex         = _chatLogReader.PreviousArrayIndex;
-                        result.PreviousOffset             = _chatLogReader.PreviousOffset;
+                        result.PreviousArrayIndex = _chatLogReader.PreviousArrayIndex;
+                        result.PreviousOffset = _chatLogReader.PreviousOffset;
                         return result; // The player is logged out.
                     }
 
-                    _chatLogReader.PreviousArrayIndex = (int) currentArrayIndex - 1;
+                    _chatLogReader.PreviousArrayIndex = (int)currentArrayIndex - 1;
                 }
                 else
                 {
                     if (currentArrayIndex < _chatLogReader.PreviousArrayIndex)
                     {
-                        _chatLogReader.PreviousOffset     = 0;
+                        _chatLogReader.PreviousOffset = 0;
                         _chatLogReader.PreviousArrayIndex = 0;
-                        result.PreviousArrayIndex         = _chatLogReader.PreviousArrayIndex;
-                        result.PreviousOffset             = _chatLogReader.PreviousOffset;
+                        result.PreviousArrayIndex = _chatLogReader.PreviousArrayIndex;
+                        result.PreviousOffset = _chatLogReader.PreviousOffset;
                         return result; // The player logged out.
                     }
 
                     if (_chatLogReader.PreviousArrayIndex < currentArrayIndex)
-                    {
                         buffered.AddRange(_chatLogReader.ResolveEntries(_chatLogReader.PreviousArrayIndex,
-                            (int) currentArrayIndex));
-                    }
+                            (int)currentArrayIndex));
 
-                    _chatLogReader.PreviousArrayIndex = (int) currentArrayIndex;
+                    _chatLogReader.PreviousArrayIndex = (int)currentArrayIndex;
                 }
             }
             catch (Exception ex)
@@ -100,7 +103,6 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
             }
 
             foreach (var bytes in buffered.Where(b => b.Count > 0))
-            {
                 try
                 {
                     var chatLogEntry = ChatEntry.Process(MemoryHandler, bytes.ToArray());
@@ -110,10 +112,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
                 {
                     MemoryHandler?.RaiseException(ex);
                 }
-            }
 
             result.PreviousArrayIndex = _chatLogReader.PreviousArrayIndex;
-            result.PreviousOffset     = _chatLogReader.PreviousOffset;
+            result.PreviousOffset = _chatLogReader.PreviousOffset;
 
             return result;
         }
