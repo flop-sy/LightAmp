@@ -1,5 +1,4 @@
-﻿
-namespace BasicSharp
+﻿namespace BasicSharp
 {
     public struct Marker
     {

@@ -1,51 +1,61 @@
-using BardMusicPlayer.Quotidian.Structs;
-using System;
+#region
+
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
+using BardMusicPlayer.Quotidian.Structs;
+
+#endregion
 
 namespace BasicSharp
 {
     public class Interpreter
     {
-        public delegate void PrintFunction(ChatMessageChannelType type, string text);
-        public delegate void SelectedBard(int num);
-        public delegate void SelectedBardAsString(string name);
+        public delegate Value BasicFunction(Interpreter interpreter, List<Value> args);
+
         public delegate string InputFunction();
 
-        public PrintFunction printHandler;
-        public SelectedBard  selectedBardHandler;
-        public SelectedBardAsString selectedBardAsStringHandler;
+        public delegate void PrintFunction(ChatMessageChannelType type, string text);
 
-        public InputFunction inputHandler;
+        public delegate void SelectedBard(int num);
 
-        private Lexer lex;
-        private Token prevToken; // token before last one
-        private Token lastToken; // last seen token
-
-        private Dictionary<string, Value> vars; // all variables are stored here
-        private Dictionary<string, Marker> labels; // already seen labels 
-        private Dictionary<string, Marker> loops; // for loops
-
-        public delegate Value BasicFunction(Interpreter interpreter, List<Value> args);
-        private Dictionary<string, BasicFunction> funcs; // all maped functions
-
-        private int ifcounter; // counter used for matching "if" with "else"
-
-        private Marker lineMarker; // current line marker
+        public delegate void SelectedBardAsString(string name);
 
         private bool exit; // do we need to exit?
+        private readonly Dictionary<string, BasicFunction> funcs; // all maped functions
 
-        public void StopExec() { exit = true; }
+        private readonly int ifcounter; // counter used for matching "if" with "else"
+
+        public InputFunction inputHandler;
+        private readonly Dictionary<string, Marker> labels; // already seen labels 
+        private Token lastToken; // last seen token
+
+        private readonly Lexer lex;
+
+        private Marker lineMarker; // current line marker
+        private readonly Dictionary<string, Marker> loops; // for loops
+        private Token prevToken; // token before last one
+
+        public PrintFunction printHandler;
+        public SelectedBardAsString selectedBardAsStringHandler;
+        public SelectedBard selectedBardHandler;
+
+        private readonly Dictionary<string, Value> vars; // all variables are stored here
 
         public Interpreter(string input)
         {
-            this.lex = new Lexer(input);
-            this.vars = new Dictionary<string, Value>();
-            this.labels = new Dictionary<string, Marker>();
-            this.loops = new Dictionary<string, Marker>();
-            this.funcs = new Dictionary<string, BasicFunction>();
-            this.ifcounter = 0;
+            lex = new Lexer(input);
+            vars = new Dictionary<string, Value>();
+            labels = new Dictionary<string, Marker>();
+            loops = new Dictionary<string, Marker>();
+            funcs = new Dictionary<string, BasicFunction>();
+            ifcounter = 0;
             BuiltIns.InstallAll(this); // map all builtins functions
+        }
+
+        public void StopExec()
+        {
+            exit = true;
         }
 
         public Value GetVar(string name)
@@ -72,16 +82,16 @@ namespace BasicSharp
             else funcs[name] = function;
         }
 
-        void Error(string text)
+        private void Error(string text)
         {
             throw new BasicException(text, lineMarker.Line);
         }
 
-        void Match(Token tok)
+        private void Match(Token tok)
         {
             // check if current token is what we expect it to be
             if (lastToken != tok)
-                Error("Expect " + tok.ToString() + " got " + lastToken.ToString());
+                Error("Expect " + tok + " got " + lastToken);
         }
 
         public void Exec()
@@ -91,7 +101,7 @@ namespace BasicSharp
             while (!exit) Line(); // do all lines
         }
 
-        Token GetNextToken()
+        private Token GetNextToken()
         {
             prevToken = lastToken;
             lastToken = lex.GetToken();
@@ -102,7 +112,7 @@ namespace BasicSharp
             return lastToken;
         }
 
-        void Line()
+        private void Line()
         {
             // skip empty new lines
             while (lastToken == Token.NewLine) GetNextToken();
@@ -117,29 +127,55 @@ namespace BasicSharp
             Statment(); // evaluate statment
 
             if (lastToken != Token.NewLine && lastToken != Token.EOF)
-                Error("Expect new line got " + lastToken.ToString());
+                Error("Expect new line got " + lastToken);
         }
 
-        void Statment()
+        private void Statment()
         {
-            Token keyword = lastToken;
+            var keyword = lastToken;
             GetNextToken();
             switch (keyword)
             {
-                case Token.Print: Print(); break;
-                case Token.Macro: Macro(); break;
-                case Token.Input: Input(); break;
-                case Token.Goto: Goto(); break;
-                case Token.If: If(); break;
-                case Token.Else: Else(); break;
+                case Token.Print:
+                    Print();
+                    break;
+                case Token.Macro:
+                    Macro();
+                    break;
+                case Token.Input:
+                    Input();
+                    break;
+                case Token.Goto:
+                    Goto();
+                    break;
+                case Token.If:
+                    If();
+                    break;
+                case Token.Else:
+                    Else();
+                    break;
                 case Token.EndIf: break;
-                case Token.For: For(); break;
-                case Token.Next: Next(); break;
-                case Token.Let: Let(); break;
-                case Token.End: End(); break;
-                case Token.Assert: Assert(); break;
-                case Token.Select: Select(); break;
-                case Token.Sleep: Sleep(); break;
+                case Token.For:
+                    For();
+                    break;
+                case Token.Next:
+                    Next();
+                    break;
+                case Token.Let:
+                    Let();
+                    break;
+                case Token.End:
+                    End();
+                    break;
+                case Token.Assert:
+                    Assert();
+                    break;
+                case Token.Select:
+                    Select();
+                    break;
+                case Token.Sleep:
+                    Sleep();
+                    break;
                 case Token.Identifier:
                     if (lastToken == Token.Equal) Let();
                     else if (lastToken == Token.Colon) Label();
@@ -149,9 +185,10 @@ namespace BasicSharp
                     exit = true;
                     break;
                 default:
-                    Error("Expect keyword got " + keyword.ToString());
+                    Error("Expect keyword got " + keyword);
                     break;
             }
+
             if (lastToken == Token.Colon)
             {
                 // we can execute more statments in single line if we use ";"
@@ -160,17 +197,17 @@ namespace BasicSharp
             }
         }
 
-        void Print()
+        private void Print()
         {
             printHandler?.Invoke(ChatMessageChannelType.Say, Expr().ToString());
         }
 
-        void Macro()
+        private void Macro()
         {
-            printHandler?.Invoke(ChatMessageChannelType.None, "/" + Expr().ToString());
+            printHandler?.Invoke(ChatMessageChannelType.None, "/" + Expr());
         }
 
-        void Input()
+        private void Input()
         {
             while (true)
             {
@@ -178,10 +215,10 @@ namespace BasicSharp
 
                 if (!vars.ContainsKey(lex.Identifier)) vars.Add(lex.Identifier, new Value());
 
-                string input = inputHandler?.Invoke();
+                var input = inputHandler?.Invoke();
                 double d;
                 // try to parse as double, if failed read value as string
-                if (double.TryParse(input, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d))
+                if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out d))
                     vars[lex.Identifier] = new Value(d);
                 else
                     vars[lex.Identifier] = new Value(input);
@@ -192,13 +229,12 @@ namespace BasicSharp
             }
         }
 
-        void Goto()
+        private void Goto()
         {
             Match(Token.Identifier);
-            string name = lex.Identifier;
+            var name = lex.Identifier;
 
             if (!labels.ContainsKey(name))
-            {
                 // if we didn't encaunter required label yet, start to search for it
                 while (true)
                 {
@@ -209,20 +245,18 @@ namespace BasicSharp
                         if (lex.Identifier == name)
                             break;
                     }
-                    if (lastToken == Token.EOF)
-                    {
-                        Error("Cannot find label named " + name);
-                    }
+
+                    if (lastToken == Token.EOF) Error("Cannot find label named " + name);
                 }
-            }
+
             lex.GoTo(labels[name]);
             lastToken = Token.NewLine;
         }
 
-        void If()
+        private void If()
         {
             // check if argument is equal to 0
-            bool result = (Expr().BinOp(new Value(0), Token.Equal).Real == 1);
+            var result = Expr().BinOp(new Value(0), Token.Equal).Real == 1;
 
             Match(Token.Then);
             GetNextToken();
@@ -230,7 +264,7 @@ namespace BasicSharp
             if (result)
             {
                 // in case "if" evaulate to zero skip to matching else or endif
-                int i = ifcounter;
+                var i = ifcounter;
                 while (true)
                 {
                     if (lastToken == Token.If)
@@ -252,17 +286,19 @@ namespace BasicSharp
                             GetNextToken();
                             return;
                         }
+
                         i--;
                     }
+
                     GetNextToken();
                 }
             }
         }
 
-        void Else()
+        private void Else()
         {
             // skip to matching endif
-            int i = ifcounter;
+            var i = ifcounter;
             while (true)
             {
                 if (lastToken == Token.If)
@@ -276,27 +312,29 @@ namespace BasicSharp
                         GetNextToken();
                         return;
                     }
+
                     i--;
                 }
+
                 GetNextToken();
             }
         }
 
-        void Label()
+        private void Label()
         {
-            string name = lex.Identifier;
+            var name = lex.Identifier;
             if (!labels.ContainsKey(name)) labels.Add(name, lex.TokenMarker);
 
             GetNextToken();
             Match(Token.NewLine);
         }
 
-        void End()
+        private void End()
         {
             exit = true;
         }
 
-        void Let()
+        private void Let()
         {
             if (lastToken != Token.Equal)
             {
@@ -305,23 +343,23 @@ namespace BasicSharp
                 Match(Token.Equal);
             }
 
-            string id = lex.Identifier;
+            var id = lex.Identifier;
 
             GetNextToken();
 
             SetVar(id, Expr());
         }
 
-        void For()
+        private void For()
         {
             Match(Token.Identifier);
-            string var = lex.Identifier;
+            var var = lex.Identifier;
 
             GetNextToken();
             Match(Token.Equal);
 
             GetNextToken();
-            Value v = Expr();
+            var v = Expr();
 
             // save for loop marker
             if (loops.ContainsKey(var))
@@ -340,7 +378,6 @@ namespace BasicSharp
             v = Expr();
 
             if (vars[var].BinOp(v, Token.More).Real == 1)
-            {
                 while (true)
                 {
                     while (!(GetNextToken() == Token.Identifier && prevToken == Token.Next)) ;
@@ -352,30 +389,26 @@ namespace BasicSharp
                         break;
                     }
                 }
-            }
         }
 
-        void Next()
+        private void Next()
         {
             // jump to begining of the "for" loop
             Match(Token.Identifier);
-            string var = lex.Identifier;
+            var var = lex.Identifier;
             vars[var] = vars[var].BinOp(new Value(1), Token.Plus);
             lex.GoTo(new Marker(loops[var].Pointer - 1, loops[var].Line, loops[var].Column - 1));
             lastToken = Token.NewLine;
         }
 
-        void Assert()
+        private void Assert()
         {
-            bool result = (Expr().BinOp(new Value(0), Token.Equal).Real == 1);
+            var result = Expr().BinOp(new Value(0), Token.Equal).Real == 1;
 
-            if (result)
-            {
-                Error("Assertion fault"); // if out assert evaluate to false, throw error with souce code line
-            }
+            if (result) Error("Assertion fault"); // if out assert evaluate to false, throw error with souce code line
         }
 
-        void Select()
+        private void Select()
         {
             var v = Expr();
             if (v.Type == ValueType.Real)
@@ -384,52 +417,52 @@ namespace BasicSharp
                 selectedBardAsStringHandler?.Invoke(v.ToString());
         }
 
-        void Sleep()
+        private void Sleep()
         {
             var v = Expr();
             if (v.Type == ValueType.Real)
             {
-                int sleeptime = (int)v.Real;
+                var sleeptime = (int)v.Real;
                 Task.Delay(sleeptime).Wait();
             }
         }
 
-        Value Expr(int min = 0)
+        private Value Expr(int min = 0)
         {
             // originally we were using shunting-yard algorithm, but now we parse it recursively 
-            Dictionary<Token, int> precedens = new Dictionary<Token, int>()
+            var precedens = new Dictionary<Token, int>
             {
                 { Token.Or, 0 }, { Token.And, 0 },
                 { Token.Equal, 1 }, { Token.NotEqual, 1 },
                 { Token.Less, 1 }, { Token.More, 1 },
-                { Token.LessEqual, 1 },  { Token.MoreEqual, 1 },
+                { Token.LessEqual, 1 }, { Token.MoreEqual, 1 },
                 { Token.Plus, 2 }, { Token.Minus, 2 },
-                { Token.Asterisk, 3 }, {Token.Slash, 3 },
+                { Token.Asterisk, 3 }, { Token.Slash, 3 },
                 { Token.Caret, 4 }
             };
 
-            Value lhs = Primary();
+            var lhs = Primary();
 
             while (true)
             {
                 if (lastToken < Token.Plus || lastToken > Token.And || precedens[lastToken] < min)
                     break;
 
-                Token op = lastToken;
-                int prec = precedens[lastToken]; // Operator Precedence
-                int assoc = 0; // 0 left, 1 right; Operator associativity
-                int nextmin = assoc == 0 ? prec : prec + 1;
+                var op = lastToken;
+                var prec = precedens[lastToken]; // Operator Precedence
+                var assoc = 0; // 0 left, 1 right; Operator associativity
+                var nextmin = assoc == 0 ? prec : prec + 1;
                 GetNextToken();
-                Value rhs = Expr(nextmin);
+                var rhs = Expr(nextmin);
                 lhs = lhs.BinOp(rhs, op);
             }
 
             return lhs;
         }
 
-        Value Primary()
+        private Value Primary()
         {
-            Value prim = Value.Zero;
+            var prim = Value.Zero;
 
             if (lastToken == Token.Value)
             {
@@ -446,12 +479,12 @@ namespace BasicSharp
                 }
                 else if (funcs.ContainsKey(lex.Identifier))
                 {
-                    string name = lex.Identifier;
-                    List<Value> args = new List<Value>();
+                    var name = lex.Identifier;
+                    var args = new List<Value>();
                     GetNextToken();
                     Match(Token.LParen);
 
-                start:
+                    start:
                     if (GetNextToken() != Token.RParen)
                     {
                         args.Add(Expr());
@@ -465,6 +498,7 @@ namespace BasicSharp
                 {
                     Error("Undeclared variable " + lex.Identifier);
                 }
+
                 GetNextToken();
             }
             else if (lastToken == Token.LParen)
@@ -479,7 +513,7 @@ namespace BasicSharp
             {
                 // unary operator
                 // '-' | '+' primary
-                Token op = lastToken;
+                var op = lastToken;
                 GetNextToken();
                 prim = Primary().UnaryOp(op);
             }

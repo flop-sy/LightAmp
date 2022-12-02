@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.IO;
@@ -9,58 +6,38 @@ using System.Threading;
 using System.Threading.Tasks;
 using BardMusicPlayer.Maestro;
 using BardMusicPlayer.Pigeonhole;
+using BardMusicPlayer.Quotidian.Structs;
 using BardMusicPlayer.Seer;
 using BasicSharp;
+
+#endregion
 
 namespace BardMusicPlayer.Script
 {
     public class BmpScript
     {
         private static readonly Lazy<BmpScript> LazyInstance = new(() => new BmpScript());
+        private Interpreter basic;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool Started { get; private set; }
+        private Thread thread;
 
         private BmpScript()
         {
         }
+
+        /// <summary>
+        /// </summary>
+        public bool Started { get; private set; }
+
         public static BmpScript Instance => LazyInstance.Value;
+
+        private int selectedBard { get; set; }
+        private string selectedBardName { get; set; } = "";
 
         public event EventHandler<bool> OnRunningStateChanged;
 
-        private Thread thread = null;
-        private Interpreter basic = null;
+        #region accessors
 
-        private int selectedBard        { get; set; } = 0;
-        private string selectedBardName { get; set; } = "";
-
-#region Routine Handlers
-
-        public void SetSelectedBard(int num)
-        {
-            selectedBardName = "";
-            selectedBard = num;
-        }
-
-        public void SetSelectedBardName(string name)
-        {
-            selectedBard = -1;
-            selectedBardName = name;
-        }
-
-        public void Print(Quotidian.Structs.ChatMessageChannelType type, string text)
-        {
-            if (selectedBard != -1)
-                BmpMaestro.Instance.SendText(selectedBard, type, text);
-            else
-                BmpMaestro.Instance.SendText(selectedBardName, type, text);
-        }
-
-#endregion
-
-#region accessors
         public void StopExecution()
         {
             if (thread == null)
@@ -74,11 +51,11 @@ namespace BardMusicPlayer.Script
                 thread.Abort();
         }
 
-#endregion 
+        #endregion
 
         public void LoadAndRun(string basicfile)
         {
-            Task task = Task.Run(() =>
+            var task = Task.Run(() =>
             {
                 thread = Thread.CurrentThread;
                 if (OnRunningStateChanged != null)
@@ -95,6 +72,7 @@ namespace BardMusicPlayer.Script
                 {
                     Console.WriteLine("Error");
                 }
+
                 if (OnRunningStateChanged != null)
                     OnRunningStateChanged(this, false);
 
@@ -106,18 +84,19 @@ namespace BardMusicPlayer.Script
         }
 
         /// <summary>
-        /// Start Script.
+        ///     Start Script.
         /// </summary>
         public void Start()
         {
             if (Started) return;
-            if (!BmpPigeonhole.Initialized) throw new BmpScriptException("Script requires Pigeonhole to be initialized.");
+            if (!BmpPigeonhole.Initialized)
+                throw new BmpScriptException("Script requires Pigeonhole to be initialized.");
             if (!BmpSeer.Instance.Started) throw new BmpScriptException("Script requires Seer to be running.");
             Started = true;
         }
 
         /// <summary>
-        /// Stop Script.
+        ///     Stop Script.
         /// </summary>
         public void Stop()
         {
@@ -125,11 +104,39 @@ namespace BardMusicPlayer.Script
             Started = false;
         }
 
-        ~BmpScript() => Dispose();
+        ~BmpScript()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
             Stop();
             GC.SuppressFinalize(this);
         }
+
+        #region Routine Handlers
+
+        public void SetSelectedBard(int num)
+        {
+            selectedBardName = "";
+            selectedBard = num;
+        }
+
+        public void SetSelectedBardName(string name)
+        {
+            selectedBard = -1;
+            selectedBardName = name;
+        }
+
+        public void Print(ChatMessageChannelType type, string text)
+        {
+            if (selectedBard != -1)
+                BmpMaestro.Instance.SendText(selectedBard, type, text);
+            else
+                BmpMaestro.Instance.SendText(selectedBardName, type, text);
+        }
+
+        #endregion
     }
 }

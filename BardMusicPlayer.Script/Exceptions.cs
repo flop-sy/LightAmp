@@ -1,17 +1,17 @@
-﻿/*
- * Copyright(c) 2022 GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using BardMusicPlayer.Quotidian;
+
+#endregion
 
 namespace BardMusicPlayer.Script
 {
     public class BmpScriptException : BmpException
     {
-        internal BmpScriptException() : base()
+        internal BmpScriptException()
         {
         }
+
         internal BmpScriptException(string message) : base(message)
         {
         }

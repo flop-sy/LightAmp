@@ -1,5 +1,4 @@
-﻿
-namespace BasicSharp
+﻿namespace BasicSharp
 {
     public enum Token
     {
@@ -52,6 +51,6 @@ namespace BasicSharp
         LParen,
         RParen,
 
-        EOF = -1   //End Of File
+        EOF = -1 //End Of File
     }
 }

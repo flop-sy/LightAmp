@@ -1,12 +1,13 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+#endregion
 
 namespace BasicSharp
 {
-    class BuiltIns
+    internal class BuiltIns
     {
         public static void InstallAll(Interpreter interpreter)
         {

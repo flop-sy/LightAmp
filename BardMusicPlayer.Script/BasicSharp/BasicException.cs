@@ -1,10 +1,15 @@
-﻿using System;
+﻿#region
+
+using System;
+
+#endregion
 
 namespace BasicSharp
 {
-    class BasicException : Exception
+    internal class BasicException : Exception
     {
         public int line;
+
         public BasicException()
         {
         }
