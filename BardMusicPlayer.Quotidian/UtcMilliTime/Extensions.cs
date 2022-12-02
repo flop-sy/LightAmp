@@ -155,7 +155,7 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
         /// <returns>DateTimeOffset</returns>
         public static DateTimeOffset ToDateTimeOffset(this long timestamp)
         {
-            return new(timestamp.ToUtcDateTime());
+            return new DateTimeOffset(timestamp.ToUtcDateTime());
         }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
         /// <returns>TimeSpan</returns>
         public static TimeSpan ToTimeSpan(this long interval)
         {
-            return new(interval * Constants.dotnet_ticks_per_millisecond);
+            return new TimeSpan(interval * Constants.dotnet_ticks_per_millisecond);
         }
 
         /// <summary>
