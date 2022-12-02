@@ -1,14 +1,13 @@
-/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
+#region
 
 using BardMusicPlayer.Siren.AlphaTab.Collections;
+
+#endregion
 
 namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
     /// <summary>
-    /// This public class represents a predefined string tuning.
+    ///     This public class represents a predefined string tuning.
     /// </summary>
     internal class Tuning
     {
@@ -17,6 +16,39 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         private static FastList<Tuning> _fiveStrings;
         private static FastList<Tuning> _fourStrings;
         private static FastDictionary<int, Tuning> _defaultTunings;
+
+        static Tuning()
+        {
+            Initialize();
+        }
+
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="Tuning" /> class.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="tuning">The tuning.</param>
+        /// <param name="isStandard">if set to <c>true</c> [is standard].</param>
+        public Tuning(string name, int[] tuning, bool isStandard)
+        {
+            IsStandard = isStandard;
+            Name = name;
+            Tunings = tuning;
+        }
+
+        /// <summary>
+        ///     Gets or sets whether this is the standard tuning for this number of strings.
+        /// </summary>
+        public bool IsStandard { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the name of the tuning.
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the values for each string of the instrument.
+        /// </summary>
+        public int[] Tunings { get; set; }
 
         internal static string GetTextForTuning(int tuning, bool includeOctave)
         {
@@ -27,31 +59,25 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                 "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"
             };
             var result = notes[note];
-            if (includeOctave)
-            {
-                result += octave - 1;
-            }
+            if (includeOctave) result += octave - 1;
 
             return result;
         }
 
         /// <summary>
-        /// Gets the default tuning for the given string count. 
+        ///     Gets the default tuning for the given string count.
         /// </summary>
         /// <param name="stringCount">The string count. </param>
         /// <returns>The tuning for the given string count or null if the string count is not defined. </returns>
         public static Tuning GetDefaultTuningFor(int stringCount)
         {
-            if (_defaultTunings.ContainsKey(stringCount))
-            {
-                return _defaultTunings[stringCount];
-            }
+            if (_defaultTunings.ContainsKey(stringCount)) return _defaultTunings[stringCount];
 
             return null;
         }
 
         /// <summary>
-        /// Gets a list of all tuning presets for a given stirng count. 
+        ///     Gets a list of all tuning presets for a given stirng count.
         /// </summary>
         /// <param name="stringCount">The string count. </param>
         /// <returns>The list of known tunings for the given string count or an empty list if the string count is not defined. </returns>
@@ -70,11 +96,6 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             }
 
             return new FastList<Tuning>();
-        }
-
-        static Tuning()
-        {
-            Initialize();
         }
 
         private static void Initialize()
@@ -391,7 +412,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         }
 
         /// <summary>
-        /// Tries to find a known tuning by a given list of tuning values. 
+        ///     Tries to find a known tuning by a given list of tuning values.
         /// </summary>
         /// <param name="strings">The values defining the tuning. </param>
         /// <returns>The known tuning. </returns>
@@ -403,49 +424,16 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                 var tuning = tunings[t];
                 var equals = true;
                 for (int i = 0, j = strings.Length; i < j; i++)
-                {
                     if (strings[i] != tuning.Tunings[i])
                     {
                         equals = false;
                         break;
                     }
-                }
 
-                if (equals)
-                {
-                    return tuning;
-                }
+                if (equals) return tuning;
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Gets or sets whether this is the standard tuning for this number of strings. 
-        /// </summary>
-        public bool IsStandard { get; set; }
-
-        /// <summary>
-        /// Gets or sets the name of the tuning. 
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// Gets or sets the values for each string of the instrument. 
-        /// </summary>
-        public int[] Tunings { get; set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Tuning"/> class.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <param name="tuning">The tuning.</param>
-        /// <param name="isStandard">if set to <c>true</c> [is standard].</param>
-        public Tuning(string name, int[] tuning, bool isStandard)
-        {
-            IsStandard = isStandard;
-            Name = name;
-            Tunings = tuning;
         }
     }
 }

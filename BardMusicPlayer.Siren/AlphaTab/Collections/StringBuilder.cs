@@ -1,9 +1,4 @@
-﻿/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
-
-namespace BardMusicPlayer.Siren.AlphaTab.Collections
+﻿namespace BardMusicPlayer.Siren.AlphaTab.Collections
 {
     internal class StringBuilder
     {

@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System.Collections.Generic;
 using System.Linq;
@@ -14,13 +11,16 @@ using Melanchall.DryWetMidi.Core;
 using Melanchall.DryWetMidi.Interaction;
 using MidiFile = BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.MidiFile;
 
+#endregion
+
 namespace BardMusicPlayer.Siren
 {
     internal static class Utils
     {
-        internal static async Task<(MidiFile, Dictionary<int, Dictionary<long, string>>)> GetSynthMidi(this BmpSong song)
+        internal static async Task<(MidiFile, Dictionary<int, Dictionary<long, string>>)> GetSynthMidi(
+            this BmpSong song)
         {
-            var file = new MidiFile {Division = 600};
+            var file = new MidiFile { Division = 600 };
             var events = new AlphaSynthMidiFileHandler(file);
             events.AddTempo(0, 100);
 
@@ -30,7 +30,7 @@ namespace BardMusicPlayer.Siren
             var midiFile = await song.GetProcessedMidiFile();
 
             var trackChunks = midiFile.GetTrackChunks().ToList();
-            
+
             var lyrics = new Dictionary<int, Dictionary<long, string>>();
             var lyricNum = 0;
 
@@ -41,10 +41,12 @@ namespace BardMusicPlayer.Siren
                 {
                     case "lyric":
                     {
-                        if (!lyrics.ContainsKey(lyricNum)) lyrics.Add(lyricNum, new Dictionary<long, string>(int.Parse(options[1])));
+                        if (!lyrics.ContainsKey(lyricNum))
+                            lyrics.Add(lyricNum, new Dictionary<long, string>(int.Parse(options[1])));
 
-                        foreach (var lyric in trackChunk.GetTimedEvents().Where(x => x.Event.EventType == MidiEventType.Lyric))
-                            lyrics[lyricNum].Add(lyric.Time, ((LyricEvent) lyric.Event).Text);
+                        foreach (var lyric in trackChunk.GetTimedEvents()
+                                     .Where(x => x.Event.EventType == MidiEventType.Lyric))
+                            lyrics[lyricNum].Add(lyric.Time, ((LyricEvent)lyric.Event).Text);
 
                         lyricNum++;
 
@@ -58,10 +60,11 @@ namespace BardMusicPlayer.Siren
                         {
                             var instrument = tone.GetInstrumentFromChannel(note.Channel);
                             var noteNum = note.NoteNumber;
-                            var dur = (int) MinimumLength(instrument, noteNum-48, note.Length);
-                            var time = (int) note.Time;
-                            events.AddProgramChange(trackCounter, time, trackCounter, (byte) instrument.MidiProgramChangeCode);
-                            events.AddNote(trackCounter, time, dur,noteNum, DynamicValue.FFF, trackCounter);
+                            var dur = (int)MinimumLength(instrument, noteNum - 48, note.Length);
+                            var time = (int)note.Time;
+                            events.AddProgramChange(trackCounter, time, trackCounter,
+                                (byte)instrument.MidiProgramChangeCode);
+                            events.AddNote(trackCounter, time, dur, noteNum, DynamicValue.FFF, trackCounter);
                             if (trackCounter == byte.MaxValue) trackCounter = byte.MinValue;
                             else trackCounter++;
                             if (time + dur > veryLast) veryLast = time + dur;
@@ -71,42 +74,43 @@ namespace BardMusicPlayer.Siren
                     }
                 }
             }
-            events.FinishTrack(byte.MaxValue, (byte) veryLast);
+
+            events.FinishTrack(byte.MaxValue, (byte)veryLast);
             return (file, lyrics);
         }
-        
+
         private static long MinimumLength(Instrument instrument, int note, long duration)
         {
             switch (instrument.Index)
             {
                 case 1: // Harp
                     if (note <= 9) return 1338;
-                    else if (note <= 19) return 1338;
-                    else if (note <= 28) return 1334;
-                    else return 1136;
+                    if (note <= 19) return 1338;
+                    if (note <= 28) return 1334;
+                    return 1136;
 
                 case 2: // Piano
                     if (note <= 11) return 1531;
-                    else if (note <= 18) return 1531;
-                    else if (note <= 25) return 1530;
-                    else if (note <= 28) return 1332;
-                    else return 1531;
+                    if (note <= 18) return 1531;
+                    if (note <= 25) return 1530;
+                    if (note <= 28) return 1332;
+                    return 1531;
 
                 case 3: // Lute
                     if (note <= 14) return 1728;
-                    else if (note <= 21) return 1727;
-                    else if (note <= 28) return 1727;
-                    else return 1528;
+                    if (note <= 21) return 1727;
+                    if (note <= 28) return 1727;
+                    return 1528;
 
                 case 4: // Fiddle
                     if (note <= 3) return 634;
-                    else if (note <= 6) return 632;
-                    else if (note <= 11) return 633;
-                    else if (note <= 15) return 634;
-                    else if (note <= 18) return 633;
-                    else if (note <= 23) return 635;
-                    else if (note <= 30) return 635;
-                    else return 635;
+                    if (note <= 6) return 632;
+                    if (note <= 11) return 633;
+                    if (note <= 15) return 634;
+                    if (note <= 18) return 633;
+                    if (note <= 23) return 635;
+                    if (note <= 30) return 635;
+                    return 635;
 
                 case 5: // Flute
                 case 6: // Oboe
@@ -118,19 +122,19 @@ namespace BardMusicPlayer.Siren
 
                 case 10: // Timpani
                     if (note <= 15) return 1193;
-                    else if (note <= 23) return 1355;
-                    else return 1309;
+                    if (note <= 23) return 1355;
+                    return 1309;
 
                 case 11: // Bongo
                     if (note <= 7) return 720;
-                    else if (note <= 21) return 544;
-                    else return 275;
+                    if (note <= 21) return 544;
+                    return 275;
 
                 case 12: // BassDrum
                     if (note <= 6) return 448;
-                    else if (note <= 11) return 335;
-                    else if (note <= 23) return 343;
-                    else return 254;
+                    if (note <= 11) return 335;
+                    if (note <= 23) return 343;
+                    return 254;
 
                 case 13: // SnareDrum
                     return 260;

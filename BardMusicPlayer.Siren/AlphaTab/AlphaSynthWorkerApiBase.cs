@@ -1,12 +1,11 @@
-﻿/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi;
 using BardMusicPlayer.Siren.AlphaTab.Util;
+
+#endregion
 
 namespace BardMusicPlayer.Siren.AlphaTab
 {
@@ -24,23 +23,6 @@ namespace BardMusicPlayer.Siren.AlphaTab
         }
 
         public abstract void Destroy();
-        protected abstract void DispatchOnUiThread(Action action);
-        protected abstract void DispatchOnWorkerThread(Action action);
-
-        protected void Initialize()
-        {
-            Player = new AlphaSynth(_output);
-            Player.PositionChanged += OnPositionChanged;
-            Player.StateChanged += OnStateChanged;
-            Player.Finished += OnFinished;
-            Player.SoundFontLoaded += OnSoundFontLoaded;
-            Player.SoundFontLoadFailed += OnSoundFontLoadFailed;
-            Player.MidiLoaded += OnMidiLoaded;
-            Player.MidiLoadFailed += OnMidiLoadFailed;
-            Player.ReadyForPlayback += OnReadyForPlayback;
-
-            DispatchOnUiThread(OnReady);
-        }
 
         public bool IsReady => Player != null && Player.IsReady;
         public bool IsReadyForPlayback => Player != null && Player.IsReadyForPlayback;
@@ -95,10 +77,7 @@ namespace BardMusicPlayer.Siren.AlphaTab
 
         public bool Play()
         {
-            if (State == PlayerState.Playing || !IsReadyForPlayback)
-            {
-                return false;
-            }
+            if (State == PlayerState.Playing || !IsReadyForPlayback) return false;
             DispatchOnWorkerThread(() => { Player.Play(); });
             return true;
         }
@@ -162,6 +141,23 @@ namespace BardMusicPlayer.Siren.AlphaTab
         public event Action<Exception> MidiLoadFailed;
         public event Action<PlayerStateChangedEventArgs> StateChanged;
         public event Action<PositionChangedEventArgs> PositionChanged;
+        protected abstract void DispatchOnUiThread(Action action);
+        protected abstract void DispatchOnWorkerThread(Action action);
+
+        protected void Initialize()
+        {
+            Player = new AlphaSynth(_output);
+            Player.PositionChanged += OnPositionChanged;
+            Player.StateChanged += OnStateChanged;
+            Player.Finished += OnFinished;
+            Player.SoundFontLoaded += OnSoundFontLoaded;
+            Player.SoundFontLoadFailed += OnSoundFontLoadFailed;
+            Player.MidiLoaded += OnMidiLoaded;
+            Player.MidiLoadFailed += OnMidiLoadFailed;
+            Player.ReadyForPlayback += OnReadyForPlayback;
+
+            DispatchOnUiThread(OnReady);
+        }
 
         protected virtual void OnReady()
         {

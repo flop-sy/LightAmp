@@ -1,9 +1,4 @@
-﻿/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
-
-namespace BardMusicPlayer.Siren.AlphaTab.Model
+﻿namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
     internal class TuningParseResult
     {
@@ -17,8 +12,9 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     internal static class TuningParser
     {
         /// <summary>
+        ///     Checks if the given string is a tuning inticator.
+        /// </summary>
         /// Checks if the given string is a tuning inticator.
-        /// </summary>Checks if the given string is a tuning inticator.
         /// <param name="name"></param>
         /// <returns></returns>
         public static bool IsTuning(string name)
@@ -37,14 +33,11 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                 if (Platform.IsCharNumber(c, false))
                 {
                     // number without note?
-                    if (string.IsNullOrEmpty(note))
-                    {
-                        return null;
-                    }
+                    if (string.IsNullOrEmpty(note)) return null;
 
                     octave += Platform.StringFromCharCode(c);
                 }
-                else if (c >= 0x41 && c <= 0x5A || c >= 0x61 && c <= 0x7A || c == 0x23)
+                else if ((c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A) || c == 0x23)
                 {
                     note += Platform.StringFromCharCode(c);
                 }
@@ -54,10 +47,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                 }
             }
 
-            if (string.IsNullOrEmpty(octave) || string.IsNullOrEmpty(note))
-            {
-                return null;
-            }
+            if (string.IsNullOrEmpty(octave) || string.IsNullOrEmpty(note)) return null;
 
             var result = new TuningParseResult();
             result.Octave = Platform.ParseInt(octave) + 1;
@@ -69,10 +59,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         public static int GetTuningForText(string str)
         {
             var result = Parse(str);
-            if (result == null)
-            {
-                return -1;
-            }
+            if (result == null) return -1;
 
             return result.RealValue;
         }

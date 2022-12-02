@@ -1,53 +1,48 @@
-/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
+#region
 
 using BardMusicPlayer.Siren.AlphaTab.Audio;
 using BardMusicPlayer.Siren.AlphaTab.Collections;
 
+#endregion
+
 namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
     /// <summary>
-    /// A voice represents a group of beats 
-    /// that can be played during a bar. 
+    ///     A voice represents a group of beats
+    ///     that can be played during a bar.
     /// </summary>
     internal class Voice
     {
         private FastDictionary<int, Beat> _beatLookup;
 
         /// <summary>
-        /// Gets or sets the zero-based index of this voice within the bar. 
-        /// </summary>
-        public int Index { get; set; }
-
-        /// <summary>
-        /// Gets or sets the reference to the bar this voice belongs to. 
-        /// </summary>
-        public Bar Bar { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of beats contained in this voice. 
-        /// </summary>
-        public FastList<Beat> Beats { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether this voice is empty. 
-        /// </summary>
-        public bool IsEmpty
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Voice"/> class.
+        ///     Initializes a new instance of the <see cref="Voice" /> class.
         /// </summary>
         public Voice()
         {
             Beats = new FastList<Beat>();
             IsEmpty = true;
         }
+
+        /// <summary>
+        ///     Gets or sets the zero-based index of this voice within the bar.
+        /// </summary>
+        public int Index { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the reference to the bar this voice belongs to.
+        /// </summary>
+        public Bar Bar { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the list of beats contained in this voice.
+        /// </summary>
+        public FastList<Beat> Beats { get; set; }
+
+        /// <summary>
+        ///     Gets or sets a value indicating whether this voice is empty.
+        /// </summary>
+        public bool IsEmpty { get; set; }
 
         internal static void CopyTo(Voice src, Voice dst)
         {
@@ -58,10 +53,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         internal void InsertBeat(Beat after, Beat newBeat)
         {
             newBeat.NextBeat = after.NextBeat;
-            if (newBeat.NextBeat != null)
-            {
-                newBeat.NextBeat.PreviousBeat = newBeat;
-            }
+            if (newBeat.NextBeat != null) newBeat.NextBeat.PreviousBeat = newBeat;
 
             newBeat.PreviousBeat = after;
             newBeat.Voice = this;
@@ -75,18 +67,12 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             beat.Voice = this;
             beat.Index = Beats.Count;
             Beats.Add(beat);
-            if (!beat.IsEmpty)
-            {
-                IsEmpty = false;
-            }
+            if (!beat.IsEmpty) IsEmpty = false;
         }
 
         private void Chain(Beat beat)
         {
-            if (Bar == null)
-            {
-                return;
-            }
+            if (Bar == null) return;
 
             if (beat.Index < Beats.Count - 1)
             {
@@ -130,10 +116,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
         internal Beat GetBeatAtDisplayStart(int displayStart)
         {
-            if (_beatLookup.ContainsKey(displayStart))
-            {
-                return _beatLookup[displayStart];
-            }
+            if (_beatLookup.ContainsKey(displayStart)) return _beatLookup[displayStart];
 
             return null;
         }
@@ -179,22 +162,13 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                         var graceDuration = Duration.Eighth;
                         var stolenDuration = 0;
                         if (numberOfGraceBeats == 1)
-                        {
                             graceDuration = Duration.Eighth;
-                        }
                         else if (numberOfGraceBeats == 2)
-                        {
                             graceDuration = Duration.Sixteenth;
-                        }
                         else
-                        {
                             graceDuration = Duration.ThirtySecond;
-                        }
 
-                        if (nonGrace != null)
-                        {
-                            nonGrace.UpdateDurations();
-                        }
+                        if (nonGrace != null) nonGrace.UpdateDurations();
 
                         // grace beats have 1/4 size of the non grace beat preceeding them
                         var perGraceDisplayDuration = beat.PreviousBeat == null
@@ -220,10 +194,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                         // steal needed duration from beat duration
                         if (beat.GraceType == GraceType.BeforeBeat)
                         {
-                            if (beat.PreviousBeat != null)
-                            {
-                                beat.PreviousBeat.PlaybackDuration -= stolenDuration;
-                            }
+                            if (beat.PreviousBeat != null) beat.PreviousBeat.PlaybackDuration -= stolenDuration;
 
                             currentPlaybackTick -= stolenDuration;
                         }
@@ -244,10 +215,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
         public int CalculateDuration()
         {
-            if (IsEmpty || Beats.Count == 0)
-            {
-                return 0;
-            }
+            if (IsEmpty || Beats.Count == 0) return 0;
 
             var lastBeat = Beats[Beats.Count - 1];
             return lastBeat.PlaybackStart + lastBeat.PlaybackDuration;

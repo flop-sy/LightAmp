@@ -1,7 +1,4 @@
-﻿/*
- * Copyright(c) 2022 MoogleTroupe, GiR-Zippo
- * Licensed under the GPL v3 license. See https://github.com/BardMusicPlayer/BardMusicPlayer/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
 using System.Collections;
@@ -13,28 +10,63 @@ using BardMusicPlayer.Quotidian;
 using BardMusicPlayer.Siren.AlphaTab;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi;
+using BardMusicPlayer.Siren.AlphaTab.Util;
 using BardMusicPlayer.Siren.Properties;
 using BardMusicPlayer.Transmogrify.Song;
 using NAudio.CoreAudioApi;
+
+#endregion
 
 namespace BardMusicPlayer.Siren
 {
     public class BmpSiren
     {
-        public string CurrentSongTitle { get; private set; } = "";
-        public BmpSong CurrentSong { get; private set; } = null;
+        /// <summary>
+        ///     Event fired when there is a lyric line.
+        /// </summary>
+        /// <param name="singer"></param>
+        /// <param name="line"></param>
+        public delegate void Lyric(int singer, string line);
+
+        /// <summary>
+        ///     Event fired when the position of a synthesized song changes.
+        /// </summary>
+        /// <param name="songTitle">The title of the current song.</param>
+        /// <param name="currentTime">The current time of this song in milliseconds</param>
+        /// <param name="endTime">The total length of this song in milliseconds</param>
+        /// <param name="activeVoices">Active voice count.</param>
+        public delegate void SynthTimePosition(string songTitle, double currentTime, double endTime, int activeVoices);
+
+        private static readonly System.Lazy<BmpSiren> LazyInstance = new(() => new BmpSiren());
+
+        private readonly TaskQueue _taskQueue = new();
+        private double _lyricIndex;
+        private Dictionary<int, Dictionary<long, string>> _lyrics;
+        private MMDevice _mdev;
 
         private IAlphaSynth _player;
-        private Dictionary<int, Dictionary<long, string>> _lyrics;
-        private double _lyricIndex;
-        private MMDevice _mdev = null;
-
-        private static readonly Lazy<BmpSiren> LazyInstance = new(() => new BmpSiren());
-        public static BmpSiren Instance => LazyInstance.Value;
 
         internal BmpSiren()
         {
         }
+
+        public string CurrentSongTitle { get; private set; } = "";
+        public BmpSong CurrentSong { get; private set; }
+        public static BmpSiren Instance => LazyInstance.Value;
+
+        /// <summary>
+        ///     Gets a collection of available MMDevice objects
+        /// </summary>
+        public MMDeviceCollection AudioDevices =>
+            new MMDeviceEnumerator().EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
+
+        /// <summary>
+        /// </summary>
+        public bool IsReady => _player != null && _player.IsReady;
+
+        /// <summary>
+        /// </summary>
+        public bool IsReadyForPlayback => IsReady && _player.IsReadyForPlayback;
 
         ~BmpSiren()
         {
@@ -42,12 +74,6 @@ namespace BardMusicPlayer.Siren
         }
 
         /// <summary>
-        /// Gets a collection of available MMDevice objects
-        /// </summary>
-        public MMDeviceCollection AudioDevices => new MMDeviceEnumerator().EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
-
-        /// <summary>
-        /// 
         /// </summary>
         /// <param name="device"></param>
         /// <param name="defaultVolume"></param>
@@ -57,7 +83,8 @@ namespace BardMusicPlayer.Siren
         {
             ShutDown();
             _mdev = device;
-            _player = new ManagedThreadAlphaSynthWorkerApi(new NAudioSynthOutput(device, bufferCount, latency), AlphaTab.Util.LogLevel.None, BeginInvoke);
+            _player = new ManagedThreadAlphaSynthWorkerApi(new NAudioSynthOutput(device, bufferCount, latency),
+                LogLevel.None, BeginInvoke);
             foreach (var resource in Resources.ResourceManager.GetResourceSet(CultureInfo.CurrentUICulture, true, true))
                 _player.LoadSoundFont((byte[])((DictionaryEntry)resource).Value, true);
             _player.PositionChanged += NotifyTimePosition;
@@ -65,7 +92,7 @@ namespace BardMusicPlayer.Siren
         }
 
         /// <summary>
-        /// Sets the volume
+        ///     Sets the volume
         /// </summary>
         /// <param name="x"></param>
         public int GetVolume()
@@ -74,7 +101,7 @@ namespace BardMusicPlayer.Siren
         }
 
         /// <summary>
-        /// Sets the volume
+        ///     Sets the volume
         /// </summary>
         /// <param name="x"></param>
         public void SetVolume(float x)
@@ -82,21 +109,12 @@ namespace BardMusicPlayer.Siren
             _mdev.AudioSessionManager.AudioSessionControl.SimpleAudioVolume.Volume = x / 100;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool IsReady => _player != null && _player.IsReady;
+        internal void BeginInvoke(Action action)
+        {
+            _taskQueue.Enqueue(() => Task.Run(action));
+        }
 
         /// <summary>
-        /// 
-        /// </summary>
-        public bool IsReadyForPlayback => IsReady && _player.IsReadyForPlayback;
-
-        private readonly TaskQueue _taskQueue = new();
-        internal void BeginInvoke(Action action) => _taskQueue.Enqueue(() => Task.Run(action));
-
-        /// <summary>
-        /// 
         /// </summary>
         /// <param name="defaultVolume"></param>
         /// <param name="bufferCount"></param>
@@ -108,7 +126,6 @@ namespace BardMusicPlayer.Siren
         }
 
         /// <summary>
-        /// 
         /// </summary>
         public void ShutDown()
         {
@@ -117,11 +134,11 @@ namespace BardMusicPlayer.Siren
             _player.PositionChanged -= NotifyTimePosition;
             _player.Destroy();
         }
-        
+
         /// <summary>
-        /// Loads a BmpSong into the synthesizer
+        ///     Loads a BmpSong into the synthesizer
         /// </summary>
-        /// <param name="song"></param> 
+        /// <param name="song"></param>
         /// <returns>This BmpSiren</returns>
         public async Task<BmpSiren> Load(BmpSong song)
         {
@@ -137,7 +154,7 @@ namespace BardMusicPlayer.Siren
         }
 
         /// <summary>
-        /// Starts the playback if possible
+        ///     Starts the playback if possible
         /// </summary>
         /// <returns>This BmpSiren</returns>
         public BmpSiren Play()
@@ -148,7 +165,7 @@ namespace BardMusicPlayer.Siren
         }
 
         /// <summary>
-        /// Pauses the playback if was running
+        ///     Pauses the playback if was running
         /// </summary>
         /// <returns>This BmpSiren</returns>
         public BmpSiren Pause()
@@ -157,9 +174,9 @@ namespace BardMusicPlayer.Siren
             _player.Pause();
             return this;
         }
-        
+
         /// <summary>
-        /// Stops the playback
+        ///     Stops the playback
         /// </summary>
         /// <returns>This BmpSiren</returns>
         public BmpSiren Stop()
@@ -171,7 +188,7 @@ namespace BardMusicPlayer.Siren
         }
 
         /// <summary>
-        /// Sets the current position of this song in milliseconds
+        ///     Sets the current position of this song in milliseconds
         /// </summary>
         /// <returns>This BmpSiren</returns>
         public BmpSiren SetPosition(int time)
@@ -184,23 +201,7 @@ namespace BardMusicPlayer.Siren
             return this;
         }
 
-        /// <summary>
-        /// Event fired when there is a lyric line.
-        /// </summary>
-        /// <param name="singer"></param>
-        /// <param name="line"></param>
-        public delegate void Lyric(int singer, string line);
-
         public event Lyric LyricTrigger;
-
-        /// <summary>
-        /// Event fired when the position of a synthesized song changes.
-        /// </summary>
-        /// <param name="songTitle">The title of the current song.</param>
-        /// <param name="currentTime">The current time of this song in milliseconds</param>
-        /// <param name="endTime">The total length of this song in milliseconds</param>
-        /// <param name="activeVoices">Active voice count.</param>
-        public delegate void SynthTimePosition(string songTitle, double currentTime, double endTime, int activeVoices);
 
         public event SynthTimePosition SynthTimePositionChanged;
 
@@ -212,6 +213,7 @@ namespace BardMusicPlayer.Siren
                 var line = _lyrics[singer].FirstOrDefault(x => x.Key > _lyricIndex && x.Key < obj.CurrentTime).Value;
                 if (!string.IsNullOrWhiteSpace(line)) LyricTrigger?.Invoke(singer, line);
             }
+
             _lyricIndex = obj.CurrentTime;
         }
     }

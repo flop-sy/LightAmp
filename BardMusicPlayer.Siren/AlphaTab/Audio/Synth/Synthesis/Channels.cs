@@ -1,9 +1,4 @@
-﻿/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
-
-// The SoundFont loading and Audio Synthesis is based on TinySoundFont, licensed under MIT,
+﻿// The SoundFont loading and Audio Synthesis is based on TinySoundFont, licensed under MIT,
 // developed by Bernhard Schelling (https://github.com/schellingb/TinySoundFont)
 
 // C# port for alphaTab: (C) 2019 by Daniel Kuschny
@@ -32,20 +27,24 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#region
+
 using System;
 using BardMusicPlayer.Siren.AlphaTab.Collections;
+
+#endregion
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
     internal class Channels
     {
-        public int ActiveChannel { get; set; }
-        public FastList<Channel> ChannelList { get; set; }
-
         public Channels()
         {
             ChannelList = new FastList<Channel>();
         }
+
+        public int ActiveChannel { get; set; }
+        public FastList<Channel> ChannelList { get; set; }
 
         public void SetupVoice(TinySoundFont tinySoundFont, Voice voice)
         {
@@ -55,9 +54,9 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
             voice.MixVolume = c.MixVolume;
             voice.NoteGainDb += c.GainDb;
             voice.CalcPitchRatio(
-                (c.PitchWheel == 8192
+                c.PitchWheel == 8192
                     ? c.Tuning
-                    : ((c.PitchWheel / 16383.0f * c.PitchRange * 2.0f) - c.PitchRange + c.Tuning)),
+                    : c.PitchWheel / 16383.0f * c.PitchRange * 2.0f - c.PitchRange + c.Tuning,
                 tinySoundFont.OutSampleRate
             );
 

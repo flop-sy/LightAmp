@@ -1,9 +1,8 @@
-﻿/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
+
+#endregion
 
 namespace BardMusicPlayer.Siren.AlphaTab.IO
 {
@@ -12,9 +11,89 @@ namespace BardMusicPlayer.Siren.AlphaTab.IO
         private byte[] _buffer;
         private int _capacity;
 
+        private ByteBuffer()
+        {
+        }
+
         public int Length { get; private set; }
 
         public int Position { get; set; }
+
+        public void Reset()
+        {
+            Position = 0;
+        }
+
+        public void Skip(int offset)
+        {
+            Position += offset;
+        }
+
+        public int ReadByte()
+        {
+            var n = Length - Position;
+            if (n <= 0) return -1;
+
+            return _buffer[Position++];
+        }
+
+        public int Read(byte[] buffer, int offset, int count)
+        {
+            var n = Length - Position;
+            if (n > count) n = count;
+
+            if (n <= 0) return 0;
+
+            if (n <= 8)
+            {
+                var byteCount = n;
+                while (--byteCount >= 0) buffer[offset + byteCount] = _buffer[Position + byteCount];
+            }
+            else
+            {
+                Platform.BlockCopy(_buffer, Position, buffer, offset, n);
+            }
+
+            Position += n;
+
+            return n;
+        }
+
+        public byte[] ReadAll()
+        {
+            return ToArray();
+        }
+
+        public void WriteByte(byte value)
+        {
+            var buffer = new byte[1];
+            buffer[0] = value;
+            Write(buffer, 0, 1);
+        }
+
+        public void Write(byte[] buffer, int offset, int count)
+        {
+            var i = Position + count;
+
+            if (i > Length)
+            {
+                if (i > _capacity) EnsureCapacity(i);
+
+                Length = i;
+            }
+
+            if (count <= 8 && buffer != _buffer)
+            {
+                var byteCount = count;
+                while (--byteCount >= 0) _buffer[Position + byteCount] = buffer[offset + byteCount];
+            }
+            else
+            {
+                Platform.BlockCopy(buffer, offset, _buffer, Position, Math.Min(count, buffer.Length - offset));
+            }
+
+            Position = i;
+        }
 
         public virtual byte[] GetBuffer()
         {
@@ -43,20 +122,6 @@ namespace BardMusicPlayer.Siren.AlphaTab.IO
             return buffer;
         }
 
-        private ByteBuffer()
-        {
-        }
-
-        public void Reset()
-        {
-            Position = 0;
-        }
-
-        public void Skip(int offset)
-        {
-            Position += offset;
-        }
-
         private void SetCapacity(int value)
         {
             if (value != _capacity)
@@ -64,10 +129,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.IO
                 if (value > 0)
                 {
                     var newBuffer = new byte[value];
-                    if (Length > 0)
-                    {
-                        Platform.BlockCopy(_buffer, 0, newBuffer, 0, Length);
-                    }
+                    if (Length > 0) Platform.BlockCopy(_buffer, 0, newBuffer, 0, Length);
 
                     _buffer = newBuffer;
                 }
@@ -80,107 +142,17 @@ namespace BardMusicPlayer.Siren.AlphaTab.IO
             }
         }
 
-        public int ReadByte()
-        {
-            var n = Length - Position;
-            if (n <= 0)
-            {
-                return -1;
-            }
-
-            return _buffer[Position++];
-        }
-
-        public int Read(byte[] buffer, int offset, int count)
-        {
-            var n = Length - Position;
-            if (n > count)
-            {
-                n = count;
-            }
-
-            if (n <= 0)
-            {
-                return 0;
-            }
-
-            if (n <= 8)
-            {
-                var byteCount = n;
-                while (--byteCount >= 0)
-                {
-                    buffer[offset + byteCount] = _buffer[Position + byteCount];
-                }
-            }
-            else
-            {
-                Platform.BlockCopy(_buffer, Position, buffer, offset, n);
-            }
-
-            Position += n;
-
-            return n;
-        }
-
-        public void WriteByte(byte value)
-        {
-            var buffer = new byte[1];
-            buffer[0] = value;
-            Write(buffer, 0, 1);
-        }
-
-        public void Write(byte[] buffer, int offset, int count)
-        {
-            var i = Position + count;
-
-            if (i > Length)
-            {
-                if (i > _capacity)
-                {
-                    EnsureCapacity(i);
-                }
-
-                Length = i;
-            }
-
-            if (count <= 8 && buffer != _buffer)
-            {
-                var byteCount = count;
-                while (--byteCount >= 0)
-                {
-                    _buffer[Position + byteCount] = buffer[offset + byteCount];
-                }
-            }
-            else
-            {
-                Platform.BlockCopy(buffer, offset, _buffer, Position, Math.Min(count, buffer.Length - offset));
-            }
-
-            Position = i;
-        }
-
         private void EnsureCapacity(int value)
         {
             if (value > _capacity)
             {
                 var newCapacity = value;
-                if (newCapacity < 256)
-                {
-                    newCapacity = 256;
-                }
+                if (newCapacity < 256) newCapacity = 256;
 
-                if (newCapacity < _capacity * 2)
-                {
-                    newCapacity = _capacity * 2;
-                }
+                if (newCapacity < _capacity * 2) newCapacity = _capacity * 2;
 
                 SetCapacity(newCapacity);
             }
-        }
-
-        public byte[] ReadAll()
-        {
-            return ToArray();
         }
 
         public virtual byte[] ToArray()

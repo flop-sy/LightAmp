@@ -1,20 +1,15 @@
-﻿/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
-
-namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
+﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
 {
     internal class LinkedList<T> where T : class
     {
-        public LinkedListNode<T> First { get; set; }
-
-        public int Length { get; private set; }
-
         public LinkedList()
         {
             Length = 0;
         }
+
+        public LinkedListNode<T> First { get; set; }
+
+        public int Length { get; private set; }
 
         public void AddFirst(T value)
         {
@@ -36,21 +31,14 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
             var node = new LinkedListNode<T>();
             node.Value = value;
             if (First == null)
-            {
                 InsertNodeToEmptyList(node);
-            }
             else
-            {
                 InsertNodeBefore(First, node);
-            }
         }
 
         public T RemoveFirst()
         {
-            if (First == null)
-            {
-                return null;
-            }
+            if (First == null) return null;
 
             var v = First.Value;
             Remove(First);
@@ -59,10 +47,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
 
         public T RemoveLast()
         {
-            if (First == null)
-            {
-                return null;
-            }
+            if (First == null) return null;
 
             var v = First.PrevInternal != null ? First.PrevInternal.Value : null;
             Remove(First.PrevInternal);
@@ -79,10 +64,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
             {
                 n.NextInternal.PrevInternal = n.PrevInternal;
                 n.PrevInternal.NextInternal = n.NextInternal;
-                if (First == n)
-                {
-                    First = n.NextInternal;
-                }
+                if (First == n) First = n.NextInternal;
             }
 
             n.Invalidate();

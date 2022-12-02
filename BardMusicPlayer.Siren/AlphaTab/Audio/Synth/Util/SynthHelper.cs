@@ -1,9 +1,8 @@
-﻿/*
- * Copyright(c) 2021 Daniel Kuschny
- * Licensed under the MPL-2.0 license. See https://github.com/CoderLine/alphaTab/blob/develop/LICENSE for full license information.
- */
+﻿#region
 
 using System;
+
+#endregion
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util
 {
@@ -26,55 +25,37 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util
 
         public static float GainToDecibels(float gain)
         {
-            return (gain <= .00001f ? -100f : (float)(20.0 * Math.Log10(gain)));
+            return gain <= .00001f ? -100f : (float)(20.0 * Math.Log10(gain));
         }
 
         public static float Cents2Hertz(float cents)
         {
             return 8.176f * (float)Math.Pow(2.0f, cents / 1200.0f);
         }
-        
+
         public static byte ClampB(byte value, byte min, byte max)
         {
-            if (value <= min)
-            {
-                return min;
-            }
+            if (value <= min) return min;
 
-            if (value >= max)
-            {
-                return max;
-            }
+            if (value >= max) return max;
 
             return value;
         }
 
         public static double ClampD(double value, double min, double max)
         {
-            if (value <= min)
-            {
-                return min;
-            }
+            if (value <= min) return min;
 
-            if (value >= max)
-            {
-                return max;
-            }
+            if (value >= max) return max;
 
             return value;
         }
 
         public static float ClampF(float value, float min, float max)
         {
-            if (value <= min)
-            {
-                return min;
-            }
+            if (value <= min) return min;
 
-            if (value >= max)
-            {
-                return max;
-            }
+            if (value >= max) return max;
 
             return value;
         }
