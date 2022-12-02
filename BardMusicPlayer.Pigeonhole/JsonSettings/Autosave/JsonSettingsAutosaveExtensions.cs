@@ -40,7 +40,7 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
             }
 
             _generator = _generator ?? new ProxyGenerator();
-            return _generator.CreateClassProxyWithTarget(settings, new JsonSettingsInterceptor((JsonSettings)settings));
+            return _generator.CreateClassProxyWithTarget(settings, new JsonSettingsInterceptor(settings));
         }
 
         /// <summary>
