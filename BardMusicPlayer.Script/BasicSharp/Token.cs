@@ -26,7 +26,9 @@
         End,
         Assert,
         Select,
+        UnSelect,
         Sleep,
+        TapKey,
 
         NewLine,
         Colon,

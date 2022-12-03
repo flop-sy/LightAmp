@@ -1,78 +1,69 @@
-#region
-
-using System.Collections.Generic;
-using System.Globalization;
-using System.Threading.Tasks;
 using BardMusicPlayer.Quotidian.Structs;
-using BasicSharp;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
-#endregion
-
-namespace BardMusicPlayer.Script.BasicSharp
+namespace BasicSharp
 {
-    public sealed class Interpreter
+    public class Interpreter
     {
-        public delegate Value BasicFunction(Interpreter interpreter, List<Value> args);
-
+        public delegate void PrintFunction(ChatMessageChannelType type, string text);
+        public delegate void TapKeyFunction(string modifier, string character);
+        public delegate void SelectedBard(int num);
+        public delegate void SelectedBardAsString(string name);
+        public delegate void UnSelectBard(string name);
         public delegate string InputFunction();
 
-        public delegate void PrintFunction(ChatMessageChannelType type, string text);
+        public PrintFunction printHandler;
+        public TapKeyFunction tapKeyHandler;
+        public SelectedBard  selectedBardHandler;
+        public SelectedBardAsString selectedBardAsStringHandler;
+        public UnSelectBard unselectBardHandler;
 
-        public delegate void SelectedBard(int num);
+        public InputFunction inputHandler;
 
-        public delegate void SelectedBardAsString(string name);
+        private Lexer lex;
+        private Token prevToken; // token before last one
+        private Token lastToken; // last seen token
 
-        private readonly Dictionary<string, BasicFunction> funcs; // all maped functions
+        private Dictionary<string, Value> vars; // all variables are stored here
+        private Dictionary<string, Marker> labels; // already seen labels 
+        private Dictionary<string, Marker> loops; // for loops
 
-        private readonly int ifcounter; // counter used for matching "if" with "else"
-        private readonly Dictionary<string, Marker> labels; // already seen labels
+        public delegate Value BasicFunction(Interpreter interpreter, List<Value> args);
+        private Dictionary<string, BasicFunction> funcs; // all maped functions
 
-        private readonly Lexer lex;
-        private readonly Dictionary<string, Marker> loops; // for loops
+        private int ifcounter; // counter used for matching "if" with "else"
 
-        private readonly Dictionary<string, Value> vars; // all variables are stored here
+        private Marker lineMarker; // current line marker
 
         private bool exit; // do we need to exit?
 
-        public InputFunction inputHandler;
-        private Token lastToken; // last seen token
-
-        private Marker lineMarker; // current line marker
-        private Token prevToken; // token before last one
-
-        public PrintFunction printHandler;
-        public SelectedBardAsString selectedBardAsStringHandler;
-        public SelectedBard selectedBardHandler;
+        public void StopExec() { exit = true; }
 
         public Interpreter(string input)
         {
-            lex = new Lexer(input);
-            vars = new Dictionary<string, Value>();
-            labels = new Dictionary<string, Marker>();
-            loops = new Dictionary<string, Marker>();
-            funcs = new Dictionary<string, BasicFunction>();
-            ifcounter = 0;
+            this.lex = new Lexer(input);
+            this.vars = new Dictionary<string, Value>();
+            this.labels = new Dictionary<string, Marker>();
+            this.loops = new Dictionary<string, Marker>();
+            this.funcs = new Dictionary<string, BasicFunction>();
+            this.ifcounter = 0;
             BuiltIns.InstallAll(this); // map all builtins functions
-        }
-
-        public void StopExec()
-        {
-            exit = true;
         }
 
         public Value GetVar(string name)
         {
             if (!vars.ContainsKey(name))
                 throw new BasicException("Variable with name " + name + " does not exist.", lineMarker.Line);
-
             return vars[name];
         }
 
         public void SetVar(string name, Value val)
         {
             if (!vars.ContainsKey(name)) vars.Add(name, val);
-            else
-                vars[name] = val;
+            else vars[name] = val;
         }
 
         public string GetLine()
@@ -83,20 +74,19 @@ namespace BardMusicPlayer.Script.BasicSharp
         public void AddFunction(string name, BasicFunction function)
         {
             if (!funcs.ContainsKey(name)) funcs.Add(name, function);
-            else
-                funcs[name] = function;
+            else funcs[name] = function;
         }
 
-        private void Error(string text)
+        void Error(string text)
         {
             throw new BasicException(text, lineMarker.Line);
         }
 
-        private void Match(Token tok)
+        void Match(Token tok)
         {
             // check if current token is what we expect it to be
             if (lastToken != tok)
-                Error("Expect " + tok + " got " + lastToken);
+                Error("Expect " + tok.ToString() + " got " + lastToken.ToString());
         }
 
         public void Exec()
@@ -106,7 +96,7 @@ namespace BardMusicPlayer.Script.BasicSharp
             while (!exit) Line(); // do all lines
         }
 
-        private Token GetNextToken()
+        Token GetNextToken()
         {
             prevToken = lastToken;
             lastToken = lex.GetToken();
@@ -117,7 +107,7 @@ namespace BardMusicPlayer.Script.BasicSharp
             return lastToken;
         }
 
-        private void Line()
+        void Line()
         {
             // skip empty new lines
             while (lastToken == Token.NewLine) GetNextToken();
@@ -132,96 +122,70 @@ namespace BardMusicPlayer.Script.BasicSharp
             Statment(); // evaluate statment
 
             if (lastToken != Token.NewLine && lastToken != Token.EOF)
-                Error("Expect new line got " + lastToken);
+                Error("Expect new line got " + lastToken.ToString());
         }
 
-        private void Statment()
+        void Statment()
         {
-            while (true)
+            Token keyword = lastToken;
+            GetNextToken();
+            switch (keyword)
             {
-                var keyword = lastToken;
+                case Token.Print: Print(); break;
+                case Token.Macro: Macro(); break;
+                case Token.Input: Input(); break;
+                case Token.Goto: Goto(); break;
+                case Token.If: If(); break;
+                case Token.Else: Else(); break;
+                case Token.EndIf: break;
+                case Token.For: For(); break;
+                case Token.Next: Next(); break;
+                case Token.Let: Let(); break;
+                case Token.End: End(); break;
+                case Token.Assert: Assert(); break;
+                case Token.Select: Select(); break;
+                case Token.UnSelect: UnSelect(); break;
+                case Token.Sleep: Sleep(); break;
+                case Token.TapKey: TapKey(); break;
+                case Token.Identifier:
+                    if (lastToken == Token.Equal) Let();
+                    else if (lastToken == Token.Colon) Label();
+                    else goto default;
+                    break;
+                case Token.EOF:
+                    exit = true;
+                    break;
+                default:
+                    Error("Expect keyword got " + keyword.ToString());
+                    break;
+            }
+            if (lastToken == Token.Colon)
+            {
+                // we can execute more statments in single line if we use ";"
                 GetNextToken();
-                switch (keyword)
-                {
-                    case Token.Print:
-                        Print();
-                        break;
-                    case Token.Macro:
-                        Macro();
-                        break;
-                    case Token.Input:
-                        Input();
-                        break;
-                    case Token.Goto:
-                        Goto();
-                        break;
-                    case Token.If:
-                        If();
-                        break;
-                    case Token.Else:
-                        Else();
-                        break;
-                    case Token.EndIf:
-                        break;
-                    case Token.For:
-                        For();
-                        break;
-                    case Token.Next:
-                        Next();
-                        break;
-                    case Token.Let:
-                        Let();
-                        break;
-                    case Token.End:
-                        End();
-                        break;
-                    case Token.Assert:
-                        Assert();
-                        break;
-                    case Token.Select:
-                        Select();
-                        break;
-                    case Token.Sleep:
-                        Sleep();
-                        break;
-                    case Token.Identifier:
-                        if (lastToken == Token.Equal)
-                            Let();
-                        else if (lastToken == Token.Colon)
-                            Label();
-                        else
-                            goto default;
-                        break;
-                    case Token.EOF:
-                        exit = true;
-                        break;
-                    default:
-                        Error("Expect keyword got " + keyword);
-                        break;
-                }
-
-                if (lastToken == Token.Colon)
-                {
-                    // we can execute more statments in single line if we use ";"
-                    GetNextToken();
-                    continue;
-                }
-
-                break;
+                Statment();
             }
         }
 
-        private void Print()
+        void TapKey()
+        {
+            var t = Expr().ToString();
+            GetNextToken();
+            var p = Expr().ToString();
+            tapKeyHandler?.Invoke(t,p);
+        }
+
+        void Print()
         {
             printHandler?.Invoke(ChatMessageChannelType.Say, Expr().ToString());
         }
 
-        private void Macro()
+        void Macro()
         {
-            printHandler?.Invoke(ChatMessageChannelType.None, "/" + Expr());
+            printHandler?.Invoke(ChatMessageChannelType.None, "/" + Expr().ToString());
         }
 
-        private void Input()
+        void Input()
         {
             while (true)
             {
@@ -229,26 +193,27 @@ namespace BardMusicPlayer.Script.BasicSharp
 
                 if (!vars.ContainsKey(lex.Identifier)) vars.Add(lex.Identifier, new Value());
 
-                var input = inputHandler?.Invoke();
+                string input = inputHandler?.Invoke();
+                double d;
                 // try to parse as double, if failed read value as string
-                if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
+                if (double.TryParse(input, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out d))
                     vars[lex.Identifier] = new Value(d);
                 else
                     vars[lex.Identifier] = new Value(input);
 
                 GetNextToken();
                 if (lastToken != Token.Comma) break;
-
                 GetNextToken();
             }
         }
 
-        private void Goto()
+        void Goto()
         {
             Match(Token.Identifier);
-            var name = lex.Identifier;
+            string name = lex.Identifier;
 
             if (!labels.ContainsKey(name))
+            {
                 // if we didn't encaunter required label yet, start to search for it
                 while (true)
                 {
@@ -259,85 +224,94 @@ namespace BardMusicPlayer.Script.BasicSharp
                         if (lex.Identifier == name)
                             break;
                     }
-
-                    if (lastToken == Token.EOF) Error("Cannot find label named " + name);
+                    if (lastToken == Token.EOF)
+                    {
+                        Error("Cannot find label named " + name);
+                    }
                 }
-
+            }
             lex.GoTo(labels[name]);
             lastToken = Token.NewLine;
         }
 
-        private void If()
+        void If()
         {
             // check if argument is equal to 0
-            var result = Expr().BinOp(new Value(0), Token.Equal).Real == 1;
+            bool result = (Expr().BinOp(new Value(0), Token.Equal).Real == 1);
 
             Match(Token.Then);
             GetNextToken();
 
-            if (!result) return;
-            // in case "if" evaulate to zero skip to matching else or endif
-            var i = ifcounter;
-            while (true)
+            if (result)
             {
-                switch (lastToken)
+                // in case "if" evaulate to zero skip to matching else or endif
+                int i = ifcounter;
+                while (true)
                 {
-                    case Token.If:
+                    if (lastToken == Token.If)
+                    {
                         i++;
-                        break;
-                    case Token.Else when i == ifcounter:
-                        GetNextToken();
-                        return;
-                    case Token.EndIf when i == ifcounter:
-                        GetNextToken();
-                        return;
-                    case Token.EndIf:
+                    }
+                    else if (lastToken == Token.Else)
+                    {
+                        if (i == ifcounter)
+                        {
+                            GetNextToken();
+                            return;
+                        }
+                    }
+                    else if (lastToken == Token.EndIf)
+                    {
+                        if (i == ifcounter)
+                        {
+                            GetNextToken();
+                            return;
+                        }
                         i--;
-                        break;
+                    }
+                    GetNextToken();
                 }
-
-                GetNextToken();
             }
         }
 
-        private void Else()
+        void Else()
         {
             // skip to matching endif
-            var i = ifcounter;
+            int i = ifcounter;
             while (true)
             {
-                switch (lastToken)
+                if (lastToken == Token.If)
                 {
-                    case Token.If:
-                        i++;
-                        break;
-                    case Token.EndIf when i == ifcounter:
+                    i++;
+                }
+                else if (lastToken == Token.EndIf)
+                {
+                    if (i == ifcounter)
+                    {
                         GetNextToken();
                         return;
-                    case Token.EndIf:
-                        i--;
-                        break;
+                    }
+                    i--;
                 }
-
                 GetNextToken();
             }
         }
 
-        private void Label()
+        void Label()
         {
-            var name = lex.Identifier;
+            string name = lex.Identifier;
             if (!labels.ContainsKey(name)) labels.Add(name, lex.TokenMarker);
 
             GetNextToken();
             Match(Token.NewLine);
         }
 
-        private void End()
+        void End()
         {
             exit = true;
         }
 
-        private void Let()
+        void Let()
         {
             if (lastToken != Token.Equal)
             {
@@ -346,23 +320,23 @@ namespace BardMusicPlayer.Script.BasicSharp
                 Match(Token.Equal);
             }
 
-            var id = lex.Identifier;
+            string id = lex.Identifier;
 
             GetNextToken();
 
             SetVar(id, Expr());
         }
 
-        private void For()
+        void For()
         {
             Match(Token.Identifier);
-            var var = lex.Identifier;
+            string var = lex.Identifier;
 
             GetNextToken();
             Match(Token.Equal);
 
             GetNextToken();
-            var v = Expr();
+            Value v = Expr();
 
             // save for loop marker
             if (loops.ContainsKey(var))
@@ -380,43 +354,43 @@ namespace BardMusicPlayer.Script.BasicSharp
             GetNextToken();
             v = Expr();
 
-            if (vars[var].BinOp(v, Token.More).Real != 1) return;
-
-            while (true)
+            if (vars[var].BinOp(v, Token.More).Real == 1)
             {
-                while (!(GetNextToken() == Token.Identifier && prevToken == Token.Next))
+                while (true)
                 {
+                    while (!(GetNextToken() == Token.Identifier && prevToken == Token.Next)) ;
+                    if (lex.Identifier == var)
+                    {
+                        loops.Remove(var);
+                        GetNextToken();
+                        Match(Token.NewLine);
+                        break;
+                    }
                 }
-
-                if (lex.Identifier != var) continue;
-
-                loops.Remove(var);
-                GetNextToken();
-                Match(Token.NewLine);
-                break;
             }
         }
 
-        private void Next()
+        void Next()
         {
             // jump to begining of the "for" loop
             Match(Token.Identifier);
-            var var = lex.Identifier;
+            string var = lex.Identifier;
             vars[var] = vars[var].BinOp(new Value(1), Token.Plus);
             lex.GoTo(new Marker(loops[var].Pointer - 1, loops[var].Line, loops[var].Column - 1));
             lastToken = Token.NewLine;
         }
 
-        private void Assert()
+        void Assert()
         {
-            var result = Expr().BinOp(new Value(0), Token.Equal).Real == 1;
+            bool result = (Expr().BinOp(new Value(0), Token.Equal).Real == 1);
 
-            if (!result) return;
-
-            Error("Assertion fault"); // if out assert evaluate to false, throw error with souce code line
+            if (result)
+            {
+                Error("Assertion fault"); // if out assert evaluate to false, throw error with souce code line
+            }
         }
 
-        private void Select()
+        void Select()
         {
             var v = Expr();
             if (v.Type == ValueType.Real)
@@ -425,111 +399,115 @@ namespace BardMusicPlayer.Script.BasicSharp
                 selectedBardAsStringHandler?.Invoke(v.ToString());
         }
 
-        private void Sleep()
+        void UnSelect()
         {
             var v = Expr();
-            if (v.Type != ValueType.Real) return;
-
-            var sleeptime = (int)v.Real;
-            Task.Delay(sleeptime).Wait();
+            if (v.Type == ValueType.String)
+                unselectBardHandler?.Invoke(v.ToString());
         }
 
-        private Value Expr(int min = 0)
+        void Sleep()
         {
-            // originally we were using shunting-yard algorithm, but now we parse it recursively
-            var precedens = new Dictionary<Token, int>
+            var v = Expr();
+            if (v.Type == ValueType.Real)
+            {
+                int sleeptime = (int)v.Real;
+                Task.Delay(sleeptime).Wait();
+            }
+        }
+
+        Value Expr(int min = 0)
+        {
+            // originally we were using shunting-yard algorithm, but now we parse it recursively 
+            Dictionary<Token, int> precedens = new Dictionary<Token, int>()
             {
                 { Token.Or, 0 }, { Token.And, 0 },
                 { Token.Equal, 1 }, { Token.NotEqual, 1 },
                 { Token.Less, 1 }, { Token.More, 1 },
-                { Token.LessEqual, 1 }, { Token.MoreEqual, 1 },
+                { Token.LessEqual, 1 },  { Token.MoreEqual, 1 },
                 { Token.Plus, 2 }, { Token.Minus, 2 },
-                { Token.Asterisk, 3 }, { Token.Slash, 3 },
+                { Token.Asterisk, 3 }, {Token.Slash, 3 },
                 { Token.Caret, 4 }
             };
 
-            var lhs = Primary();
+            Value lhs = Primary();
 
             while (true)
             {
-                if (lastToken is < Token.Plus or > Token.And || precedens[lastToken] < min)
+                if (lastToken < Token.Plus || lastToken > Token.And || precedens[lastToken] < min)
                     break;
 
-                var op = lastToken;
-                var prec = precedens[lastToken]; // Operator Precedence
-                var nextmin = prec;
+                Token op = lastToken;
+                int prec = precedens[lastToken]; // Operator Precedence
+                int assoc = 0; // 0 left, 1 right; Operator associativity
+                int nextmin = assoc == 0 ? prec : prec + 1;
                 GetNextToken();
-                var rhs = Expr(nextmin);
+                Value rhs = Expr(nextmin);
                 lhs = lhs.BinOp(rhs, op);
             }
 
             return lhs;
         }
 
-        private Value Primary()
+        Value Primary()
         {
-            var prim = Value.Zero;
+            Value prim = Value.Zero;
 
-            switch (lastToken)
+            if (lastToken == Token.Value)
             {
-                case Token.Value:
-                    // number | string
-                    prim = lex.Value;
-                    GetNextToken();
-                    break;
-                case Token.Identifier:
+                // number | string
+                prim = lex.Value;
+                GetNextToken();
+            }
+            else if (lastToken == Token.Identifier)
+            {
+                // ident | ident '(' args ')'
+                if (vars.ContainsKey(lex.Identifier))
                 {
-                    // ident | ident '(' args ')'
-                    if (vars.ContainsKey(lex.Identifier))
-                    {
-                        prim = vars[lex.Identifier];
-                    }
-                    else if (funcs.ContainsKey(lex.Identifier))
-                    {
-                        var name = lex.Identifier;
-                        var args = new List<Value>();
-                        GetNextToken();
-                        Match(Token.LParen);
-
-                        start:
-                        if (GetNextToken() != Token.RParen)
-                        {
-                            args.Add(Expr());
-                            if (lastToken == Token.Comma)
-                                goto start;
-                        }
-
-                        prim = funcs[name](null, args);
-                    }
-                    else
-                    {
-                        Error("Undeclared variable " + lex.Identifier);
-                    }
-
-                    GetNextToken();
-                    break;
+                    prim = vars[lex.Identifier];
                 }
-                case Token.LParen:
-                    // '(' expr ')'
-                    GetNextToken();
-                    prim = Expr();
-                    Match(Token.RParen);
-                    GetNextToken();
-                    break;
-                case Token.Plus:
-                case Token.Minus:
-                case Token.Not:
+                else if (funcs.ContainsKey(lex.Identifier))
                 {
-                    // unary operator
-                    // '-' | '+' primary
-                    var op = lastToken;
+                    string name = lex.Identifier;
+                    List<Value> args = new List<Value>();
                     GetNextToken();
-                    prim = Primary().UnaryOp(op);
-                    break;
+                    Match(Token.LParen);
+
+                start:
+                    if (GetNextToken() != Token.RParen)
+                    {
+                        args.Add(Expr());
+                        if (lastToken == Token.Comma)
+                            goto start;
+                    }
+
+                    prim = funcs[name](null, args);
                 }
-                default:
-                    Error("Unexpected token in primary!");
-                    break;
+                else
+                {
+                    Error("Undeclared variable " + lex.Identifier);
+                }
+                GetNextToken();
+            }
+            else if (lastToken == Token.LParen)
+            {
+                // '(' expr ')'
+                GetNextToken();
+                prim = Expr();
+                Match(Token.RParen);
+                GetNextToken();
+            }
+            else if (lastToken == Token.Plus || lastToken == Token.Minus || lastToken == Token.Not)
+            {
+                // unary operator
+                // '-' | '+' primary
+                Token op = lastToken;
+                GetNextToken();
+                prim = Primary().UnaryOp(op);
+            }
+            else
+            {
+                Error("Unexpexted token in primary!");
             }
 
             return prim;

@@ -1,17 +1,17 @@
-#region
-
 using System;
-using System.Globalization;
-
-#endregion
 
 namespace BasicSharp
 {
-    public sealed class Lexer
+    public class Lexer
     {
         private readonly string source;
-        private char lastChar;
         private Marker sourceMarker; // current position in source string
+        private char lastChar;
+
+        public Marker TokenMarker { get; set; }
+
+        public string Identifier { get; set; } // Last encountered identifier
+        public Value Value { get; set; } // Last number or string
 
         public Lexer(string input)
         {
@@ -20,11 +20,6 @@ namespace BasicSharp
             lastChar = source[0];
         }
 
-        public Marker TokenMarker { get; set; }
-
-        public string Identifier { get; set; } // Last encountered identifier
-        public Value Value { get; set; } // Last number or string
-
         public void GoTo(Marker marker)
         {
             sourceMarker = marker;
@@ -32,11 +27,11 @@ namespace BasicSharp
 
         public string GetLine(Marker marker)
         {
-            var oldMarker = sourceMarker;
+            Marker oldMarker = sourceMarker;
             marker.Pointer--;
             GoTo(marker);
 
-            var line = "";
+            string line = "";
             do
             {
                 line += GetChar();
@@ -49,7 +44,7 @@ namespace BasicSharp
             return line;
         }
 
-        private char GetChar()
+        char GetChar()
         {
             sourceMarker.Column++;
             sourceMarker.Pointer++;
@@ -57,196 +52,135 @@ namespace BasicSharp
             if (sourceMarker.Pointer >= source.Length)
                 return lastChar = (char)0;
 
-            if ((lastChar = source[sourceMarker.Pointer]) != '\n') return lastChar;
-
-            sourceMarker.Column = 1;
-            sourceMarker.Line++;
-
+            if ((lastChar = source[sourceMarker.Pointer]) == '\n')
+            {
+                sourceMarker.Column = 1;
+                sourceMarker.Line++;
+            }
             return lastChar;
         }
 
         public Token GetToken()
         {
-            while (true)
+            // skip white chars
+            while (lastChar == ' ' || lastChar == '\t' || lastChar == '\r')
+                GetChar();
+
+            TokenMarker = sourceMarker;
+
+            if (char.IsLetter(lastChar))
             {
-                // skip white chars
-                while (lastChar is ' ' or '\t' or '\r') GetChar();
+                Identifier = lastChar.ToString();
+                while (char.IsLetterOrDigit(GetChar()))
+                    Identifier += lastChar;
 
-                TokenMarker = sourceMarker;
-
-                if (char.IsLetter(lastChar))
+                switch (Identifier.ToUpper())
                 {
-                    Identifier = lastChar.ToString();
-                    while (char.IsLetterOrDigit(GetChar())) Identifier += lastChar;
-
-                    switch (Identifier.ToUpper())
-                    {
-                        case "PRINT":
-                            return Token.Print;
-                        case "MACRO":
-                            return Token.Macro;
-                        case "IF":
-                            return Token.If;
-                        case "ENDIF":
-                            return Token.EndIf;
-                        case "THEN":
-                            return Token.Then;
-                        case "ELSE":
-                            return Token.Else;
-                        case "FOR":
-                            return Token.For;
-                        case "TO":
-                            return Token.To;
-                        case "NEXT":
-                            return Token.Next;
-                        case "GOTO":
-                            return Token.Goto;
-                        case "INPUT":
-                            return Token.Input;
-                        case "LET":
-                            return Token.Let;
-                        case "GOSUB":
-                            return Token.Gosub;
-                        case "RETURN":
-                            return Token.Return;
-                        case "END":
-                            return Token.End;
-                        case "OR":
-                            return Token.Or;
-                        case "AND":
-                            return Token.And;
-                        case "NOT":
-                            return Token.Not;
-                        case "ASSERT":
-                            return Token.Assert;
-                        case "SELECT":
-                            return Token.Select;
-                        case "SLEEP":
-                            return Token.Sleep;
-                        case "REM":
-                            while (lastChar != '\n') GetChar();
-                            GetChar();
-                            continue;
-                        default:
-                            return Token.Identifier;
-                    }
-                }
-
-                if (char.IsDigit(lastChar))
-                {
-                    var num = "";
-                    do
-                    {
-                        num += lastChar;
-                    } while (char.IsDigit(GetChar()) || lastChar == '.');
-
-                    if (!double.TryParse(num, NumberStyles.Float, CultureInfo.InvariantCulture, out var real))
-                        throw new Exception("ERROR while parsing number");
-
-                    Value = new Value(real);
-                    return Token.Value;
-                }
-
-                var tok = Token.Unknown;
-                switch (lastChar)
-                {
-                    case '\n':
-                        tok = Token.NewLine;
-                        break;
-                    case ':':
-                        tok = Token.Colon;
-                        break;
-                    case ';':
-                        tok = Token.Semicolon;
-                        break;
-                    case ',':
-                        tok = Token.Comma;
-                        break;
-                    case '=':
-                        tok = Token.Equal;
-                        break;
-                    case '+':
-                        tok = Token.Plus;
-                        break;
-                    case '-':
-                        tok = Token.Minus;
-                        break;
-                    case '/':
-                        tok = Token.Slash;
-                        break;
-                    case '*':
-                        tok = Token.Asterisk;
-                        break;
-                    case '^':
-                        tok = Token.Caret;
-                        break;
-                    case '(':
-                        tok = Token.LParen;
-                        break;
-                    case ')':
-                        tok = Token.RParen;
-                        break;
-                    case '\'':
-                        // skip comment until new line
+                    case "PRINT": return Token.Print;
+                    case "MACRO": return Token.Macro;
+                    case "IF": return Token.If;
+                    case "ENDIF": return Token.EndIf;
+                    case "THEN": return Token.Then;
+                    case "ELSE": return Token.Else;
+                    case "FOR": return Token.For;
+                    case "TO": return Token.To;
+                    case "NEXT": return Token.Next;
+                    case "GOTO": return Token.Goto;
+                    case "INPUT": return Token.Input;
+                    case "LET": return Token.Let;
+                    case "GOSUB": return Token.Gosub;
+                    case "RETURN": return Token.Return;
+                    case "END": return Token.End;
+                    case "OR": return Token.Or;
+                    case "AND": return Token.And;
+                    case "NOT": return Token.Not;
+                    case "ASSERT": return Token.Assert;
+                    case "SELECT": return Token.Select;
+                    case "UNSELECT": return Token.UnSelect;
+                    case "SLEEP": return Token.Sleep;
+                    case "TAPKEY": return Token.TapKey;
+                    case "REM":
                         while (lastChar != '\n') GetChar();
                         GetChar();
-                        continue;
-                    case '<':
-                        GetChar();
-                        switch (lastChar)
-                        {
-                            case '>':
-                                tok = Token.NotEqual;
-                                break;
-                            case '=':
-                                tok = Token.LessEqual;
-                                break;
-                            default:
-                                return Token.Less;
-                        }
-
-                        break;
-                    case '>':
-                        GetChar();
-                        if (lastChar == '=')
-                            tok = Token.MoreEqual;
-                        else
-                            return Token.More;
-
-                        break;
-                    case '"':
-                        var str = "";
-                        while (GetChar() != '"')
-                            if (lastChar == '\\')
-                                // parse \n, \t, \\, \"
-                                switch (char.ToLower(GetChar()))
-                                {
-                                    case 'n':
-                                        str += '\n';
-                                        break;
-                                    case 't':
-                                        str += '\t';
-                                        break;
-                                    case '\\':
-                                        str += '\\';
-                                        break;
-                                    case '"':
-                                        str += '"';
-                                        break;
-                                }
-                            else
-                                str += lastChar;
-
-                        Value = new Value(str);
-                        tok = Token.Value;
-                        break;
-                    case (char)0:
-                        return Token.EOF;
+                        return GetToken();
+                    default:
+                        return Token.Identifier;
                 }
-
-                GetChar();
-                return tok;
             }
+
+            if (char.IsDigit(lastChar))
+            {
+                string num = "";
+                do { num += lastChar; } while (char.IsDigit(GetChar()) || lastChar == '.');
+
+                double real;
+                if (!double.TryParse(num, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out real))
+                    throw new Exception("ERROR while parsing number");
+                Value = new Value(real);
+                return Token.Value;
+            }
+
+            Token tok = Token.Unknown;
+            switch (lastChar)
+            {
+                case '\n': tok = Token.NewLine; break;
+                case ':': tok = Token.Colon; break;
+                case ';': tok = Token.Semicolon; break;
+                case ',': tok = Token.Comma; break;
+                case '=': tok = Token.Equal; break;
+                case '+': tok = Token.Plus; break;
+                case '-': tok = Token.Minus; break;
+                case '/': tok = Token.Slash; break;
+                case '*': tok = Token.Asterisk; break;
+                case '^': tok = Token.Caret; break;
+                case '(': tok = Token.LParen; break;
+                case ')': tok = Token.RParen; break;
+                case '\'':
+                    // skip comment until new line
+                    while (lastChar != '\n') GetChar();
+                    GetChar();
+                    return GetToken();
+                case '<':
+                    GetChar();
+                    if (lastChar == '>') tok = Token.NotEqual;
+                    else if (lastChar == '=') tok = Token.LessEqual;
+                    else return Token.Less;
+                    break;
+                case '>':
+                    GetChar();
+                    if (lastChar == '=') tok = Token.MoreEqual;
+                    else return Token.More;
+                    break;
+                case '"':
+                    string str = "";
+                    while (GetChar() != '"')
+                    {
+                        if (lastChar == '\\')
+                        {
+                            // parse \n, \t, \\, \"
+                            switch (char.ToLower(GetChar()))
+                            {
+                                case 'n': str += '\n'; break;
+                                case 't': str += '\t'; break;
+                                case '\\': str += '\\'; break;
+                                case '"': str += '"'; break;
+                            }
+                        }
+                        else
+                        {
+                            str += lastChar;
+                        }
+                    }
+                    Value = new Value(str);
+                    tok = Token.Value;
+                    break;
+                case (char)0:
+                    return Token.EOF;
+            }
+
+            GetChar();
+            return tok;
         }
     }
 }
+
