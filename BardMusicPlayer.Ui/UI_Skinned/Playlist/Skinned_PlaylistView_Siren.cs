@@ -21,7 +21,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     logic for the siren controls
     /// </summary>
-    public sealed partial class Skinned_PlaylistView : Window
+    public sealed partial class Skinned_PlaylistView
     {
         private double lasttime; //last poll time of Instance_SynthTimePositionChanged
         private int scrollpos; //position of the title scroller

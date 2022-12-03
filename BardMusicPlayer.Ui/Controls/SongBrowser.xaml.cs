@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using BardMusicPlayer.Pigeonhole;
 using UI.Resources;
@@ -18,7 +17,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     The songbrowser but much faster than the BMP 1.x had
     /// </summary>
-    public sealed partial class SongBrowser : UserControl
+    public sealed partial class SongBrowser
     {
         public EventHandler<string> OnLoadSongFromBrowser;
 

@@ -349,10 +349,6 @@ namespace Sanford.Multimedia.Midi
                     if (length != KeySigLength) result = false;
 
                     break;
-
-                default:
-                    result = true;
-                    break;
             }
 
             return result;

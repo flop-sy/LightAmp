@@ -10,7 +10,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für NetworkPlayWindow.xaml
     /// </summary>
-    public partial class NetworkPlayWindow : Window
+    public partial class NetworkPlayWindow
     {
         public NetworkPlayWindow()
         {

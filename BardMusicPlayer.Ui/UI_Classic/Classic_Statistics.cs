@@ -3,7 +3,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
-using System.Windows.Controls;
 using BardMusicPlayer.Maestro.Events;
 using BardMusicPlayer.Ui.Functions;
 using Microsoft.Win32;
@@ -15,7 +14,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     only here cuz someone would like to have it back
     /// </summary>
-    public sealed partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView
     {
         private List<int> _notesCountForTracks = new();
 

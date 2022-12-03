@@ -33,7 +33,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
-    public sealed partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView
     {
         private readonly ObservableCollection<LyricsContainer> lyricsData = new();
 

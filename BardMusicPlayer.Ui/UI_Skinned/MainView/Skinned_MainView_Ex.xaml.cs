@@ -1,7 +1,6 @@
 ﻿#region
 
 using System;
-using System.Windows;
 using BardMusicPlayer.Ui.Globals.SkinContainer;
 
 #endregion
@@ -11,7 +10,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     does nothing, but looks fancy
     /// </summary>
-    public sealed partial class Skinned_MainView_Ex : Window
+    public sealed partial class Skinned_MainView_Ex
     {
         public Skinned_MainView_Ex()
         {

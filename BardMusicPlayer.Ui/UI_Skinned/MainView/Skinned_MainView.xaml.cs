@@ -3,7 +3,6 @@
 using System;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using BardMusicPlayer.Maestro;
@@ -22,7 +21,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für Skinned_MainView.xaml
     /// </summary>
-    public sealed partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView
     {
         public BardsWindow _BardListView;
         public Skinned_MainView_Ex _MainView_Ex;

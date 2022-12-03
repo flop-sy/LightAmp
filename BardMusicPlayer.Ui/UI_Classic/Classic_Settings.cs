@@ -11,7 +11,7 @@ using BardMusicPlayer.Pigeonhole;
 
 namespace BardMusicPlayer.Ui.Classic
 {
-    public sealed partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView
     {
         /// <summary>
         ///     load the settings

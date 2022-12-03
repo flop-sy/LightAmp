@@ -27,7 +27,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für Skinned_PlaylistView.xaml
     /// </summary>
-    public sealed partial class Skinned_PlaylistView : Window
+    public sealed partial class Skinned_PlaylistView
     {
         private IPlaylist _currentPlaylist; //The currently used playlist
         public EventHandler<BmpSong> OnLoadSongFromPlaylist;

@@ -14,7 +14,7 @@ namespace Sanford.Threading
     /// <summary>
     ///     Provides functionality for timestamped delegate invocation.
     /// </summary>
-    public class DelegateScheduler : IDisposable, IComponent
+    public class DelegateScheduler : IComponent
     {
         #region IDisposable Members
 

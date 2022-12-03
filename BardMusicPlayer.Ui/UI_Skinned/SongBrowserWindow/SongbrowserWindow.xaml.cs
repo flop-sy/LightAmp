@@ -12,7 +12,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für SongbrowserWindow.xaml
     /// </summary>
-    public sealed partial class SongbrowserWindow : Window
+    public sealed partial class SongbrowserWindow
     {
         public EventHandler<string> OnLoadSongFromBrowser;
 

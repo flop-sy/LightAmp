@@ -20,7 +20,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
-    public sealed partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView
     {
         private int MaxTracks = 1;
 
@@ -28,6 +28,8 @@ namespace BardMusicPlayer.Ui.Classic
         public Classic_MainView()
         {
             InitializeComponent();
+            CurrentInstance = this;
+
             //Always start with the playlists
             _showingPlaylists = true;
             //Fill the list
@@ -55,6 +57,8 @@ namespace BardMusicPlayer.Ui.Classic
             Globals.Globals.OnConfigReload += Globals_OnConfigReload;
             LoadConfig();
         }
+
+        public static Classic_MainView CurrentInstance { get; private set; }
 
         private bool _directLoaded { get; set; } //indicates if a song was loaded directly or from playlist
 
@@ -371,8 +375,7 @@ namespace BardMusicPlayer.Ui.Classic
             if (speed_txtNum == null)
                 return;
 
-            var t = 0;
-            if (!int.TryParse(speed_txtNum.Text.Replace(@"%", ""), out t)) return;
+            if (!int.TryParse(speed_txtNum.Text.Replace(@"%", ""), out var t)) return;
 
             var speedShift = (Convert.ToDouble(t) / 100).Clamp(0.1f, 2.0f);
             BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -16,7 +15,7 @@ using BardMusicPlayer.Ui.Globals.SkinContainer;
 
 namespace BardMusicPlayer.Ui.Skinned
 {
-    public sealed partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView
     {
         /*void WriteTrackField(string data)
         {

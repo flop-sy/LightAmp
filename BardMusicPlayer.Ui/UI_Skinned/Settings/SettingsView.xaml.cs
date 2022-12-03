@@ -24,7 +24,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für Settings.xaml
     /// </summary>
-    public sealed partial class SettingsView : Window
+    public sealed partial class SettingsView
     {
         public SettingsView()
         {

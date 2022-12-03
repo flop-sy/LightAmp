@@ -13,7 +13,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für MacroEditWindow.xaml
     /// </summary>
-    public sealed partial class MacroEditWindow : Window
+    public sealed partial class MacroEditWindow
     {
         public MacroEditWindow(Macro macro)
         {

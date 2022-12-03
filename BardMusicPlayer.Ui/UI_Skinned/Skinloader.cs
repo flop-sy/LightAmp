@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -23,7 +22,7 @@ using Image = System.Drawing.Image;
 
 namespace BardMusicPlayer.Ui.Skinned
 {
-    public sealed partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView
     {
         /// <summary>
         ///     Load the selected skin

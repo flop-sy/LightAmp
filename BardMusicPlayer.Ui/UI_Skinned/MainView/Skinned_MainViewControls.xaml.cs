@@ -3,7 +3,6 @@
 using System.Globalization;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using BardMusicPlayer.Maestro;
@@ -15,7 +14,7 @@ using BardMusicPlayer.Ui.Globals.SkinContainer;
 
 namespace BardMusicPlayer.Ui.Skinned
 {
-    public sealed partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView
     {
         /// <summary>
         ///     load the prev song in the playlist

@@ -13,7 +13,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für TrackNumericUpDown.xaml
     /// </summary>
-    public sealed partial class TrackNumericUpDown : UserControl
+    public sealed partial class TrackNumericUpDown
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(string), typeof(TrackNumericUpDown),

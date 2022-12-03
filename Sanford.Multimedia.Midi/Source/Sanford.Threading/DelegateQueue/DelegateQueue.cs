@@ -245,7 +245,7 @@ namespace Sanford.Threading
 
             #endregion
 
-            object returnValue = null;
+            object returnValue;
 
             // If InvokePriority was called from a different thread than the one
             // in which the DelegateQueue is running.
@@ -394,7 +394,7 @@ namespace Sanford.Threading
             while (true)
             {
                 // Critical section.
-                DelegateQueueAsyncResult result = null;
+                DelegateQueueAsyncResult result;
                 lock (lockObject)
                 {
                     // If the DelegateQueue has been disposed, break out of loop; we're done.
@@ -686,7 +686,7 @@ namespace Sanford.Threading
 
             #endregion
 
-            object returnValue = null;
+            object returnValue;
 
             if (InvokeRequired)
             {

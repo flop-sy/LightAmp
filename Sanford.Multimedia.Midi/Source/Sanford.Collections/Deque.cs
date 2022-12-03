@@ -12,7 +12,7 @@ namespace Sanford.Collections
     ///     Represents a simple double-ended-queue collection of objects.
     /// </summary>
     [Serializable]
-    public class Deque : ICollection, IEnumerable, ICloneable
+    public class Deque : ICollection, ICloneable
     {
         #region ICloneable Members
 

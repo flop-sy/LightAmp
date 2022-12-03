@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -33,7 +32,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für KeyboardHeatMap.xaml
     /// </summary>
-    public sealed partial class KeyboardHeatMap : UserControl
+    public sealed partial class KeyboardHeatMap
     {
         //note frequencies
         private readonly int mOctave = 4; // default octave (octaves can be from 1 to 7)

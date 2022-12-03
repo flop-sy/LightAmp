@@ -8,7 +8,7 @@ using Sanford.Threading;
 
 namespace Sanford.Multimedia.Midi
 {
-    public sealed partial class InputDevice : MidiDevice
+    public sealed partial class InputDevice
     {
         #region Construction
 

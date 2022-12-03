@@ -17,7 +17,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für BardExtSettingsWindow.xaml
     /// </summary>
-    public sealed partial class BardExtSettingsWindow : Window
+    public sealed partial class BardExtSettingsWindow
     {
         private readonly List<CheckBox> _cpuBoxes = new();
         private readonly Performer _performer;

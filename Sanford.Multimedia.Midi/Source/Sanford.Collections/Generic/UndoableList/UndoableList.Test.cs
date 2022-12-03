@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace Sanford.Collections.Generic
 {
-    public partial class UndoableList<T> : IList<T>
+    public partial class UndoableList<T>
     {
         [Conditional("MIDIDEBUG")]
         public static void Test()

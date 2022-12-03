@@ -17,6 +17,8 @@ using BardMusicPlayer.Maestro.Performance;
 using BardMusicPlayer.Pigeonhole;
 using BardMusicPlayer.Seer;
 using BardMusicPlayer.Seer.Events;
+using BardMusicPlayer.Ui.Classic;
+using BardMusicPlayer.Ui.Functions;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 
@@ -27,7 +29,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für BardView.xaml
     /// </summary>
-    public sealed partial class BardView : UserControl
+    public sealed partial class BardView
     {
         public BardView()
         {
@@ -116,6 +118,12 @@ namespace BardMusicPlayer.Ui.Controls
 
         private void CloseInstrumentButton_Click(object sender, RoutedEventArgs e)
         {
+            if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
+            {
+                PlaybackFunctions.PauseSong();
+                Classic_MainView.CurrentInstance.Play_Button_State();
+            }
+
             BmpMaestro.Instance.StopLocalPerformer();
             BmpMaestro.Instance.UnEquipInstruments();
         }
@@ -133,42 +141,37 @@ namespace BardMusicPlayer.Ui.Controls
         /* Track UP/Down */
         private void TrackNumericUpDown_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            var ctl = sender as TrackNumericUpDown;
-            ctl.OnValueChanged += OnValueChanged;
+            if (sender is TrackNumericUpDown ctl) ctl.OnValueChanged += OnValueChanged;
         }
 
         private static void OnValueChanged(object sender, int s)
         {
-            var game = (sender as TrackNumericUpDown).DataContext as Performer;
+            var game = (sender as TrackNumericUpDown)?.DataContext as Performer;
             BmpMaestro.Instance.SetTracknumber(game, s);
 
-            var ctl = sender as TrackNumericUpDown;
-            ctl.OnValueChanged -= OnValueChanged;
+            if (sender is TrackNumericUpDown ctl) ctl.OnValueChanged -= OnValueChanged;
         }
 
         /* Octave UP/Down */
         private void OctaveControl_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
-            var ctl = sender as OctaveNumericUpDown;
-            ctl.OnValueChanged += OnOctaveValueChanged;
+            if (sender is OctaveNumericUpDown ctl) ctl.OnValueChanged += OnOctaveValueChanged;
         }
 
         private static void OnOctaveValueChanged(object sender, int s)
         {
-            var performer = (sender as OctaveNumericUpDown).DataContext as Performer;
+            var performer = (sender as OctaveNumericUpDown)?.DataContext as Performer;
             BmpMaestro.Instance.SetOctaveshift(performer, s);
 
-            var ctl = sender as OctaveNumericUpDown;
-            ctl.OnValueChanged -= OnOctaveValueChanged;
+            if (sender is OctaveNumericUpDown ctl) ctl.OnValueChanged -= OnOctaveValueChanged;
         }
 
         private void HostChecker_Checked(object sender, RoutedEventArgs e)
         {
-            var ctl = sender as CheckBox;
-            if (!ctl.IsChecked ?? false)
+            if (sender is CheckBox ctl && (!ctl.IsChecked ?? false))
                 return;
 
-            var game = (sender as CheckBox).DataContext as Performer;
+            var game = (sender as CheckBox)?.DataContext as Performer;
             BmpMaestro.Instance.SetHostBard(game);
         }
 
@@ -284,8 +287,11 @@ namespace BardMusicPlayer.Ui.Controls
         /// </summary>
         private void MenuButton_PreviewMouseLeftButtonDown(object sender, RoutedEventArgs e)
         {
-            var rectangle = sender as Button;
+            if (sender is not Button rectangle) return;
+
             var contextMenu = rectangle.ContextMenu;
+            if (contextMenu == null) return;
+
             contextMenu.PlacementTarget = rectangle;
             contextMenu.Placement = PlacementMode.Bottom;
             contextMenu.IsOpen = true;

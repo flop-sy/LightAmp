@@ -18,7 +18,7 @@ namespace BardMusicPlayer.Ui
     /// <summary>
     ///     Interaktionslogik für "App.xaml"
     /// </summary>
-    public sealed partial class App : Application
+    public sealed partial class App
     {
         protected override void OnStartup(StartupEventArgs e)
         {

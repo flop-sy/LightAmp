@@ -15,7 +15,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für MediaBrowser.xaml
     /// </summary>
-    public sealed partial class MediaBrowser : Window
+    public sealed partial class MediaBrowser
     {
         private IPlaylist _currentPlaylist; //The current selected playlist at the browser
         private int _currentPlaylistIndex;

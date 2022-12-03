@@ -17,14 +17,14 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
-    public sealed partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView
     {
         private bool _alltracks;
         private bool _Playbar_dragStarted;
         private bool _Siren_Playbar_dragStarted;
 
         /* Playbuttonstate */
-        private void Play_Button_State(bool playing = false)
+        public void Play_Button_State(bool playing = false)
         {
             Play_Button.Content = !playing ? @"▶" : @"⏸";
         }

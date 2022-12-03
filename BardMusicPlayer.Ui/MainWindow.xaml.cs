@@ -13,7 +13,7 @@ namespace BardMusicPlayer.Ui
     /// <summary>
     ///     Interaktionslogik für MainWindow.xaml
     /// </summary>
-    public sealed partial class MainWindow : Window
+    public sealed partial class MainWindow
     {
         public MainWindow()
         {

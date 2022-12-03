@@ -12,7 +12,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für NumericUpDown.xaml
     /// </summary>
-    public sealed partial class OctaveNumericUpDown : UserControl
+    public sealed partial class OctaveNumericUpDown
     {
         public static readonly DependencyProperty ValueProperty =
             DependencyProperty.Register(nameof(Value), typeof(string), typeof(OctaveNumericUpDown),

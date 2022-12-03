@@ -12,7 +12,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Only a container window
     /// </summary>
-    public sealed partial class BardsWindow : Window
+    public sealed partial class BardsWindow
     {
         public BardsWindow()
         {

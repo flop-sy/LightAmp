@@ -2,7 +2,6 @@
 
 using System;
 using System.Windows;
-using System.Windows.Controls;
 using BardMusicPlayer.Jamboree;
 using BardMusicPlayer.Jamboree.Events;
 
@@ -13,7 +12,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     The songbrowser but much faster than the BMP 1.x had
     /// </summary>
-    public sealed partial class NetworkControl : UserControl
+    public sealed partial class NetworkControl
     {
         public NetworkControl()
         {

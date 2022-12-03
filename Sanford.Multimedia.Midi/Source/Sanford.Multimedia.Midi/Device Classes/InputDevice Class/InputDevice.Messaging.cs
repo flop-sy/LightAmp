@@ -21,7 +21,7 @@ namespace Sanford.Multimedia.Midi
         }
     }
 
-    public sealed partial class InputDevice : MidiDevice
+    public sealed partial class InputDevice
     {
         /// <summary>
         ///     Gets or sets a value indicating whether the midi input driver callback should be posted on a delegate queue with
