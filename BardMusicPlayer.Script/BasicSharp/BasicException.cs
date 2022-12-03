@@ -4,7 +4,7 @@ using System;
 
 #endregion
 
-namespace BasicSharp
+namespace BardMusicPlayer.Script.BasicSharp
 {
     internal sealed class BasicException : Exception
     {

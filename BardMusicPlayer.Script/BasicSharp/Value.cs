@@ -5,7 +5,7 @@ using System.Globalization;
 
 #endregion
 
-namespace BasicSharp
+namespace BardMusicPlayer.Script.BasicSharp
 {
     public enum ValueType
     {

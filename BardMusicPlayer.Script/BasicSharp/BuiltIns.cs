@@ -2,11 +2,10 @@
 
 using System;
 using System.Collections.Generic;
-using BardMusicPlayer.Script.BasicSharp;
 
 #endregion
 
-namespace BasicSharp
+namespace BardMusicPlayer.Script.BasicSharp
 {
     internal abstract class BuiltIns
     {

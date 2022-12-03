@@ -128,7 +128,8 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
         public string GetInstrumentKeyMap(Instrument instrument)
         {
             var slots = GetSlotsFromType(SlotType.Instrument);
-            foreach (var slot in slots.Where(slot => slot.Action == instrument && slot.Job == 0x17)) //read only the bard
+            //read only the bard
+            foreach (var slot in slots.Where(slot => slot.Action == instrument && slot.Job == 0x17))
                 return slot.ToString();
 
             return string.Empty;
