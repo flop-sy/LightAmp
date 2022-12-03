@@ -1,5 +1,3 @@
-// ReSharper disable InconsistentNaming
-
 namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
     /// <summary>

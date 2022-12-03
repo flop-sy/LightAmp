@@ -54,7 +54,6 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi
         ///     Writes the midi file into a binary format.
         /// </summary>
         /// <returns>The binary midi file.</returns>
-        // ReSharper disable once UnusedMember.Global
         public byte[] ToBinary()
         {
             var data = ByteBuffer.Empty();

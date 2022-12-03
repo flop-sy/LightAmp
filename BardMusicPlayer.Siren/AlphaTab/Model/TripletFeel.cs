@@ -1,6 +1,5 @@
 namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
-    // ReSharper disable InconsistentNaming
     /// <summary>
     ///     This public enumeration lists all feels of triplets.
     /// </summary>

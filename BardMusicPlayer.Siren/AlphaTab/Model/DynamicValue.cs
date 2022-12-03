@@ -1,6 +1,5 @@
 namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
-    // ReSharper disable InconsistentNaming
     /// <summary>
     ///     Lists all dynamics.
     /// </summary>

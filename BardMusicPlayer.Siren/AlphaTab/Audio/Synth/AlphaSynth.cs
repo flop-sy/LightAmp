@@ -255,7 +255,6 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth
         ///     Loads the given midi file for playback.
         /// </summary>
         /// <param name="midiFile">The midi file to load</param>
-        // ReSharper disable once UnusedMember.Global
         public void LoadMidiFile(MidiFile midiFile)
         {
             Stop();
