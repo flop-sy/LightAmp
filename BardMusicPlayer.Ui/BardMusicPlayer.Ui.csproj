@@ -14,7 +14,7 @@
         <SignAssembly>false</SignAssembly>
         <AssemblyOriginatorKeyFile>signature.snk</AssemblyOriginatorKeyFile>
         <LangVersion>9</LangVersion>
-        <Configurations>Debug;DebugPublish;Release;ReleasePublish</Configurations>
+        <Configurations>Debug;Release</Configurations>
         <ApplicationIcon>iconp.ico</ApplicationIcon>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
