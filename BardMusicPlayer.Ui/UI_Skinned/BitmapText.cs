@@ -11,13 +11,12 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using BardMusicPlayer.Ui.Globals.SkinContainer;
-using Image = System.Drawing.Image;
 
 #endregion
 
 namespace BardMusicPlayer.Ui.Skinned
 {
-    public partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView : UserControl
     {
         /*void WriteTrackField(string data)
         {
@@ -41,13 +40,9 @@ namespace BardMusicPlayer.Ui.Skinned
             var bitmap = new Bitmap(30, 8);
             var graphics = Graphics.FromImage(bitmap);
             var index = 0;
-            foreach (var a in data)
+            foreach (var img in data.Select(static a =>
+                         SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
             {
-                Image img;
-                if (SkinContainer.FONT.ContainsKey(a))
-                    img = SkinContainer.FONT[a];
-                else
-                    img = SkinContainer.FONT[32];
                 graphics.DrawImage(img, 5 * index, 0);
                 index++;
             }
@@ -69,13 +64,9 @@ namespace BardMusicPlayer.Ui.Skinned
             var bitmap = new Bitmap(30, 8);
             var graphics = Graphics.FromImage(bitmap);
             var index = 0;
-            foreach (var a in data)
+            foreach (var img in data.Select(static a =>
+                         SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
             {
-                Image img;
-                if (SkinContainer.FONT.ContainsKey(a))
-                    img = SkinContainer.FONT[a];
-                else
-                    img = SkinContainer.FONT[32];
                 graphics.DrawImage(img, 5 * index, 0);
                 index++;
             }
@@ -93,16 +84,13 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             if (data == null)
                 return;
+
             var bitmap = new Bitmap(110, 12);
             var graphics = Graphics.FromImage(bitmap);
             var index = 0;
-            foreach (var a in data)
+            foreach (var img in data.Select(static a =>
+                         SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
             {
-                Image img;
-                if (SkinContainer.FONT.ContainsKey(a))
-                    img = SkinContainer.FONT[a];
-                else
-                    img = SkinContainer.FONT[32];
                 graphics.DrawImage(img, 5 * index, 0);
                 index++;
             }
@@ -117,7 +105,7 @@ namespace BardMusicPlayer.Ui.Skinned
         private int scrollpos;
         private bool scrolldir = true;
 
-        protected async Task UpdateScroller(CancellationToken stoppingToken, string data)
+        private async Task UpdateScroller(CancellationToken stoppingToken, string data)
         {
             var songname = data;
             scrollpos = 0;
@@ -139,7 +127,6 @@ namespace BardMusicPlayer.Ui.Skinned
             var graphics = Graphics.FromImage(bitmap);
             for (var i = 0; i < 33; i++)
             {
-                Image img;
                 var a = ' ';
 
                 if (scrollpos == -1 && !scrolldir)
@@ -154,16 +141,13 @@ namespace BardMusicPlayer.Ui.Skinned
                     }
                     else
                     {
-                        if (scrollpos == -2)
-                            scrollpos = 0;
+                        if (scrollpos == -2) scrollpos = 0;
+
                         a = data.ToArray()[i + scrollpos];
                     }
                 }
 
-                if (SkinContainer.FONT.ContainsKey(a))
-                    img = SkinContainer.FONT[a];
-                else
-                    img = SkinContainer.FONT[32];
+                var img = SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32];
                 graphics.DrawImage(img, 5 * i, 0);
             }
 

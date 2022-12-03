@@ -37,27 +37,21 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util
         {
             if (value <= min) return min;
 
-            if (value >= max) return max;
-
-            return value;
+            return value >= max ? max : value;
         }
 
         public static double ClampD(double value, double min, double max)
         {
             if (value <= min) return min;
 
-            if (value >= max) return max;
-
-            return value;
+            return value >= max ? max : value;
         }
 
         public static float ClampF(float value, float min, float max)
         {
             if (value <= min) return min;
 
-            if (value >= max) return max;
-
-            return value;
+            return value >= max ? max : value;
         }
     }
 }

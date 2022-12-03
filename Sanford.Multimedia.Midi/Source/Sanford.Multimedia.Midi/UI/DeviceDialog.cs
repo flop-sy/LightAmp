@@ -39,30 +39,25 @@ namespace Sanford.Multimedia.Midi.UI
 {
     public partial class DeviceDialog : Form
     {
-        private int inputDeviceID = 0;
+        private int inputDeviceID;
 
-        private int outputDeviceID = 0;
+        private int outputDeviceID;
 
         public DeviceDialog()
         {
             InitializeComponent();
 
-            if(InputDevice.DeviceCount > 0)
+            if (InputDevice.DeviceCount > 0)
             {
-                for(int i = 0; i < InputDevice.DeviceCount; i++)
-                {
-                    inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
-                }
+                for (var i = 0; i < InputDevice.DeviceCount; i++) inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
 
                 inputComboBox.SelectedIndex = inputDeviceID;
             }
 
-            if(OutputDevice.DeviceCount > 0)
+            if (OutputDeviceBase.DeviceCount <= 0) return;
+
             {
-                for(int i = 0; i < OutputDevice.DeviceCount; i++)
-                {
-                    outputComboBox.Items.Add(OutputDevice.GetDeviceCapabilities(i).name);
-                }
+                for (var i = 0; i < OutputDeviceBase.DeviceCount; i++) outputComboBox.Items.Add(OutputDeviceBase.GetDeviceCapabilities(i).name);
 
                 outputComboBox.SelectedIndex = inputDeviceID;
             }
@@ -70,30 +65,18 @@ namespace Sanford.Multimedia.Midi.UI
 
         protected override void OnShown(EventArgs e)
         {
-            if(InputDevice.DeviceCount > 0)
-            {
-                inputComboBox.SelectedIndex = inputDeviceID;
-            }
+            if (InputDevice.DeviceCount > 0) inputComboBox.SelectedIndex = inputDeviceID;
 
-            if(OutputDevice.DeviceCount > 0)
-            {
-                outputComboBox.SelectedIndex = outputDeviceID;
-            }
+            if (OutputDeviceBase.DeviceCount > 0) outputComboBox.SelectedIndex = outputDeviceID;
 
             base.OnShown(e);
         }
 
         private void okButton_Click(object sender, EventArgs e)
         {
-            if(InputDevice.DeviceCount > 0)
-            {
-                inputDeviceID = inputComboBox.SelectedIndex;
-            }
+            if (InputDevice.DeviceCount > 0) inputDeviceID = inputComboBox.SelectedIndex;
 
-            if(OutputDevice.DeviceCount > 0)
-            {
-                outputDeviceID = outputComboBox.SelectedIndex;
-            }
+            if (OutputDeviceBase.DeviceCount > 0) outputDeviceID = outputComboBox.SelectedIndex;
 
             DialogResult = DialogResult.OK;
         }
@@ -109,10 +92,7 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 #region Require
 
-                if(InputDevice.DeviceCount == 0)
-                {
-                    throw new InvalidOperationException();
-                }
+                if (InputDevice.DeviceCount == 0) throw new InvalidOperationException();
 
                 #endregion
 
@@ -126,10 +106,7 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 #region Require
 
-                if(OutputDevice.DeviceCount == 0)
-                {
-                    throw new InvalidOperationException();
-                }
+                if (OutputDeviceBase.DeviceCount == 0) throw new InvalidOperationException();
 
                 #endregion
 

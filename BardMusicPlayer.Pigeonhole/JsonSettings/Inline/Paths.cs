@@ -49,9 +49,9 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Inline
         /// <returns></returns>
         public static FileInfo CombineToExecutingBase(string filename)
         {
-            if (ExecutingExe.DirectoryName != null)
-                return new FileInfo(Path.Combine(ExecutingDirectory.FullName, filename));
-            return null;
+            return ExecutingExe.DirectoryName != null
+                ? new FileInfo(Path.Combine(ExecutingDirectory.FullName, filename))
+                : null;
         }
 
         /// <summary>
@@ -59,8 +59,8 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Inline
         /// </summary>
         public static string NormalizePath(string path, bool forComparsion = false)
         {
-            var validBackslash = "\\";
-            var invalidBackslash = "/";
+            const string validBackslash = "\\";
+            const string invalidBackslash = "/";
 
             path = path
                 .Replace(invalidBackslash, validBackslash)
@@ -68,16 +68,18 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Inline
 
             if (forComparsion) path = path.ToUpperInvariant();
 
-            if (path.Contains(validBackslash))
-                if (Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute))
-                    try
-                    {
-                        path = Path.GetFullPath(new Uri(path).LocalPath);
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
+            if (!path.Contains(validBackslash)) return path;
+
+            if (!Uri.IsWellFormedUriString(path, UriKind.RelativeOrAbsolute)) return path;
+
+            try
+            {
+                path = Path.GetFullPath(new Uri(path).LocalPath);
+            }
+            catch
+            {
+                // ignored
+            }
 
             return path;
         }

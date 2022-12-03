@@ -13,7 +13,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
     /// <summary>
     ///     Type of metadata.
     /// </summary>
-    [DebuggerDisplay(@"{Tag}")]
+    [DebuggerDisplay(@"{" + nameof(Tag) + @"}")]
     public abstract class MetaDataType : IEquatable<MetaDataType>
     {
         private static readonly char[] invalidChars = "]:".ToCharArray();
@@ -36,6 +36,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         internal MetaDataType(string tag, Type dataType, bool isSafe)
         {
             if (!isSafe) tag = checkTag(tag);
+
             DataType = dataType ?? throw new ArgumentNullException(nameof(dataType));
             Tag = tag;
         }
@@ -65,6 +66,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         {
             if (string.IsNullOrWhiteSpace(tag))
                 throw new ArgumentNullException(tag);
+
             Helper.CheckString(nameof(tag), tag, invalidChars);
             tag = tag.Trim();
             return tag;
@@ -104,29 +106,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         public static MetaDataType Create(string tag)
         {
             tag = checkTag(tag);
-            if (PreDefined.TryGetValue(tag, out var r))
-                return r;
-            return new NoValidateMetaDataType(tag);
-        }
-
-        /// <summary>
-        ///     Create new instance of <see cref="MetaDataType" />, if <paramref name="tag" /> is known, value from
-        ///     <see cref="PreDefined" /> will be returned.
-        /// </summary>
-        /// <param name="tag">Tag of metadata.</param>
-        /// <param name="parser">Parser for <see cref="Parse(string)" /> method.</param>
-        /// <returns>New instance of <see cref="MetaDataType" />, or instance from <see cref="PreDefined" />.</returns>
-        /// <exception cref="ArgumentNullException">
-        ///     <paramref name="tag" /> or <paramref name="parser" /> is
-        ///     <see langword="null" />.
-        /// </exception>
-        /// <exception cref="ArgumentException"><paramref name="tag" /> contains invalid character.</exception>
-        /// <remarks>
-        ///     If instance from <see cref="PreDefined" /> is returned, <paramref name="parser" /> will be ignored.
-        /// </remarks>
-        public static MetaDataType Create<T>(string tag, Func<string, T> parser)
-        {
-            return Create(tag, parser, null, default);
+            return PreDefined.TryGetValue(tag, out var r) ? r : new NoValidateMetaDataType(tag);
         }
 
         /// <summary>
@@ -190,21 +170,22 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         ///     If instance from <see cref="PreDefined" /> is returned, <paramref name="parser" /> and
         ///     <paramref name="stringifier" /> will be ignored.
         /// </remarks>
-        public static MetaDataType Create<T>(string tag, Func<string, T> parser, Func<T, string> stringifier,
-            T defaultValue)
+        public static MetaDataType Create<T>(string tag, Func<string, T> parser, Func<T, string> stringifier = null,
+            T defaultValue = default)
         {
             if (parser is null)
                 throw new ArgumentNullException(nameof(parser));
+
             tag = checkTag(tag);
-            if (PreDefined.TryGetValue(tag, out var r))
-                return r;
-            return new DelegateMetaDataType<T>(tag, parser, stringifier, defaultValue);
+            return PreDefined.TryGetValue(tag, out var r)
+                ? r
+                : new DelegateMetaDataType<T>(tag, parser, stringifier, defaultValue);
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            return obj is MetaDataType dt ? Equals(dt) : false;
+            return obj is MetaDataType dt && Equals(dt);
         }
 
         /// <inheritdoc />
@@ -252,8 +233,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
 
             protected internal override string Stringify(object mataDataContent)
             {
-                if (mataDataContent is T data && stringifier is Func<T, string> func)
-                    return func(data);
+                if (mataDataContent is T data && stringifier != null)
+                    return stringifier(data);
+
                 return base.Stringify(mataDataContent);
             }
         }
@@ -273,16 +255,17 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                     ["au"] = new NoValidateMetaDataType("au"),
                     ["by"] = new NoValidateMetaDataType("by"),
                     ["offset"] = new DelegateMetaDataType<TimeSpan>("offset",
-                        v => TimeSpan.FromTicks((long)(double.Parse(v, NumberStyles.Any) * 10000)),
-                        ts => ts.TotalMilliseconds.ToString("+0.#;-0.#"), default),
+                        static v => TimeSpan.FromTicks((long)(double.Parse(v, NumberStyles.Any) * 10000)),
+                        static ts => ts.TotalMilliseconds.ToString("+0.#;-0.#"), default),
                     ["re"] = new NoValidateMetaDataType("re"),
                     ["ve"] = new NoValidateMetaDataType("ve"),
-                    ["length"] = new DelegateMetaDataType<DateTime>("length", v =>
+                    ["length"] = new DelegateMetaDataType<DateTime>("length", static v =>
                     {
                         if (DateTimeExtension.TryParseLrcString(v, 0, v.Length, out var r))
                             return r;
+
                         throw new ArgumentException("Invalid length string.");
-                    }, d => d.ToTimestamp().ToLrcStringShort(), default)
+                    }, static d => d.ToTimestamp().ToLrcStringShort(), default)
                 });
 
         /// <summary>

@@ -39,39 +39,29 @@ namespace Sanford.Multimedia.Midi.UI
 {
     public partial class InputDeviceDialog : Form
     {
-        private int inputDeviceID = 0;
+        private int inputDeviceID;
 
         public InputDeviceDialog()
         {
             InitializeComponent();
 
-            if(InputDevice.DeviceCount > 0)
-            {
-                for(int i = 0; i < InputDevice.DeviceCount; i++)
-                {
-                    inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
-                }
+            if (InputDevice.DeviceCount <= 0) return;
 
-                inputComboBox.SelectedIndex = inputDeviceID;
-            }
+            for (var i = 0; i < InputDevice.DeviceCount; i++) inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
+
+            inputComboBox.SelectedIndex = inputDeviceID;
         }
 
         protected override void OnShown(EventArgs e)
         {
-            if(InputDevice.DeviceCount > 0)
-            {
-                inputComboBox.SelectedIndex = inputDeviceID;
-            }
+            if (InputDevice.DeviceCount > 0) inputComboBox.SelectedIndex = inputDeviceID;
 
             base.OnShown(e);
         }
 
         private void okButton_Click(object sender, EventArgs e)
         {
-            if(InputDevice.DeviceCount > 0)
-            {
-                inputDeviceID = inputComboBox.SelectedIndex;
-            }
+            if (InputDevice.DeviceCount > 0) inputDeviceID = inputComboBox.SelectedIndex;
 
             DialogResult = DialogResult.OK;
         }
@@ -87,10 +77,7 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 #region Require
 
-                if(InputDevice.DeviceCount == 0)
-                {
-                    throw new InvalidOperationException();
-                }
+                if (InputDevice.DeviceCount == 0) throw new InvalidOperationException();
 
                 #endregion
 

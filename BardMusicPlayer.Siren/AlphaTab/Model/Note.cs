@@ -12,7 +12,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     ///     It consists of a fret offset and a string on which the note is played on.
     ///     It also can be modified by a lot of different effects.
     /// </summary>
-    internal class Note
+    internal sealed class Note
     {
         private const int MaxOffsetForSameLineSearch = 3;
 
@@ -354,47 +354,42 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                     // Fret 3 2nd octave + fifth
                     return 31;
 
-                if (value <= 4) return 28;
-
-                if (value <= 5) return 24;
-
-                if (value <= 6 /* 5.8 */) return 34;
-
-                if (value <= 7) return 19;
+                switch (value)
+                {
+                    case <= 4:
+                        return 28;
+                    case <= 5:
+                        return 24;
+                    /* 5.8 */
+                    case <= 6:
+                        return 34;
+                    case <= 7:
+                        return 19;
+                }
 
                 if (value <= 8.5 /*8.2*/) return 36;
 
-                if (value <= 9) return 28;
-
-                if (value <= 10 /*9.6*/) return 34;
-
-                if (value <= 11) return 0;
-
-                if (value <= 12) return 12;
-
-                if (value < 14)
+                return value switch
+                {
+                    <= 9 => 28,
+                    /*9.6*/
+                    <= 10 => 34,
+                    <= 11 => 0,
+                    <= 12 => 12,
                     // fret 13,14 stay
-                    return 0;
-
-                if (value <= 15 /*14.7*/) return 34;
-
-                if (value <= 16) return 28;
-
-                if (value <= 17) return 36;
-
-                if (value <= 18) return 0;
-
-                if (value <= 19) return 19;
-
-                if (value <= 21)
+                    < 14 => 0,
+                    /*14.7*/
+                    <= 15 => 34,
+                    <= 16 => 28,
+                    <= 17 => 36,
+                    <= 18 => 0,
+                    <= 19 => 19,
                     //  20,21 stay
-                    return 0;
-
-                if (value <= 22 /* 21.7 */) return 36;
-
-                if (value <= 24) return 24;
-
-                return 0;
+                    <= 21 => 0,
+                    /* 21.7 */
+                    <= 22 => 36,
+                    _ => value <= 24 ? 24 : 0
+                };
             }
         }
 
@@ -500,9 +495,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
         internal static int GetStringTuning(Staff staff, int noteString)
         {
-            if (staff.Tuning.Length > 0) return staff.Tuning[staff.Tuning.Length - (noteString - 1) - 1];
-
-            return 0;
+            return staff.Tuning.Length > 0 ? staff.Tuning[staff.Tuning.Length - (noteString - 1) - 1] : 0;
         }
 
         internal static void CopyTo(Note src, Note dst)
@@ -564,7 +557,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         {
             var nextNoteOnLine = new Lazy<Note>(() => NextNoteOnSameLine(this));
 
-            var isSongBook = false;
+            //const bool isSongBook = false;
 
             // connect ties
             if (IsTieDestination)
@@ -594,29 +587,17 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
 
                 // implicit let ring
-                if (isSongBook && TieOrigin.IsLetRing) IsLetRing = true;
+                //if (isSongBook && TieOrigin.IsLetRing) IsLetRing = true;
             }
 
             // connect letring
             if (IsLetRing)
-            {
-                if (nextNoteOnLine.Value == null || !nextNoteOnLine.Value.IsLetRing)
-                    LetRingDestination = this;
-                else
-                    LetRingDestination = nextNoteOnLine.Value;
-
-                if (isSongBook && IsTieDestination && !TieOrigin.HasBend) IsVisible = false;
-            }
-
+                LetRingDestination = nextNoteOnLine.Value is not { IsLetRing: true } ? this : nextNoteOnLine.Value;
+            //if (isSongBook && IsTieDestination && !TieOrigin.HasBend) IsVisible = false;
 
             // connect palmmute
             if (IsPalmMute)
-            {
-                if (nextNoteOnLine.Value == null || !nextNoteOnLine.Value.IsPalmMute)
-                    PalmMuteDestination = this;
-                else
-                    PalmMuteDestination = nextNoteOnLine.Value;
-            }
+                PalmMuteDestination = nextNoteOnLine.Value is not { IsPalmMute: true } ? this : nextNoteOnLine.Value;
 
             // set hammeron/pulloffs
             if (IsHammerPullOrigin)
@@ -666,116 +647,124 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             }
 
 
-            // try to detect what kind of bend was used and cleans unneeded points if required
-            // Guitar Pro 6 and above (gpif.xml) uses exactly 4 points to define all bends
-            if (BendPoints.Count > 0 && BendType == BendType.Custom)
+            switch (BendPoints.Count)
             {
-                var isContinuedBend = IsContinuedBend = TieOrigin != null && TieOrigin.HasBend;
-                if (BendPoints.Count == 4)
+                // try to detect what kind of bend was used and cleans unneeded points if required
+                // Guitar Pro 6 and above (gpif.xml) uses exactly 4 points to define all bends
+                case > 0 when BendType == BendType.Custom:
                 {
-                    var origin = BendPoints[0];
-                    var middle1 = BendPoints[1];
-                    var middle2 = BendPoints[2];
-                    var destination = BendPoints[3];
-
-                    // the middle points are used for holds, anything else is a new feature we do not support yet
-                    if (middle1.Value == middle2.Value)
+                    var isContinuedBend = IsContinuedBend = TieOrigin is { HasBend: true };
+                    switch (BendPoints.Count)
                     {
-                        // bend higher?
-                        if (destination.Value > origin.Value)
+                        case 4:
                         {
-                            if (middle1.Value > destination.Value)
+                            var origin = BendPoints[0];
+                            var middle1 = BendPoints[1];
+                            var middle2 = BendPoints[2];
+                            var destination = BendPoints[3];
+
+                            // the middle points are used for holds, anything else is a new feature we do not support yet
+                            if (middle1.Value == middle2.Value)
                             {
-                                BendType = BendType.BendRelease;
-                            }
-                            else if (!isContinuedBend && origin.Value > 0)
-                            {
-                                BendType = BendType.PrebendBend;
-                                BendPoints.RemoveAt(2);
-                                BendPoints.RemoveAt(1);
+                                // bend higher?
+                                if (destination.Value > origin.Value)
+                                {
+                                    if (middle1.Value > destination.Value)
+                                    {
+                                        BendType = BendType.BendRelease;
+                                    }
+                                    else if (!isContinuedBend && origin.Value > 0)
+                                    {
+                                        BendType = BendType.PrebendBend;
+                                        BendPoints.RemoveAt(2);
+                                        BendPoints.RemoveAt(1);
+                                    }
+                                    else
+                                    {
+                                        BendType = BendType.Bend;
+                                        BendPoints.RemoveAt(2);
+                                        BendPoints.RemoveAt(1);
+                                    }
+                                }
+                                // release?
+                                else if (destination.Value < origin.Value)
+                                {
+                                    // origin must be > 0 otherwise it's no release, we cannot bend negative
+                                    if (isContinuedBend)
+                                    {
+                                        BendType = BendType.Release;
+                                        BendPoints.RemoveAt(2);
+                                        BendPoints.RemoveAt(1);
+                                    }
+                                    else
+                                    {
+                                        BendType = BendType.PrebendRelease;
+                                        BendPoints.RemoveAt(2);
+                                        BendPoints.RemoveAt(1);
+                                    }
+                                }
+                                // hold?
+                                else
+                                {
+                                    if (middle1.Value > origin.Value)
+                                    {
+                                        BendType = BendType.BendRelease;
+                                    }
+                                    else if (origin.Value > 0 && !isContinuedBend)
+                                    {
+                                        BendType = BendType.Prebend;
+                                        BendPoints.RemoveAt(2);
+                                        BendPoints.RemoveAt(1);
+                                    }
+                                    else
+                                    {
+                                        BendType = BendType.Hold;
+                                        BendPoints.RemoveAt(2);
+                                        BendPoints.RemoveAt(1);
+                                    }
+                                }
                             }
                             else
                             {
-                                BendType = BendType.Bend;
-                                BendPoints.RemoveAt(2);
-                                BendPoints.RemoveAt(1);
+                                Logger.Warning("Model", "Unsupported bend type detected, fallback to custom");
                             }
+
+                            break;
                         }
-                        // release?
-                        else if (destination.Value < origin.Value)
+                        case 2:
                         {
-                            // origin must be > 0 otherwise it's no release, we cannot bend negative
-                            if (isContinuedBend)
+                            var origin = BendPoints[0];
+                            var destination = BendPoints[1];
+
+                            // bend higher?
+                            if (destination.Value > origin.Value)
                             {
-                                BendType = BendType.Release;
-                                BendPoints.RemoveAt(2);
-                                BendPoints.RemoveAt(1);
+                                if (!isContinuedBend && origin.Value > 0)
+                                    BendType = BendType.PrebendBend;
+                                else
+                                    BendType = BendType.Bend;
                             }
-                            else
+                            // release?
+                            else if (destination.Value < origin.Value)
                             {
-                                BendType = BendType.PrebendRelease;
-                                BendPoints.RemoveAt(2);
-                                BendPoints.RemoveAt(1);
+                                // origin must be > 0 otherwise it's no release, we cannot bend negative
+                                BendType = isContinuedBend ? BendType.Release : BendType.PrebendRelease;
                             }
-                        }
-                        // hold?
-                        else
-                        {
-                            if (middle1.Value > origin.Value)
-                            {
-                                BendType = BendType.BendRelease;
-                            }
-                            else if (origin.Value > 0 && !isContinuedBend)
-                            {
-                                BendType = BendType.Prebend;
-                                BendPoints.RemoveAt(2);
-                                BendPoints.RemoveAt(1);
-                            }
+                            // hold?
                             else
                             {
                                 BendType = BendType.Hold;
-                                BendPoints.RemoveAt(2);
-                                BendPoints.RemoveAt(1);
                             }
+
+                            break;
                         }
                     }
-                    else
-                    {
-                        Logger.Warning("Model", "Unsupported bend type detected, fallback to custom");
-                    }
-                }
-                else if (BendPoints.Count == 2)
-                {
-                    var origin = BendPoints[0];
-                    var destination = BendPoints[1];
 
-                    // bend higher?
-                    if (destination.Value > origin.Value)
-                    {
-                        if (!isContinuedBend && origin.Value > 0)
-                            BendType = BendType.PrebendBend;
-                        else
-                            BendType = BendType.Bend;
-                    }
-                    // release?
-                    else if (destination.Value < origin.Value)
-                    {
-                        // origin must be > 0 otherwise it's no release, we cannot bend negative
-                        if (isContinuedBend)
-                            BendType = BendType.Release;
-                        else
-                            BendType = BendType.PrebendRelease;
-                    }
-                    // hold?
-                    else
-                    {
-                        BendType = BendType.Hold;
-                    }
+                    break;
                 }
-            }
-            else if (BendPoints.Count == 0)
-            {
-                BendType = BendType.None;
+                case 0:
+                    BendType = BendType.None;
+                    break;
             }
         }
 

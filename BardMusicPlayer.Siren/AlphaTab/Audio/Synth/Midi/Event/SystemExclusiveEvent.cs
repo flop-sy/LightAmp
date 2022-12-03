@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.IO;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event
 {
-    internal class SystemExclusiveEvent : SystemCommonEvent
+    internal sealed class SystemExclusiveEvent : SystemCommonEvent
     {
         public SystemExclusiveEvent(int delta, byte status, short id, byte[] data)
             : base(delta, status, (byte)(id & 0x00FF), (byte)(id >> 8))

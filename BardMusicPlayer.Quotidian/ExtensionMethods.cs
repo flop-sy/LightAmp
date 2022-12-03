@@ -33,6 +33,7 @@ namespace BardMusicPlayer.Quotidian
         {
             value = 0;
             if (obj == null) return false;
+
             var type = obj.GetType();
             var typeCode = Type.GetTypeCode(type);
             switch (typeCode)
@@ -58,6 +59,7 @@ namespace BardMusicPlayer.Quotidian
         {
             value = 0;
             if (obj == null) return false;
+
             var type = obj.GetType();
             var typeCode = Type.GetTypeCode(type);
             switch (typeCode)
@@ -82,9 +84,11 @@ namespace BardMusicPlayer.Quotidian
         public static int Clear<T>(this BlockingCollection<T> blockingCollection)
         {
             if (blockingCollection == null) throw new ArgumentNullException("BlockingCollection");
+
             var count = 0;
             T _;
             while (blockingCollection.TryTake(out _)) count++;
+
             return count;
         }
 
@@ -92,16 +96,18 @@ namespace BardMusicPlayer.Quotidian
         {
             if (myString.Count(c => c == escapeCharacter) % 2 != 0)
                 myString = myString.Remove(myString.LastIndexOf("" + escapeCharacter, StringComparison.Ordinal), 1);
+
             return myString.Split(escapeCharacter)
                 .Select((element, index) =>
                     index % 2 == 0
                         ? element.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries)
-                        : new[] { element }).SelectMany(element => element).ToList();
+                        : new[] { element }).SelectMany(static element => element).ToList();
         }
 
         public static MemoryStream Rewind(this MemoryStream memoryStream, long position = 0)
         {
             if (memoryStream == null) throw new EndOfStreamException();
+
             memoryStream.Position = position;
             return memoryStream;
         }
@@ -113,6 +119,7 @@ namespace BardMusicPlayer.Quotidian
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
             if (elementSelector == null) throw new ArgumentNullException(nameof(elementSelector));
+
             var d = new ConcurrentDictionary<TKey, TElement>(comparer ?? EqualityComparer<TKey>.Default);
             foreach (var element in source) d.TryAdd(keySelector(element), elementSelector(element));
             return d;
@@ -140,6 +147,7 @@ namespace BardMusicPlayer.Quotidian
         {
             var obj = stack.Pop();
             if (obj.Equals(element)) return obj;
+
             var toReturn = stack.Remove(element);
             stack.Push(obj);
             return toReturn;
@@ -164,7 +172,7 @@ namespace BardMusicPlayer.Quotidian
         {
             public static Func<TElement, TElement> Instance
             {
-                get { return x => x; }
+                get { return static x => x; }
             }
         }
     }

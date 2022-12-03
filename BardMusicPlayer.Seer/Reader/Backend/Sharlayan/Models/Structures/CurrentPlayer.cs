@@ -1,6 +1,6 @@
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.Structures
 {
-    internal class CurrentPlayer
+    internal sealed class CurrentPlayer
     {
         public int SourceSize { get; set; }
 

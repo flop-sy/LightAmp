@@ -1,45 +1,15 @@
-#region License
-
-/* Copyright (c) 2006 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
+
+#endregion
 
 namespace Sanford.Multimedia.Midi
 {
     /// <summary>
-    /// Dispatches IMidiMessages to their corresponding sink.
+    ///     Dispatches IMidiMessages to their corresponding sink.
     /// </summary>
-    public class MessageDispatcher
+    public sealed class MessageDispatcher
     {
         #region MessageDispatcher Members
 
@@ -58,23 +28,20 @@ namespace Sanford.Multimedia.Midi
         #endregion
 
         /// <summary>
-        /// Dispatches IMidiMessages to their corresponding sink.
+        ///     Dispatches IMidiMessages to their corresponding sink.
         /// </summary>
         /// <param name="message">
-        /// The IMidiMessage to dispatch.
+        ///     The IMidiMessage to dispatch.
         /// </param>
         public void Dispatch(Track track, IMidiMessage message)
         {
             #region Require
 
-            if(message == null)
-            {
-                throw new ArgumentNullException("message");
-            }
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
             #endregion
 
-            switch(message.MessageType)
+            switch (message.MessageType)
             {
                 case MessageType.Channel:
                     OnChannelMessageDispatched(new ChannelMessageEventArgs(track, (ChannelMessage)message));
@@ -93,7 +60,7 @@ namespace Sanford.Multimedia.Midi
                     break;
 
                 case MessageType.SystemRealtime:
-                    switch(((SysRealtimeMessage)message).SysRealtimeType)
+                    switch (((SysRealtimeMessage)message).SysRealtimeType)
                     {
                         case SysRealtimeType.ActiveSense:
                             OnSysRealtimeMessageDispatched(SysRealtimeMessageEventArgs.ActiveSense);
@@ -128,54 +95,39 @@ namespace Sanford.Multimedia.Midi
             }
         }
 
-        protected virtual void OnChannelMessageDispatched(ChannelMessageEventArgs e)
+        private void OnChannelMessageDispatched(ChannelMessageEventArgs e)
         {
-            EventHandler<ChannelMessageEventArgs> handler = ChannelMessageDispatched;
+            var handler = ChannelMessageDispatched;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
-        protected virtual void OnSysExMessageDispatched(SysExMessageEventArgs e)
+        private void OnSysExMessageDispatched(SysExMessageEventArgs e)
         {
-            EventHandler<SysExMessageEventArgs> handler = SysExMessageDispatched;
+            var handler = SysExMessageDispatched;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
-        protected virtual void OnSysCommonMessageDispatched(SysCommonMessageEventArgs e)
+        private void OnSysCommonMessageDispatched(SysCommonMessageEventArgs e)
         {
-            EventHandler<SysCommonMessageEventArgs> handler = SysCommonMessageDispatched;
+            var handler = SysCommonMessageDispatched;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
-        protected virtual void OnSysRealtimeMessageDispatched(SysRealtimeMessageEventArgs e)
+        private void OnSysRealtimeMessageDispatched(SysRealtimeMessageEventArgs e)
         {
-            EventHandler<SysRealtimeMessageEventArgs> handler = SysRealtimeMessageDispatched;
+            var handler = SysRealtimeMessageDispatched;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
-        protected virtual void OnMetaMessageDispatched(MetaMessageEventArgs e)
+        private void OnMetaMessageDispatched(MetaMessageEventArgs e)
         {
-            EventHandler<MetaMessageEventArgs> handler = MetaMessageDispatched;
+            var handler = MetaMessageDispatched;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         #endregion

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace BardMusicPlayer.Seer
 {
-    public partial class Game
+    public sealed partial class Game
     {
         /// <summary>
         ///     Return true if low settings
@@ -17,36 +17,30 @@ namespace BardMusicPlayer.Seer
         private bool CheckIfGfxIsLow()
         {
             var number = 5;
-            if (File.Exists(ConfigPath + "FFXIV.cfg"))
-                using (var sr = File.OpenText(ConfigPath + "FFXIV.cfg"))
+            if (!File.Exists(ConfigPath + "FFXIV.cfg")) return false;
+
+            using (var sr = File.OpenText(ConfigPath + "FFXIV.cfg"))
+            {
+                while (sr.ReadLine() is { } s)
                 {
-                    var s = "";
-                    while ((s = sr.ReadLine()) != null)
-                    {
-                        if (s.Contains("DisplayObjectLimitType"))
-                            number -= GetCfgIntSetting(s);
+                    if (s.Contains("DisplayObjectLimitType")) number -= GetCfgIntSetting(s);
 
-                        if (s.Contains("WaterWet_DX11"))
-                            number -= GetCfgIntSetting(s);
+                    if (s.Contains("WaterWet_DX11")) number -= GetCfgIntSetting(s);
 
-                        if (s.Contains("OcclusionCulling_DX11"))
-                            number -= GetCfgIntSetting(s);
+                    if (s.Contains("OcclusionCulling_DX11")) number -= GetCfgIntSetting(s);
 
-                        if (s.Contains("ReflectionType_DX11"))
-                            number -= GetCfgIntSetting(s);
+                    if (s.Contains("ReflectionType_DX11")) number -= GetCfgIntSetting(s);
 
-                        if (s.Contains("GrassQuality_DX11"))
-                            number -= GetCfgIntSetting(s);
+                    if (s.Contains("GrassQuality_DX11")) number -= GetCfgIntSetting(s);
 
-                        if (s.Contains("SSAO_DX11"))
-                            number -= GetCfgIntSetting(s);
-                    }
+                    if (s.Contains("SSAO_DX11")) number -= GetCfgIntSetting(s);
                 }
+            }
 
-            return number == 0 ? true : false;
+            return number == 0;
         }
 
-        private int GetCfgIntSetting(string SettingsString)
+        private static int GetCfgIntSetting(string SettingsString)
         {
             var resultString = Convert.ToInt32(Regex.Replace(SettingsString.Split('\t')[1], "[^.0-9]", ""));
             return resultString;

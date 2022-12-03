@@ -14,7 +14,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Collections
     /// </summary>
     /// <typeparam name="T">The type fo the elements</typeparam>
     /// <seealso cref="System.Collections.Generic.IEnumerable{T}" />
-    internal class FastList<T> : IEnumerable<T>
+    internal sealed class FastList<T> : IEnumerable<T>
     {
         private readonly List<T> _list;
 

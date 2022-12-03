@@ -18,7 +18,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
         /// <returns></returns>
         internal static Task<List<Note>> FixChords(this List<Note> notes)
         {
-            notes = notes.OrderBy(x => x.Time).Reverse().ToList();
+            notes = notes.OrderBy(static x => x.Time).Reverse().ToList();
 
             for (var i = 1; i < notes.Count; i++)
             {
@@ -33,6 +33,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
                 }
 
                 if (lowestParent > time + 50) continue;
+
                 time = lowestParent - 50;
 
                 if (time < 0) continue;
@@ -41,7 +42,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
                 notes[i].Length = 25;
             }
 
-            return Task.FromResult(notes.OrderBy(x => x.Time).ToList());
+            return Task.FromResult(notes.OrderBy(static x => x.Time).ToList());
         }
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
         /// <returns></returns>
         internal static Task<List<Note>> OffSet50Ms(this List<Note> notes)
         {
-            notes = notes.OrderBy(x => x.Time).ToList();
+            notes = notes.OrderBy(static x => x.Time).ToList();
 
             var thisNotes = new List<Note>(notes.Count);
 
@@ -87,7 +88,8 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
                     {
                         if (startTime % 100 < 25 || (startTime % 100 < 75 && startTime % 100 > 50))
                             startTime = 50 * ((startTime + 49) / 50);
-                        else startTime = 50 * (startTime / 50);
+                        else
+                            startTime = 50 * (startTime / 50);
                     }
 
                     if (dur % 100 != 0 && dur % 100 != 25 && dur % 100 != 50 && dur % 100 != 75)
@@ -112,8 +114,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
                     startTime = last50MsTimeStamp;
                     stopTime = startTime + dur;
 
-                    if (startTime - lastStopTime < 25)
-                        lastDur = startTime - lastStartTime - 25;
+                    if (startTime - lastStopTime < 25) lastDur = startTime - lastStartTime - 25;
 
                     if (dur % 100 != 0 && dur % 100 != 25 && dur % 100 != 50 && dur % 100 != 75)
                     {
@@ -146,7 +147,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
                     OffVelocity = (SevenBitNumber)lastVelocity
                 });
 
-            return Task.FromResult(thisNotes.OrderBy(x => x.Time).ToList());
+            return Task.FromResult(thisNotes.OrderBy(static x => x.Time).ToList());
         }
 
         /// <summary>
@@ -164,7 +165,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
         /// <returns></returns>
         internal static Task<List<Note>> FixEndSpacing(this List<Note> notes)
         {
-            notes = notes.OrderBy(x => x.Time).ToList();
+            notes = notes.OrderBy(static x => x.Time).ToList();
 
             var thisNotes = new List<Note>(notes.Count);
             for (var j = 0; j < notes.Count; j++)
@@ -190,7 +191,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
                 });
             }
 
-            return Task.FromResult(thisNotes.OrderBy(x => x.Time).ToList());
+            return Task.FromResult(thisNotes.OrderBy(static x => x.Time).ToList());
         }
 
         /// <summary>

@@ -1,22 +1,18 @@
+#region
+
 using System;
+
+#endregion
 
 namespace Sanford.Multimedia
 {
-    public class ErrorEventArgs : EventArgs
+    public sealed class ErrorEventArgs : EventArgs
     {
-        private Exception ex;
-
         public ErrorEventArgs(Exception ex)
         {
-            this.ex = ex;
+            Error = ex;
         }
 
-        public Exception Error
-        {
-            get
-            {
-                return ex;
-            }
-        }
+        public Exception Error { get; }
     }
 }

@@ -14,7 +14,7 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
 {
     public sealed class Clock : ITime
     {
-        private static readonly Lazy<Clock> instance = new(() => new Clock());
+        private static readonly Lazy<Clock> instance = new(static () => new Clock());
         private static bool successfully_synced;
         private static long device_boot_time;
         private static NTPCallState ntpCall;
@@ -44,6 +44,7 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
             try
             {
                 if (ntpCall != null) return;
+
                 ntpCall = new NTPCallState
                 {
                     priorSyncState = successfully_synced
@@ -58,6 +59,7 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
 
                 if (ntpServerHostName == Constants.fallback_server && !string.IsNullOrEmpty(DefaultServer))
                     ntpServerHostName = DefaultServer;
+
                 ntpCall.serverResolved = ntpServerHostName;
                 var addresses = await Dns.GetHostAddressesAsync(ntpServerHostName);
 
@@ -90,6 +92,7 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
         private void NetworkChange_NetworkAvailabilityChanged(object sender, NetworkAvailabilityEventArgs e)
         {
             if (!Indicated) return;
+
             SelfUpdateAsync().SafeFireAndForget(false);
             NetworkChange.NetworkAvailabilityChanged -= NetworkChange_NetworkAvailabilityChanged;
         }
@@ -154,20 +157,22 @@ namespace BardMusicPlayer.Quotidian.UtcMilliTime
                 var milliseconds = intPart * 1000 + fractPart * 1000 / 0x100000000L;
                 var timeNow = (long)milliseconds - Constants.ntp_to_unix_milliseconds + halfRoundTrip;
                 if (timeNow <= 0) return;
+
                 device_boot_time = timeNow - device_uptime;
                 instance.Value.Skew = timeNow - GetDeviceTime();
                 ntpCall.methodsCompleted += 1;
                 successfully_synced = ntpCall.methodsCompleted == 4;
                 ntpCall.latency.Stop();
-                if (successfully_synced && !ntpCall.priorSyncState && instance.Value.NetworkTimeAcquired != null)
-                {
-                    var args = new NTPEventArgs(ntpCall.serverResolved, ntpCall.latency.ElapsedMilliseconds,
-                        instance.Value.Skew);
-                    instance.Value.NetworkTimeAcquired.Invoke(new object(), args);
-                }
+                if (!successfully_synced || ntpCall.priorSyncState ||
+                    instance.Value.NetworkTimeAcquired == null) return;
+
+                var args = new NTPEventArgs(ntpCall.serverResolved, ntpCall.latency.ElapsedMilliseconds,
+                    instance.Value.Skew);
+                instance.Value.NetworkTimeAcquired.Invoke(new object(), args);
             }
             catch (Exception)
             {
+                // ignored
             } // blank intentionally; documentation says "fail silently. Check the Time.Synchronized boolean property for the outcome."
             finally
             {

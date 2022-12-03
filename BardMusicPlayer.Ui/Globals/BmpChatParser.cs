@@ -27,19 +27,21 @@ namespace BardMusicPlayer.Ui
                 {
                     // Party
                     var pid = (format[0] & 0xF) + 1;
-                    format = string.Format("[{0}] {1}", pid, format.Substring(1));
+                    format = $"[{pid}] {format.Substring(1)}";
                     break;
                 }
                 case "000D":
                 {
                     // PM receive
-                    if (format.IndexOf(": ") != -1) format = format.Replace(": ", " >> ");
+                    if (format.IndexOf(": ", StringComparison.Ordinal) != -1) format = format.Replace(": ", " >> ");
+
                     break;
                 }
                 case "000C":
                 {
                     // PM Send
-                    if (format.IndexOf(": ") != -1) format = ">> " + format;
+                    if (format.IndexOf(": ", StringComparison.Ordinal) != -1) format = ">> " + format;
+
                     break;
                 }
                 case "001B":
@@ -51,19 +53,22 @@ namespace BardMusicPlayer.Ui
                 case "001C":
                 {
                     // Custom Emote
-                    if (format.IndexOf(": ") != -1) format = format.Replace(": ", "");
+                    if (format.IndexOf(": ", StringComparison.Ordinal) != -1) format = format.Replace(": ", "");
+
                     break;
                 }
                 case "001D":
                 {
                     // Standard Emote
-                    if (format.IndexOf(": ") != -1) format = format.Substring(format.IndexOf(": ") + 2);
+                    if (format.IndexOf(": ", StringComparison.Ordinal) != -1)
+                        format = format.Substring(format.IndexOf(": ", StringComparison.Ordinal) + 2);
+
                     break;
                 }
                 case "0018":
                 {
                     // FC
-                    format = string.Format("<FC> {0}", format);
+                    format = $"<FC> {format}";
                     break;
                 }
                 case "0010":
@@ -157,7 +162,7 @@ namespace BardMusicPlayer.Ui
                 }
             }
 
-            format = string.Format("[{0}] {1}", timestamp, format);
+            format = $"[{timestamp}] {format}";
             return new KeyValuePair<string, Color>(format, col);
         }
 

@@ -12,10 +12,10 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für NumericUpDown.xaml
     /// </summary>
-    public partial class NumericUpDown : UserControl
+    public sealed partial class NumericUpDown : UserControl
     {
         public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register("Value", typeof(string), typeof(NumericUpDown),
+            DependencyProperty.Register(nameof(Value), typeof(string), typeof(NumericUpDown),
                 new PropertyMetadata(OnValueChangedCallBack));
 
 
@@ -48,10 +48,10 @@ namespace BardMusicPlayer.Ui.Controls
         private static void OnValueChangedCallBack(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
             var c = sender as NumericUpDown;
-            if (c != null) c.OnValueChangedC(c.Value);
+            c?.OnValueChangedC(c.Value);
         }
 
-        protected virtual void OnValueChangedC(string c)
+        private void OnValueChangedC(string c)
         {
             NumValue = Convert.ToInt32(c);
         }

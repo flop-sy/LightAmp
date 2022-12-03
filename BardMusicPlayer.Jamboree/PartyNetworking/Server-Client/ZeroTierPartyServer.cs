@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -15,9 +16,9 @@ using ZeroTier.Sockets;
 
 namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
 {
-    public class NetworkPartyServer : IDisposable
+    public sealed class NetworkPartyServer : IDisposable
     {
-        private static readonly Lazy<NetworkPartyServer> lazy = new(() => new NetworkPartyServer());
+        private static readonly Lazy<NetworkPartyServer> lazy = new(static () => new NetworkPartyServer());
 
         private NetworkPartyServer()
         {
@@ -60,20 +61,19 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
             svcWorker.Stop();
         }
 
-        private void logWorkers_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private static void logWorkers_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             Console.WriteLine(e.UserState.ToString());
         }
     }
 
-    public class SocketServer
+    public sealed class SocketServer
     {
         private readonly PartyClientInfo _clientInfo = new();
         private readonly Dictionary<string, KeyValuePair<long, ZeroTierExtendedSocket>> _pushBacklist = new();
         private readonly List<NetworkSocket> removed_sessions = new();
 
         private readonly List<NetworkSocket> sessions = new();
-        private readonly BackgroundWorker worker;
         public bool disposing;
         public IPEndPoint iPEndPoint;
         private ZeroTierExtendedSocket listener;
@@ -81,9 +81,8 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
 
         public SocketServer(ref BackgroundWorker w, IPEndPoint localEndPoint, byte type, string name)
         {
-            worker = w;
             iPEndPoint = localEndPoint;
-            worker.ReportProgress(1, "Server");
+            w.ReportProgress(1, "Server");
 
             _clientInfo.Performer_Type = type;
             _clientInfo.Performer_Name = name;
@@ -93,8 +92,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
 
         public void Instance_Finished(object sender, string ip)
         {
-            KeyValuePair<long, ZeroTierExtendedSocket> val;
-            if (!_pushBacklist.TryGetValue(ip, out val))
+            if (!_pushBacklist.TryGetValue(ip, out var val))
                 return;
 
             var handler = val.Value;
@@ -146,11 +144,14 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
                     //Incomming connection
                     var handler = listener.Accept();
                     var isInList = false;
-                    Parallel.ForEach(sessions, session =>
+                    lock (sessions)
                     {
-                        if (session.ListenSocket == handler)
-                            isInList = true;
-                    });
+                        Parallel.ForEach(sessions, session =>
+                        {
+                            if (session.ListenSocket == handler) isInList = true;
+                        });
+                    }
+
                     if (!isInList)
                     {
                         var remoteIpEndPoint = handler.RemoteEndPoint as IPEndPoint;
@@ -158,7 +159,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
                         {
                             var val = new KeyValuePair<long, ZeroTierExtendedSocket>(
                                 DateTimeOffset.Now.ToUnixTimeSeconds(), handler);
-                            _pushBacklist.Add(remoteIpEndPoint.Address.ToString(), val);
+                            if (remoteIpEndPoint != null) _pushBacklist.Add(remoteIpEndPoint.Address.ToString(), val);
                         }
                     }
                 }
@@ -166,9 +167,8 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
                 lock (sessions)
                 {
                     //Update the sessions
-                    foreach (var session in sessions)
-                        if (!session.Update())
-                            removed_sessions.Add(session);
+                    foreach (var session in sessions.Where(static session => !session.Update()))
+                        removed_sessions.Add(session);
 
                     //Remove dead sessions
                     foreach (var session in removed_sessions) sessions.Remove(session);
@@ -184,11 +184,10 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
                     var val = data.Value;
                     var currtime = DateTimeOffset.Now.ToUnixTimeSeconds();
 
-                    if (val.Key + 60 <= currtime)
-                    {
-                        delPushlist.Add(data.Key);
-                        val.Value.Close();
-                    }
+                    if (val.Key + 60 > currtime) continue;
+
+                    delPushlist.Add(data.Key);
+                    val.Value.Close();
                 }
 
                 lock (_pushBacklist)
@@ -204,13 +203,17 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
                 }
                 catch
                 {
+                    // ignored
                 }
             }
 
             //Finished serving - close all
-            foreach (var s in sessions)
-                // Release the socket.
-                s.CloseConnection();
+            lock (sessions)
+            {
+                foreach (var s in sessions)
+                    // Release the socket.
+                    s.CloseConnection();
+            }
 
             listener.KeepAlive = false;
             try
@@ -227,8 +230,11 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking.Server_Client
 
         public void SendToAll(byte[] pck)
         {
-            foreach (var session in sessions)
-                session.SendPacket(pck);
+            lock (sessions)
+            {
+                foreach (var session in sessions)
+                    session.SendPacket(pck);
+            }
         }
 
         public void Stop()

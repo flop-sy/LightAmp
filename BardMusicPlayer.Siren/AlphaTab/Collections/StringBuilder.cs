@@ -1,6 +1,6 @@
 ﻿namespace BardMusicPlayer.Siren.AlphaTab.Collections
 {
-    internal class StringBuilder
+    internal sealed class StringBuilder
     {
         private readonly System.Text.StringBuilder _sb;
 

@@ -81,7 +81,10 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
         /// <summary>
         ///     Gets or sets the global tempo of the song in BPM. The tempo might change via
-        ///     <see cref="MasterBar.TempoAutomation" />.
+        ///     <see>
+        ///         <cref>MasterBar.TempoAutomation</cref>
+        ///     </see>
+        ///     .
         /// </summary>
         public int Tempo { get; set; }
 
@@ -127,8 +130,8 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             foreach (var bar in MasterBars)
             {
                 // if the group is closed only the next upcoming header can
-                // reopen the group in case of a repeat alternative, so we 
-                // remove the current group 
+                // reopen the group in case of a repeat alternative, so we
+                // remove the current group
                 if (bar.IsRepeatStart || (_currentRepeatGroup.IsClosed && bar.AlternateEndings <= 0))
                     currentGroup = new RepeatGroup();
 
@@ -148,8 +151,8 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             }
 
             // if the group is closed only the next upcoming header can
-            // reopen the group in case of a repeat alternative, so we 
-            // remove the current group 
+            // reopen the group in case of a repeat alternative, so we
+            // remove the current group
             if (bar.IsRepeatStart || (_currentRepeatGroup.IsClosed && bar.AlternateEndings <= 0))
                 _currentRepeatGroup = new RepeatGroup();
 

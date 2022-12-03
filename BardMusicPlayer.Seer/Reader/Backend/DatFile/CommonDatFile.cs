@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
 {
-    internal class CommonDatFile : IDisposable
+    internal sealed class CommonDatFile : IDisposable
     {
         private readonly string _filePath;
 
@@ -68,12 +68,12 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
 
         public List<BarInfo> GetSharedBars()
         {
-            return _hotbarBarInformation.Where(x => x.IsShared).ToList();
+            return _hotbarBarInformation.Where(static x => x.IsShared).ToList();
         }
 
         public List<BarInfo> GetJobBars()
         {
-            return _hotbarBarInformation.Where(x => !x.IsShared).ToList();
+            return _hotbarBarInformation.Where(static x => !x.IsShared).ToList();
         }
     }
 }

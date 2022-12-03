@@ -31,6 +31,7 @@
                 <ColumnDefinition Width="75" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="24" />
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <Rectangle PreviewMouseDown="TitleBar_MouseDown" Grid.Column="0" x:Name="BARDS_TOP_LEFT"
                        HorizontalAlignment="Left" Width="75" Height="23" VerticalAlignment="Top">

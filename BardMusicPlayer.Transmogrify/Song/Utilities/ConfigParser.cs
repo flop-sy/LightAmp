@@ -1,5 +1,6 @@
 ﻿#region
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -37,7 +38,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
             var configContainers = new Dictionary<long, ConfigContainer>();
 
             if (trackChunk.GetNotes().Count == 0 &&
-                trackChunk.GetTimedEvents().All(x => x.Event.EventType != MidiEventType.Lyric))
+                trackChunk.GetTimedEvents().All(static x => x.Event.EventType != MidiEventType.Lyric))
             {
                 BmpLog.I(BmpLog.Source.Transmogrify,
                     "Skipping track " + trackNumber + " as it contains no notes and contains no lyric events.");
@@ -66,7 +67,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
                 if (fields.Length == 0) continue;
 
                 // bmp 2.x style group name
-                if (fields[0].StartsWith("vst:") || fields[0].Equals("lyrics"))
+                if (fields[0].StartsWith("vst:", StringComparison.Ordinal) || fields[0].Equals("lyrics"))
                 {
                     var subfields = fields[0].Split(':');
 
@@ -113,7 +114,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
                                     }
 
                                     if (!int.TryParse(toneIndexAndOctaveRange.Groups[1].Value, out var toneIndex) ||
-                                        toneIndex < 0 || toneIndex > 4)
+                                        toneIndex is < 0 or > 4)
                                     {
                                         BmpLog.W(BmpLog.Source.Transmogrify,
                                             "Skipping invalid VST octave setting \"" + shift + "\" on track " +
@@ -125,7 +126,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
                                     var octaveRange = OctaveRange.C3toC6;
                                     if (toneIndexAndOctaveRange.Groups[2].Success)
                                         octaveRange = OctaveRange.Parse(toneIndexAndOctaveRange.Groups[2].Value);
+
                                     if (octaveRange.Equals(OctaveRange.Invalid)) octaveRange = OctaveRange.C3toC6;
+
                                     manualToneConfig.OctaveRanges[toneIndex] = octaveRange;
                                 }
                             }
@@ -157,13 +160,18 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
                         new ClassicProcessorConfig { Track = trackNumber });
                     var instrumentAndOctaveRange = modifier.Match(fields[0]);
                     if (!instrumentAndOctaveRange.Success) continue; // Invalid Instrument name.
+
                     if (instrumentAndOctaveRange.Groups[1].Success)
                         classicConfig.Instrument = Instrument.Parse(instrumentAndOctaveRange.Groups[1].Value);
+
                     if (classicConfig.Instrument.Equals(Instrument.None)) continue; // Invalid Instrument name.
+
                     if (instrumentAndOctaveRange.Groups[2].Success)
                         classicConfig.OctaveRange = OctaveRange.Parse(instrumentAndOctaveRange.Groups[2].Value);
+
                     if (classicConfig.OctaveRange.Equals(OctaveRange.Invalid))
                         classicConfig.OctaveRange = OctaveRange.C3toC6;
+
                     ParseAdditionalOptions(trackNumber, classicConfig, song, fields);
                     BmpLog.I(BmpLog.Source.Transmogrify,
                         "Found Classic Config Instrument " + classicConfig.Instrument.Name + " OctaveRange " +
@@ -173,14 +181,13 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
                 }
             }
 
-            if (configContainers.Count == 0)
-            {
-                BmpLog.I(BmpLog.Source.Transmogrify,
-                    "Found 0 configurations on track " + trackNumber +
-                    ", and the keyword \"Ignore\" is not in the track title. Adding a default harp.");
-                configContainers.Add(0,
-                    new ConfigContainer { ProcessorConfig = new ClassicProcessorConfig { Track = trackNumber } });
-            }
+            if (configContainers.Count != 0) return configContainers;
+
+            BmpLog.I(BmpLog.Source.Transmogrify,
+                "Found 0 configurations on track " + trackNumber +
+                ", and the keyword \"Ignore\" is not in the track title. Adding a default harp.");
+            configContainers.Add(0,
+                new ConfigContainer { ProcessorConfig = new ClassicProcessorConfig { Track = trackNumber } });
 
             return configContainers;
         }
@@ -196,7 +203,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
             IReadOnlyList<string> fields)
         {
             for (var fieldCounter = 1; fieldCounter < fields.Count; fieldCounter++)
-                if (fields[fieldCounter].StartsWith("include="))
+                if (fields[fieldCounter].StartsWith("include=", StringComparison.Ordinal))
                 {
                     var tracksToMerge = fields[fieldCounter].Remove(0, 8).Split(',');
                     foreach (var trackToMerge in tracksToMerge)
@@ -204,8 +211,8 @@ namespace BardMusicPlayer.Transmogrify.Song.Utilities
                             value < song.TrackContainers.Count)
                             processorConfig.IncludedTracks.Add(value);
                 }
-                else if (fields[fieldCounter].StartsWith("bards=") &&
-                         int.TryParse(fields[fieldCounter].Remove(0, 6), out var value) && value > 0 && value < 17)
+                else if (fields[fieldCounter].StartsWith("bards=", StringComparison.Ordinal) &&
+                         int.TryParse(fields[fieldCounter].Remove(0, 6), out var value) && value is > 0 and < 17)
                 {
                     processorConfig.PlayerCount = value;
                 }

@@ -6,7 +6,7 @@ using System;
 
 namespace BasicSharp
 {
-    internal class BasicException : Exception
+    internal sealed class BasicException : Exception
     {
         public int line;
 

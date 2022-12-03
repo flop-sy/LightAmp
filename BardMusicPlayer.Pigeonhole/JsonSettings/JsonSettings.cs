@@ -59,6 +59,7 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings
         {
             if (_isdisposed)
                 return;
+
             _isdisposed = true;
         }
 
@@ -70,7 +71,7 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings
         /// <summary>
         ///     The filename that was originally loaded from. saving to other file does not change this field!
         /// </summary>
-        /// <param name="filename">the name of the file, <DEFAULT> is the default.</param>
+        /// <param name="filename">the name of the file</param>
         protected virtual void Save(string filename)
         {
             Save(_childtype, this, filename);
@@ -148,7 +149,6 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings
         ///     Loads or creates a settings file.
         /// </summary>
         /// <param name="filename">File name, for example "settings.jsn". no path required, just a file name.</param>
-        /// <param name="configure">Configurate the settings instance prior to loading - called after OnConfigure</param>
         /// <returns>The loaded or freshly new saved object</returns>
         protected static T Load<T>(string filename) where T : ISavable
         {
@@ -182,7 +182,7 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings
         /// <returns>The loaded or freshly new saved object</returns>
         protected static object Load(object instance, Action configure, string filename)
         {
-            byte[] ReadAllBytes(Stream instream)
+            static byte[] ReadAllBytes(Stream instream)
             {
                 if (instream is MemoryStream stream)
                     return stream.ToArray();
@@ -226,7 +226,7 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings
                     throw new BmpPigeonholeException(
                         "Unable to deserialize settings file, value<->type mismatch. see inner exception", e);
                 }
-                catch (ArgumentException e) when (e.Message.StartsWith("Invalid"))
+                catch (ArgumentException e) when (e.Message.StartsWith("Invalid", StringComparison.Ordinal))
                 {
                     throw new BmpPigeonholeException("Settings file is corrupt.");
                 }
@@ -257,13 +257,13 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings
             return filename;
         }
 
-        private class FileNameIgnoreResolver : DefaultContractResolver
+        private sealed class FileNameIgnoreResolver : DefaultContractResolver
         {
             protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
             {
                 var prop = base.CreateProperty(member, memberSerialization);
-                if (prop.PropertyName.Equals("FileName", StringComparison.OrdinalIgnoreCase))
-                    prop.Ignored = true;
+                if (prop.PropertyName.Equals("FileName", StringComparison.OrdinalIgnoreCase)) prop.Ignored = true;
+
                 return prop;
             }
         }

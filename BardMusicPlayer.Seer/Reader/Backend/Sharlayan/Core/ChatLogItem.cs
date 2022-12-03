@@ -7,7 +7,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core.Interfaces;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
 {
-    internal class ChatLogItem : IChatLogItem
+    internal sealed class ChatLogItem : IChatLogItem
     {
         public byte[] Bytes { get; set; }
 

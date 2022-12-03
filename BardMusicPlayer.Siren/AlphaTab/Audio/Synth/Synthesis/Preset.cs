@@ -1,6 +1,6 @@
 ﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class Preset
+    internal sealed class Preset
     {
         public string Name { get; set; }
         public ushort PresetNumber { get; set; }

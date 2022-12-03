@@ -33,7 +33,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für KeyboardHeatMap.xaml
     /// </summary>
-    public partial class KeyboardHeatMap : UserControl
+    public sealed partial class KeyboardHeatMap : UserControl
     {
         //note frequencies
         private readonly int mOctave = 4; // default octave (octaves can be from 1 to 7)
@@ -119,8 +119,7 @@ namespace BardMusicPlayer.Ui.Controls
             var notecount = 0;
 
             //If your host has an invalid track, set it to 0
-            if (tracknumber - 1 <= trackChunks.Count)
-                tracknumber = 0;
+            if (tracknumber - 1 <= trackChunks.Count) tracknumber = 0;
 
             if (tracknumber != 0)
             {
@@ -150,7 +149,6 @@ namespace BardMusicPlayer.Ui.Controls
                     {
                         int noteNum = note.NoteNumber;
                         noteNum -= 48 - 12 * octaveshift;
-                        ;
                         var count = 1;
                         if (notedict.ContainsKey(noteNum))
                         {
@@ -184,22 +182,19 @@ namespace BardMusicPlayer.Ui.Controls
         {
             ResetFill();
 
-            Dictionary<int, double> noteCountDict = null;
-            if (song != null)
+            if (song == null) return;
+            if (tracknumber - 1 >= song.TrackContainers.Count)
+                return;
+
+            var noteCountDict = getNoteCountForKey(song, tracknumber, octaveshift);
+
+            foreach (var n in noteCountDict)
             {
-                if (tracknumber - 1 >= song.TrackContainers.Count())
-                    return;
+                if (n.Key >= noteInfo.Count)
+                    continue;
 
-                noteCountDict = getNoteCountForKey(song, tracknumber, octaveshift);
-
-                foreach (var n in noteCountDict)
-                {
-                    if (n.Key >= noteInfo.Count)
-                        continue;
-                    var wantedNode = FindName(noteInfo[n.Key].name);
-                    var r = wantedNode as Rectangle;
-                    r.Fill = NoteFill(noteInfo[n.Key].black_key, n.Value);
-                }
+                var wantedNode = FindName(noteInfo[n.Key].name);
+                if (wantedNode is Rectangle r) r.Fill = NoteFill(noteInfo[n.Key].black_key, n.Value);
             }
         }
 
@@ -209,21 +204,20 @@ namespace BardMusicPlayer.Ui.Controls
             {
                 var wantedNode = FindName(n.Value.name);
                 var r = wantedNode as Rectangle;
-                if (n.Value.black_key)
-                    r.Fill = Brushes.Black;
-                else
-                    r.Fill = Brushes.White;
+                r.Fill = n.Value.black_key ? Brushes.Black : Brushes.White;
             }
         }
 
-        private LinearGradientBrush NoteFill(bool blk, double count)
+        private static LinearGradientBrush NoteFill(bool blk, double count)
         {
-            count = count / 50;
-            if (count < 0.02)
-                count = 0.02;
-            var brush = new LinearGradientBrush();
-            brush.StartPoint = blk ? new Point(1, 0) : new Point(1, 1);
-            brush.EndPoint = blk ? new Point(1, 1) : new Point(1, 0);
+            count /= 50;
+            if (count < 0.02) count = 0.02;
+
+            var brush = new LinearGradientBrush
+            {
+                StartPoint = blk ? new Point(1, 0) : new Point(1, 1),
+                EndPoint = blk ? new Point(1, 1) : new Point(1, 0)
+            };
 
             if (!blk)
             {

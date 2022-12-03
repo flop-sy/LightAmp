@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.IO;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event
 {
-    internal class MetaNumberEvent : MetaEvent
+    internal sealed class MetaNumberEvent : MetaEvent
     {
         public MetaNumberEvent(int delta, byte status, byte metaId, int number)
             : base(delta, status, metaId, 0)

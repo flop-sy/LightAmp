@@ -9,7 +9,7 @@ using ZeroTier.Core;
 
 namespace ZeroTier
 {
-    public class ZeroTierConnector
+    public sealed class ZeroTierConnector
     {
         private Node node;
         private volatile bool nodeOnline;
@@ -62,11 +62,10 @@ namespace ZeroTier
 #if DEBUG
             Console.WriteLine("Num of assigned addresses : " + node.GetNetworkAddresses(networkId).Count);
 #endif
-            if (node.GetNetworkAddresses(networkId).Count == 1)
-            {
-                var addr = node.GetNetworkAddresses(networkId)[0];
-                ipAddress = addr.ToString();
-            }
+            if (node.GetNetworkAddresses(networkId).Count != 1) return Task.FromResult(ipAddress);
+
+            var addr = node.GetNetworkAddresses(networkId)[0];
+            ipAddress = addr.ToString();
 #if DEBUG
             foreach (IPAddress addr in node.GetNetworkAddresses(networkId))
             {
@@ -100,6 +99,7 @@ namespace ZeroTier
             Console.WriteLine("Event.Code = {0} ({1})", e.Code, e.Name);
 #endif
             if (e.Code == Constants.EVENT_NODE_ONLINE) nodeOnline = true;
+
             if (e.Code == Constants.EVENT_PEER_PATH_DEAD) Console.WriteLine("DEAD");
             /*
         if (e.Code == ZeroTier.Constants.EVENT_NETWORK_OK) {

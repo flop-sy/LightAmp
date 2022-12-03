@@ -16,7 +16,7 @@ using BardMusicPlayer.Seer.Utilities.KnownFolder;
 
 namespace BardMusicPlayer.Seer
 {
-    public partial class Game
+    public sealed partial class Game
     {
         /// <summary>
         ///     Contains the Process object for this Game. Set on creation of this Game.
@@ -77,7 +77,7 @@ namespace BardMusicPlayer.Seer
         /// <summary>
         ///     Shows the instrument tone held. Updated by Sharlayan and Machina.
         /// </summary>
-        public InstrumentTone InstrumentToneHeld { get; } = InstrumentTone.None;
+        public static InstrumentTone InstrumentToneHeld => InstrumentTone.None;
 
         /// <summary>
         ///     Shows if the chatbox is open for input. Updated by Sharlayan.
@@ -97,7 +97,7 @@ namespace BardMusicPlayer.Seer
         /// <summary>
         ///     Indicates if gfx set to low
         /// </summary>
-        public bool GfxSettingsLow { get; set; } = false;
+        public bool GfxSettingsLow { get; set; }
 
         /// <summary>
         ///     Contains nearby partymember list. Updated by Sharlayan & Machina. Currently only Sharlayan updates during logoff.
@@ -118,8 +118,8 @@ namespace BardMusicPlayer.Seer
         ///     Sharlayan.
         /// </summary>
         public IReadOnlyDictionary<Instrument, Keys> InstrumentKeys { get; private set; } =
-            new ReadOnlyDictionary<Instrument, Keys>(Instrument.All.ToDictionary(instrument => instrument,
-                _ => Keys.None));
+            new ReadOnlyDictionary<Instrument, Keys>(Instrument.All.ToDictionary(static instrument => instrument,
+                static _ => Keys.None));
 
         /// <summary>
         ///     Contains KeyMaps for instrument tone hotbar keys. Unbound keys = Keys.None. Updated by DatReader via ConfigId from
@@ -127,7 +127,7 @@ namespace BardMusicPlayer.Seer
         /// </summary>
         public IReadOnlyDictionary<InstrumentTone, Keys> InstrumentToneKeys { get; private set; } =
             new ReadOnlyDictionary<InstrumentTone, Keys>(
-                InstrumentTone.All.ToDictionary(instrumentTone => instrumentTone, _ => Keys.None));
+                InstrumentTone.All.ToDictionary(static instrumentTone => instrumentTone, static _ => Keys.None));
 
         /// <summary>
         ///     Contains KeyMaps for navigation menu keys. Unbound keys = Keys.None. Updated by DatReader via ConfigId from
@@ -135,7 +135,8 @@ namespace BardMusicPlayer.Seer
         /// </summary>
         public IReadOnlyDictionary<NavigationMenuKey, Keys> NavigationMenuKeys { get; private set; } =
             new ReadOnlyDictionary<NavigationMenuKey, Keys>(Enum.GetValues(typeof(NavigationMenuKey))
-                .Cast<NavigationMenuKey>().ToDictionary(navigationMenuKey => navigationMenuKey, _ => Keys.None));
+                .Cast<NavigationMenuKey>()
+                .ToDictionary(static navigationMenuKey => navigationMenuKey, static _ => Keys.None));
 
         /// <summary>
         ///     Contains KeyMaps for instrument tone menu keys. Unbound keys = Keys.None. Updated by DatReader via ConfigId from
@@ -144,14 +145,14 @@ namespace BardMusicPlayer.Seer
         public IReadOnlyDictionary<InstrumentToneMenuKey, Keys> InstrumentToneMenuKeys { get; private set; } =
             new ReadOnlyDictionary<InstrumentToneMenuKey, Keys>(Enum.GetValues(typeof(InstrumentToneMenuKey))
                 .Cast<InstrumentToneMenuKey>()
-                .ToDictionary(instrumentToneMenuKey => instrumentToneMenuKey, _ => Keys.None));
+                .ToDictionary(static instrumentToneMenuKey => instrumentToneMenuKey, static _ => Keys.None));
 
         /// <summary>
         ///     Contains KeyMaps for note keys. Unbound keys = Keys.None. Updated by DatReader via ConfigId from Sharlayan.
         /// </summary>
         public IReadOnlyDictionary<NoteKey, Keys> NoteKeys { get; private set; } =
             new ReadOnlyDictionary<NoteKey, Keys>(Enum.GetValues(typeof(NoteKey)).Cast<NoteKey>()
-                .ToDictionary(noteKey => noteKey, _ => Keys.None));
+                .ToDictionary(static noteKey => noteKey, static _ => Keys.None));
 
         private void InitInformation()
         {
@@ -166,15 +167,14 @@ namespace BardMusicPlayer.Seer
             try
             {
                 var gamePath = Process.Modules.Cast<ProcessModule>()
-                    .Aggregate("",
-                        (current, module) =>
-                            module.ModuleName.ToLower() switch
-                            {
-                                "ffxiv_dx11.exe" => Directory
-                                    .GetParent(Path.GetDirectoryName(module.FileName) ?? string.Empty)
-                                    ?.FullName,
-                                _ => current
-                            }
+                    .Aggregate("", static (current, module) =>
+                        module.ModuleName.ToLower() switch
+                        {
+                            "ffxiv_dx11.exe" => Directory
+                                .GetParent(Path.GetDirectoryName(module.FileName) ?? string.Empty)
+                                ?.FullName,
+                            _ => current
+                        }
                     );
 
                 if (string.IsNullOrEmpty(gamePath))
@@ -197,7 +197,7 @@ namespace BardMusicPlayer.Seer
             {
                 var modules = Process.Modules;
                 var environmentType = modules.Cast<ProcessModule>()
-                    .Aggregate(EnvironmentType.Normal, (current, module) => module.ModuleName.ToLower() switch
+                    .Aggregate(EnvironmentType.Normal, static (current, module) => module.ModuleName.ToLower() switch
                     {
                         "sbiedll.dll" => EnvironmentType.Sandboxie,
                         "innerspace.dll" => EnvironmentType.InnerSpace,
@@ -219,7 +219,8 @@ namespace BardMusicPlayer.Seer
             {
                 var gameRegion = GameRegion.Global;
 
-                if (File.Exists(GamePath + @"boot\locales\ko.pak")) gameRegion = GameRegion.Korea;
+                if (File.Exists(GamePath + @"boot\locales\ko.pak"))
+                    gameRegion = GameRegion.Korea;
                 else if (Directory.Exists(GamePath + @"sdo")) gameRegion = GameRegion.China;
 
                 return gameRegion;
@@ -254,17 +255,18 @@ namespace BardMusicPlayer.Seer
                                                       @"\Sandboxie.ini";
                         else
                             sandboxieConfigFilePath = Process.GetProcesses()
-                                .Where(process => process.ProcessName.ToLower().Equals("sbiectrl"))
-                                .Select(sandboxieProcess => sandboxieProcess.Modules)
-                                .Aggregate(sandboxieConfigFilePath, (current1, sandboxieModules) => sandboxieModules
-                                    .Cast<ProcessModule>()
-                                    .Aggregate(current1, (current, sandboxieModule) =>
-                                        sandboxieModule.ModuleName.ToLower() switch
-                                        {
-                                            "sbiectrl.exe" => Path.GetDirectoryName(sandboxieModule.FileName) +
-                                                              @"\Sandboxie.ini",
-                                            _ => current
-                                        }));
+                                .Where(static process => process.ProcessName.ToLower().Equals("sbiectrl"))
+                                .Select(static sandboxieProcess => sandboxieProcess.Modules)
+                                .Aggregate(sandboxieConfigFilePath, static (current1, sandboxieModules) =>
+                                    sandboxieModules
+                                        .Cast<ProcessModule>()
+                                        .Aggregate(current1, static (current, sandboxieModule) =>
+                                            sandboxieModule.ModuleName.ToLower() switch
+                                            {
+                                                "sbiectrl.exe" => Path.GetDirectoryName(sandboxieModule.FileName) +
+                                                                  @"\Sandboxie.ini",
+                                                _ => current
+                                            }));
                     }
                     finally
                     {
@@ -279,7 +281,7 @@ namespace BardMusicPlayer.Seer
                     // Note: sandboxie is a legacy program and writes it's config file in 2-byte per character mode, or Unicode in c# terms.
                     // There is a newer open source fork that may change this, we may have to deal with it later.
                     var boxRoot = File.ReadLines(sandboxieConfigFilePath, Encoding.Unicode)
-                        .First(line => line.StartsWith("BoxRootFolder"))
+                        .First(static line => line.StartsWith("BoxRootFolder", StringComparison.Ordinal))
                         .Split('=').Last() + @"\Sandbox\" + boxName + @"\";
 
                     if (Directory.Exists(boxRoot))
@@ -287,7 +289,8 @@ namespace BardMusicPlayer.Seer
                         if (GameRegion == GameRegion.China)
                             configPath = boxRoot + GamePath.Substring(0, 1) + @"\" +
                                          GamePath.Substring(2, GamePath.Length) + @"game\" + partialConfigPath;
-                        else configPath = boxRoot + @"user\current\Documents\" + partialConfigPath;
+                        else
+                            configPath = boxRoot + @"user\current\Documents\" + partialConfigPath;
                     }
                     else
                     {
@@ -299,7 +302,8 @@ namespace BardMusicPlayer.Seer
                 // Normal games + ISBoxer/Innerspace games.
                 else
                 {
-                    if (GameRegion == GameRegion.China) configPath = GamePath + @"game\" + partialConfigPath;
+                    if (GameRegion == GameRegion.China)
+                        configPath = GamePath + @"game\" + partialConfigPath;
                     else
                         configPath = new KnownFolder(KnownFolderType.Documents, Process.WindowsIdentity()).Path + @"\" +
                                      partialConfigPath;

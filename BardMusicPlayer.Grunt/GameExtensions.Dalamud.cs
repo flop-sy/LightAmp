@@ -15,6 +15,7 @@ namespace BardMusicPlayer.Grunt
         public static bool IsDalamudHooked(this Game game)
         {
             if (!BmpGrunt.Instance.Started) throw new BmpGruntException("Grunt not started.");
+
             return BmpGrunt.Instance.DalamudServer.IsConnected(game.Pid);
         }
     }

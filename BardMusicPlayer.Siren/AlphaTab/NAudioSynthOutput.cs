@@ -14,7 +14,7 @@ namespace BardMusicPlayer.Siren.AlphaTab
     ///     A <see cref="ISynthOutput" /> implementation that uses NAudio to play the
     ///     sound via WasapiOut.
     /// </summary>
-    internal class NAudioSynthOutput : WaveProvider32, ISynthOutput, IDisposable
+    internal sealed class NAudioSynthOutput : WaveProvider32, ISynthOutput, IDisposable
     {
         private const int BufferSize = 4096;
 
@@ -131,6 +131,7 @@ namespace BardMusicPlayer.Siren.AlphaTab
         private void RequestBuffers()
         {
             if (_circularBuffer.Count >= _bufferCountSize || SampleRequest == null) return;
+
             for (var i = 0; i < _bufferCount / 2; i++) SampleRequest();
         }
 

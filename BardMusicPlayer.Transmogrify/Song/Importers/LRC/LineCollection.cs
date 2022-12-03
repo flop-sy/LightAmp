@@ -28,6 +28,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         {
             if (offset == default)
                 return;
+
             var i = 0;
             try
             {
@@ -52,14 +53,15 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         internal StringBuilder ToString(StringBuilder sb, LyricsFormat format)
         {
             var datasource = this.AsEnumerable();
-            if (format.Flag(LyricsFormat.LinesSortByContent))
-                datasource = datasource.OrderBy(l => l.Content);
+            if (format.Flag(LyricsFormat.LinesSortByContent)) datasource = datasource.OrderBy(static l => l.Content);
+
             if (format.Flag(LyricsFormat.LinesSortByTimestamp))
                 datasource = datasource is IOrderedEnumerable<TLine> od
-                    ? od.ThenBy(l => l.InternalTimestamp)
-                    : datasource.OrderBy(l => l.InternalTimestamp);
+                    ? od.ThenBy(static l => l.InternalTimestamp)
+                    : datasource.OrderBy(static l => l.InternalTimestamp);
+
             if (format.Flag(LyricsFormat.MergeTimestamp))
-                foreach (var item in datasource.GroupBy(l => l.Content))
+                foreach (var item in datasource.GroupBy(static l => l.Content))
                 {
                     foreach (var line in item) line.TimestampToString(sb);
                     sb.AppendLine(item.Key);

@@ -53,7 +53,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
     /// </summary>
     /// <typeparam name="TLine">Type of lyrics line.</typeparam>
     [DebuggerDisplay(@"MetaDataCount = {MetaData.Count} LineCount = {Lines.Count}")]
-    public class Lyrics<TLine>
+    public sealed class Lyrics<TLine>
         where TLine : Line
     {
         /// <summary>

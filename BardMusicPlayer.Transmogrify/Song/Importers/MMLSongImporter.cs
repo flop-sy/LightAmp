@@ -60,9 +60,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
             while (rfile.Peek() >= 0)
             {
                 var line = rfile.ReadLine();
-                if (line.Contains("[Settings]"))
-                    _chap = Chap.SETTINGS;
-                if (line.StartsWith("[Channel"))
+                if (line.Contains("[Settings]")) _chap = Chap.SETTINGS;
+
+                if (line.StartsWith("[Channel", StringComparison.Ordinal))
                 {
                     if (musicdata.Length > 0)
                     {
@@ -92,20 +92,24 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
                     _chap = Chap.FINISHED;
                 }
 
-                if (_chap == Chap.SETTINGS)
-                    if (line.Split('=')[0] == "Title")
-                        Title = line.Split('=')[1];
-                if (_chap == Chap.CHANNEL)
+                switch (_chap)
                 {
-                    if (line.StartsWith("//"))
+                    case Chap.SETTINGS:
+                    {
+                        if (line.Split('=')[0] == "Title") Title = line.Split('=')[1];
+
+                        break;
+                    }
+                    case Chap.CHANNEL when line.StartsWith("//", StringComparison.Ordinal):
                     {
                         var result = Instrument.Parse(StripComments(line));
-                        if (result.Index != 0)
-                            musicInstrument[CurrentChannel] = result.Name;
+                        if (result.Index != 0) musicInstrument[CurrentChannel] = result.Name;
+
                         continue;
                     }
-
-                    musicdata += StripComments(line);
+                    case Chap.CHANNEL:
+                        musicdata += StripComments(line);
+                        break;
                 }
             }
 
@@ -114,19 +118,19 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
 
         private static string StripComments(string code)
         {
-            if (code.StartsWith("/*"))
+            if (code.StartsWith("/*", StringComparison.Ordinal))
             {
-                var idx = code.IndexOf("*/");
+                var idx = code.IndexOf("*/", StringComparison.Ordinal);
                 code = code.Substring(idx + 2);
             }
 
-            if (code.StartsWith("//"))
+            if (code.StartsWith("//", StringComparison.Ordinal))
             {
-                var idx = code.IndexOf("//");
+                var idx = code.IndexOf("//", StringComparison.Ordinal);
                 code = code.Substring(idx + 2);
             }
 
-            code = string.Concat(code.Where(c => !char.IsWhiteSpace(c)));
+            code = string.Concat(code.Where(static c => !char.IsWhiteSpace(c)));
             return code;
         }
 
@@ -139,10 +143,8 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
 
                 _Octave = 60;
                 _Length = 0;
-                var instrument = "Piano";
-                musicInstrument.TryGetValue(t.Key, out instrument);
-                if (instrument == null)
-                    instrument = "Piano";
+                musicInstrument.TryGetValue(t.Key, out var instrument);
+                instrument ??= "Piano";
 
                 var thisTrack = new TrackChunk(new SequenceTrackNameEvent(instrument));
                 var result = Instrument.Parse(instrument);
@@ -153,8 +155,8 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
                     {
                         case MMLCommandType.Tempo:
                             _Tempo = Convert.ToInt32(cmd.Args[0]);
-                            if (_Length == 0)
-                                _Length = GetLength("4");
+                            if (_Length == 0) _Length = GetLength("4");
+
                             break;
                         case MMLCommandType.Octave:
                             _Octave = Convert.ToInt32(cmd.Args[0]) * 12 + 12;
@@ -168,21 +170,21 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
                         case MMLCommandType.Tie:
                             break;
                         case MMLCommandType.Length:
-                            _Length = GetLength(cmd.Args[0], cmd.Args[1] == "." ? true : false);
+                            _Length = GetLength(cmd.Args[0], cmd.Args[1] == ".");
                             break;
                         case MMLCommandType.Rest:
-                            duration += GetLength(cmd.Args[0], cmd.Args[1] == "." ? true : false);
+                            duration += GetLength(cmd.Args[0], cmd.Args[1] == ".");
                             break;
                         case MMLCommandType.NoteNumber:
                             var number = Convert.ToInt32(cmd.Args[0]);
                             if (number == 0)
                             {
-                                duration += GetLength("", cmd.Args[1] == "." ? true : false);
+                                duration += GetLength("", cmd.Args[1] == ".");
                                 break;
                             }
 
                             SetNoteOn(thisTrack, duration, (SevenBitNumber)(number + 12));
-                            duration += GetLength("", cmd.Args[1] == "." ? true : false);
+                            duration += GetLength("", cmd.Args[1] == ".");
 
                             if (i + 1 != t.Value.Count)
                             {
@@ -197,7 +199,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
                         case MMLCommandType.Note:
                             var nnumber = GetNote(cmd);
                             SetNoteOn(thisTrack, duration, (SevenBitNumber)nnumber);
-                            duration += GetLength(cmd.Args[2], cmd.Args[3] == "." ? true : false);
+                            duration += GetLength(cmd.Args[2], cmd.Args[3] == ".");
 
                             if (i + 1 != t.Value.Count)
                             {
@@ -231,12 +233,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
                 length = _Length;
                 if (dottet)
                     return length * 1.5;
+
                 return length;
             }
 
             var length_multiplier = Convert.ToInt32(multiplier);
             if (dottet)
                 return length / length_multiplier * 1.5;
+
             return length / length_multiplier;
         }
 
@@ -263,22 +267,18 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
 
         private static void SetNoteOn(TrackChunk track, double duration, SevenBitNumber noteNumber)
         {
-            using (var manager = new TimedEventsManager(track.Events))
-            {
-                var timedEvents = manager.Events;
-                timedEvents.Add(new TimedEvent(new NoteOnEvent(noteNumber, (SevenBitNumber)127),
-                    (long)duration / 1000));
-            }
+            using var manager = new TimedEventsManager(track.Events);
+            var timedEvents = manager.Events;
+            timedEvents.Add(new TimedEvent(new NoteOnEvent(noteNumber, (SevenBitNumber)127),
+                (long)duration / 1000));
         }
 
         private static void SetNoteOff(TrackChunk track, double duration, SevenBitNumber noteNumber)
         {
-            using (var manager = new TimedEventsManager(track.Events))
-            {
-                var timedEvents = manager.Events;
-                timedEvents.Add(
-                    new TimedEvent(new NoteOffEvent(noteNumber, (SevenBitNumber)127), (long)duration / 1000));
-            }
+            using var manager = new TimedEventsManager(track.Events);
+            var timedEvents = manager.Events;
+            timedEvents.Add(
+                new TimedEvent(new NoteOffEvent(noteNumber, (SevenBitNumber)127), (long)duration / 1000));
         }
     }
 }

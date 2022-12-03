@@ -162,8 +162,10 @@ namespace BardMusicPlayer.Quotidian.Structs
         public int CompareTo(object obj)
         {
             if (obj == null) return 1;
-            if (!(obj is Instrument)) throw new ArgumentException("This is not an InstrumentTone");
-            return Index - ((Instrument)obj).Index;
+
+            if (obj is not Instrument instrument) throw new ArgumentException("This is not an InstrumentTone");
+
+            return Index - instrument.Index;
         }
 
         public int CompareTo(InstrumentTone other)
@@ -326,6 +328,7 @@ namespace BardMusicPlayer.Quotidian.Structs
 
             instrumentTone = instrumentTone.Replace(" ", "").Replace("_", "");
             if (int.TryParse(instrumentTone, out var number)) return TryParse(number, out result);
+
             if (All.Any(x => x.Name.Equals(instrumentTone, StringComparison.CurrentCultureIgnoreCase)))
             {
                 result = All.First(x => x.Name.Equals(instrumentTone, StringComparison.CurrentCultureIgnoreCase));

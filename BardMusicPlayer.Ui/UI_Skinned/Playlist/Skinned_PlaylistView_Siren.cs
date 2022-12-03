@@ -21,7 +21,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     logic for the siren controls
     /// </summary>
-    public partial class Skinned_PlaylistView : Window
+    public sealed partial class Skinned_PlaylistView : Window
     {
         private double lasttime; //last poll time of Instance_SynthTimePositionChanged
         private int scrollpos; //position of the title scroller
@@ -38,12 +38,11 @@ namespace BardMusicPlayer.Ui.Skinned
                 BmpSiren.Instance.Stop();
 
             //Scrolling
-            if (lasttime + 500 < currentTime)
-            {
-                Dispatcher.BeginInvoke(new Action(() => WriteSongTitle(songTitle)));
-                Dispatcher.BeginInvoke(new Action(() => WriteSongTime(currentTime)));
-                lasttime = currentTime;
-            }
+            if (!(lasttime + 500 < currentTime)) return;
+
+            Dispatcher.BeginInvoke(new Action(() => WriteSongTitle(songTitle)));
+            Dispatcher.BeginInvoke(new Action(() => WriteSongTime(currentTime)));
+            lasttime = currentTime;
         }
 
         #region Scroller
@@ -58,7 +57,6 @@ namespace BardMusicPlayer.Ui.Skinned
             var graphics = Graphics.FromImage(bitmap);
             for (var i = 0; i < 20; i++)
             {
-                Image img;
                 var a = ' ';
                 if (i + scrollpos >= data.Length)
                 {
@@ -73,10 +71,7 @@ namespace BardMusicPlayer.Ui.Skinned
                     a = data.ToArray()[i + scrollpos];
                 }
 
-                if (SkinContainer.FONT.ContainsKey(a))
-                    img = SkinContainer.FONT[a];
-                else
-                    img = SkinContainer.FONT[32];
+                var img = SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32];
                 graphics.DrawImage(img, 5 * i, 0);
             }
 
@@ -99,8 +94,7 @@ namespace BardMusicPlayer.Ui.Skinned
 
             var Seconds = t.Seconds.ToString();
             var Minutes = t.Minutes.ToString();
-            Image img;
-            img = SkinContainer.FONT[Minutes.Length == 1 ? '0' : Minutes.ToArray()[0]];
+            var img = SkinContainer.FONT[Minutes.Length == 1 ? '0' : Minutes.ToArray()[0]];
             graphics.DrawImage(img, 5 * 0, 0);
             img = SkinContainer.FONT[Minutes.Length == 1 ? Minutes.ToArray()[0] : Minutes.ToArray()[1]];
             graphics.DrawImage(img, 5 * 1, 0);
@@ -136,6 +130,7 @@ namespace BardMusicPlayer.Ui.Skinned
             var song = PlaylistFunctions.GetSongFromPlaylist(_currentPlaylist, t);
             if (song == null)
                 return;
+
             scrollpos = 0;
             lasttime = 0;
             WriteSongTitle(song.Title);
@@ -149,8 +144,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="e"></param>
         private void Playbutton_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (BmpSiren.Instance.IsReadyForPlayback)
-                _ = BmpSiren.Instance.Play();
+            if (BmpSiren.Instance.IsReadyForPlayback) _ = BmpSiren.Instance.Play();
         }
 
         /// <summary>
@@ -222,6 +216,7 @@ namespace BardMusicPlayer.Ui.Skinned
             var song = PlaylistFunctions.GetSongFromPlaylist(_currentPlaylist, t);
             if (song == null)
                 return;
+
             scrollpos = 0;
             lasttime = 0;
             WriteSongTitle(song.Title);

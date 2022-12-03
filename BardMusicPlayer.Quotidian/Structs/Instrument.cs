@@ -297,8 +297,10 @@ namespace BardMusicPlayer.Quotidian.Structs
         public int CompareTo(object obj)
         {
             if (obj == null) return 1;
-            if (!(obj is Instrument)) throw new ArgumentException("This is not an Instrument");
-            return Index - ((Instrument)obj).Index;
+
+            if (obj is not Instrument instrument) throw new ArgumentException("This is not an Instrument");
+
+            return Index - instrument.Index;
         }
 
         public int CompareTo(Instrument other)
@@ -490,16 +492,17 @@ namespace BardMusicPlayer.Quotidian.Structs
 
             instrument = instrument.Replace(" ", "").Replace("_", "");
             if (int.TryParse(instrument, out var number)) return TryParse(number, out result);
+
             if (All.Any(x => x.Name.Equals(instrument, StringComparison.CurrentCultureIgnoreCase)))
             {
                 result = All.First(x => x.Name.Equals(instrument, StringComparison.CurrentCultureIgnoreCase));
                 return true;
             }
 
-            foreach (var instr in All)
+            foreach (var instr in All.Where(instr =>
+                         instr.AlternativeNames.Any(
+                             x => x.Equals(instrument, StringComparison.CurrentCultureIgnoreCase))))
             {
-                if (!instr.AlternativeNames.Any(x => x.Equals(instrument, StringComparison.CurrentCultureIgnoreCase)))
-                    continue;
                 result = instr;
                 return true;
             }
@@ -517,9 +520,9 @@ namespace BardMusicPlayer.Quotidian.Structs
         {
             if (Equals(Clarinet) && note < 3) return -100;
 
-            if (Equals(Clarinet) && note > 2 && note < 8) return -50;
+            if (Equals(Clarinet) && note is > 2 and < 8) return -50;
 
-            if (Equals(Clarinet) && note > 7 && note < 11) return 0;
+            if (Equals(Clarinet) && note is > 7 and < 11) return 0;
 
             if (Equals(Panpipes) && note < 6) return 0;
 
@@ -543,7 +546,7 @@ namespace BardMusicPlayer.Quotidian.Structs
 
             if (Equals(Lute) && note < 3) return -50;
 
-            if (Equals(Lute) && note >= 3 && note < 8) return 0;
+            if (Equals(Lute) && note is >= 3 and < 8) return 0;
 
             if (Equals(Lute) && note == 36) return 100;
 

@@ -12,7 +12,7 @@ using Melanchall.DryWetMidi.Interaction;
 
 namespace BardMusicPlayer.Transmogrify.Processor
 {
-    internal class LyricProcessor : BaseProcessor
+    internal sealed class LyricProcessor : BaseProcessor
     {
         internal LyricProcessor(LyricProcessorConfig processorConfig, BmpSong song) : base(song)
         {
@@ -33,7 +33,8 @@ namespace BardMusicPlayer.Transmogrify.Processor
 
             var tempoMap = Song.SourceTempoMap.Clone();
 
-            foreach (var midiEvent in trackChunk.GetTimedEvents().Where(e => e.Event.EventType == MidiEventType.Lyric))
+            foreach (var midiEvent in trackChunk.GetTimedEvents()
+                         .Where(static e => e.Event.EventType == MidiEventType.Lyric))
             {
                 lyricLineCount++;
                 midiEvent.Time = midiEvent.TimeAs<MetricTimeSpan>(tempoMap).TotalMicroseconds / 1000 + 120000;

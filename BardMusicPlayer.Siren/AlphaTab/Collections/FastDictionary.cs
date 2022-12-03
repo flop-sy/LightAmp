@@ -13,7 +13,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Collections
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    internal class FastDictionary<TKey, TValue> : IEnumerable<TKey>
+    internal sealed class FastDictionary<TKey, TValue> : IEnumerable<TKey>
     {
         private readonly Dictionary<TKey, TValue> _dictionary;
 

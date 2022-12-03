@@ -4,12 +4,12 @@
     {
         internal static bool RangeOkay(uint actorId)
         {
-            return actorId >= 200000000 && actorId < 300000000;
+            return actorId is >= 200000000 and < 300000000;
         }
 
         internal static bool RangeOkay(int actorId)
         {
-            return actorId >= 200000000 && actorId < 300000000;
+            return actorId is >= 200000000 and < 300000000;
         }
     }
 }

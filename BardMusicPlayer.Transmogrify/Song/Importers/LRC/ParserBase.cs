@@ -21,7 +21,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
 
         private Lyrics<TLine> lyrics;
 
-        public ParserBase(string data)
+        protected ParserBase(string data)
         {
             Data = data ?? "";
         }

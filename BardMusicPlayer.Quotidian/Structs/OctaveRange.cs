@@ -153,8 +153,10 @@ namespace BardMusicPlayer.Quotidian.Structs
         public int CompareTo(object obj)
         {
             if (obj == null) return 1;
-            if (!(obj is OctaveRange)) throw new ArgumentException("This is not an OctaveRange");
-            return Index - ((OctaveRange)obj).Index;
+
+            if (obj is not OctaveRange range) throw new ArgumentException("This is not an OctaveRange");
+
+            return Index - range.Index;
         }
 
         public int CompareTo(OctaveRange other)
@@ -353,6 +355,7 @@ namespace BardMusicPlayer.Quotidian.Structs
         public bool TryShiftNoteToOctave(OctaveRange currentOctaveRange, ref int note)
         {
             if (!currentOctaveRange.ValidateNoteRange(note)) return false;
+
             note += LowerNote - currentOctaveRange.LowerNote;
             return true;
         }
@@ -362,6 +365,7 @@ namespace BardMusicPlayer.Quotidian.Structs
             if (!currentOctaveRange.ValidateNoteRange(note))
                 throw new BmpException("ShiftNoteToOctave note " + note + " not in range of " +
                                        currentOctaveRange.Name);
+
             return note + LowerNote - currentOctaveRange.LowerNote;
         }
     }

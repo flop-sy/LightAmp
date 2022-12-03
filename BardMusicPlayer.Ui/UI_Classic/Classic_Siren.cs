@@ -18,7 +18,7 @@ using Microsoft.Win32;
 
 namespace BardMusicPlayer.Ui.Classic
 {
-    public class LyricsContainer
+    public sealed class LyricsContainer
     {
         public LyricsContainer(DateTime t, string l)
         {
@@ -33,7 +33,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
-    public partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView : UserControl
     {
         private readonly ObservableCollection<LyricsContainer> lyricsData = new();
 
@@ -45,8 +45,7 @@ namespace BardMusicPlayer.Ui.Classic
         private void Siren_Load_Click(object sender, RoutedEventArgs e)
         {
             BmpSong CurrentSong = null;
-            var song = PlaylistContainer.SelectedItem as string;
-            if (song == null)
+            if (PlaylistContainer.SelectedItem is not string song)
             {
                 CurrentSong = Siren_LoadMidiFile();
                 if (CurrentSong == null)
@@ -54,7 +53,7 @@ namespace BardMusicPlayer.Ui.Classic
             }
             else
             {
-                if ((string)PlaylistContainer.SelectedItem == "..")
+                if (song == "..")
                 {
                     CurrentSong = Siren_LoadMidiFile();
                     if (CurrentSong == null)
@@ -63,7 +62,7 @@ namespace BardMusicPlayer.Ui.Classic
                 else
                 {
                     CurrentSong =
-                        PlaylistFunctions.GetSongFromPlaylist(_currentPlaylist, (string)PlaylistContainer.SelectedItem);
+                        PlaylistFunctions.GetSongFromPlaylist(_currentPlaylist, song);
                 }
             }
 
@@ -102,21 +101,20 @@ namespace BardMusicPlayer.Ui.Classic
 
         private void Siren_Pause_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Right)
-            {
-                var curr = new DateTime(1, 1, 1).AddMilliseconds(Siren_Position.Value);
-                if (Siren_Lyrics.SelectedIndex == -1)
-                    return;
+            if (e.ChangedButton != MouseButton.Right) return;
 
-                var idx = Siren_Lyrics.SelectedIndex;
-                var t = lyricsData[idx];
-                lyricsData.RemoveAt(idx);
-                t.time = curr;
-                lyricsData.Insert(idx, t);
+            var curr = new DateTime(1, 1, 1).AddMilliseconds(Siren_Position.Value);
+            if (Siren_Lyrics.SelectedIndex == -1)
+                return;
 
-                Siren_Lyrics.DataContext = lyricsData;
-                Siren_Lyrics.Items.Refresh();
-            }
+            var idx = Siren_Lyrics.SelectedIndex;
+            var t = lyricsData[idx];
+            lyricsData.RemoveAt(idx);
+            t.time = curr;
+            lyricsData.Insert(idx, t);
+
+            Siren_Lyrics.DataContext = lyricsData;
+            Siren_Lyrics.Items.Refresh();
         }
 
         /// <summary>
@@ -134,7 +132,7 @@ namespace BardMusicPlayer.Ui.Classic
         ///     opens a fileslector box and loads the selected song
         /// </summary>
         /// <returns>BmpSong</returns>
-        private BmpSong Siren_LoadMidiFile()
+        private static BmpSong Siren_LoadMidiFile()
         {
             var openFileDialog = new OpenFileDialog
             {
@@ -145,10 +143,7 @@ namespace BardMusicPlayer.Ui.Classic
             if (openFileDialog.ShowDialog() != true)
                 return null;
 
-            if (!openFileDialog.CheckFileExists)
-                return null;
-
-            return BmpSong.OpenFile(openFileDialog.FileName).Result;
+            return !openFileDialog.CheckFileExists ? null : BmpSong.OpenFile(openFileDialog.FileName).Result;
         }
 
         /// <summary>
@@ -158,8 +153,7 @@ namespace BardMusicPlayer.Ui.Classic
         /// <param name="e"></param>
         private void Siren_Volume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            var slider = e.OriginalSource as Slider;
-            BmpSiren.Instance.SetVolume((float)slider.Value);
+            if (e.OriginalSource is Slider slider) BmpSiren.Instance.SetVolume((float)slider.Value);
         }
 
         /// <summary>
@@ -178,31 +172,24 @@ namespace BardMusicPlayer.Ui.Classic
             {
                 Siren_Position.Maximum = endTime;
                 t = TimeSpan.FromMilliseconds(endTime);
-                Siren_TimeLapsed.Content = string.Format("{0:D2}:{1:D2}", t.Minutes, t.Seconds);
+                Siren_TimeLapsed.Content = $"{t.Minutes:D2}:{t.Seconds:D2}";
             }
 
             t = TimeSpan.FromMilliseconds(currentTime);
-            Siren_Time.Content = string.Format("{0:D2}:{1:D2}", t.Minutes, t.Seconds);
-            if (!_Siren_Playbar_dragStarted)
-                Siren_Position.Value = currentTime;
+            Siren_Time.Content = $"{t.Minutes:D2}:{t.Seconds:D2}";
+            if (!_Siren_Playbar_dragStarted) Siren_Position.Value = currentTime;
 
             //Set the lyrics progress
-            if (Siren_Lyrics.Items.Count > 0)
-            {
-                var ret = Siren_Lyrics.Items.Cast<LyricsContainer>().ToList();
-                var idx = -1;
-                foreach (var dt in ret)
-                {
-                    var ts = new TimeSpan(0, dt.time.Hour, dt.time.Minute, dt.time.Second, dt.time.Millisecond);
-                    if (ts >= t)
-                        break;
-                    idx++;
-                }
+            if (Siren_Lyrics.Items.Count <= 0) return;
 
-                Siren_Lyrics.SelectedIndex = idx;
-                if (Siren_Lyrics.SelectedItem != null)
-                    Siren_Lyrics.ScrollIntoView(Siren_Lyrics.SelectedItem);
-            }
+            var ret = Siren_Lyrics.Items.Cast<LyricsContainer>().ToList();
+            var idx = -1 + ret
+                .Select(static dt => new TimeSpan(0, dt.time.Hour, dt.time.Minute, dt.time.Second, dt.time.Millisecond))
+                .TakeWhile(ts => ts < t).Count();
+
+            Siren_Lyrics.SelectedIndex = idx;
+            if (Siren_Lyrics.SelectedItem != null)
+                Siren_Lyrics.ScrollIntoView(Siren_Lyrics.SelectedItem);
         }
 
         /// <summary>
@@ -239,27 +226,27 @@ namespace BardMusicPlayer.Ui.Classic
         private void Siren_Lyrics_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             var curr = new DateTime(1, 1, 1).AddMilliseconds(Siren_Position.Value);
-            if (e.ChangedButton == MouseButton.Middle)
+            switch (e.ChangedButton)
             {
-                if (Siren_Lyrics.SelectedIndex == -1)
+                case MouseButton.Middle when Siren_Lyrics.SelectedIndex == -1:
                     return;
-
-                var idx = Siren_Lyrics.SelectedIndex;
-                var t = lyricsData[idx];
-                lyricsData.RemoveAt(idx);
-                t.time = curr;
-                lyricsData.Insert(idx, t);
-            }
-            else if (e.ChangedButton == MouseButton.Right)
-            {
-                if (Siren_Lyrics.SelectedIndex == -1)
+                case MouseButton.Middle:
+                {
+                    var idx = Siren_Lyrics.SelectedIndex;
+                    var t = lyricsData[idx];
+                    lyricsData.RemoveAt(idx);
+                    t.time = curr;
+                    lyricsData.Insert(idx, t);
+                    break;
+                }
+                case MouseButton.Right when Siren_Lyrics.SelectedIndex == -1:
                     lyricsData.Insert(0, new LyricsContainer(curr, ""));
-                else
+                    break;
+                case MouseButton.Right:
                     lyricsData.Insert(Siren_Lyrics.SelectedIndex + 1, new LyricsContainer(curr, ""));
-            }
-            else
-            {
-                return;
+                    break;
+                default:
+                    return;
             }
 
             Siren_Lyrics.DataContext = lyricsData;
@@ -279,7 +266,7 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var openFileDialog = new SaveFileDialog
             {
-                Filter = "Performerconfig | *.lrc"
+                Filter = "Performer Config | *.lrc"
             };
 
             if (openFileDialog.ShowDialog() != true)

@@ -1,6 +1,7 @@
 ﻿#region
 
 using System.Collections.Generic;
+using System.Linq;
 using BardMusicPlayer.Maestro.Sequencing;
 
 #endregion
@@ -20,26 +21,11 @@ namespace BardMusicPlayer.Maestro.Events
 
         public int MaxTracks { get; }
 
-        public int TotalNoteCount
-        {
-            get
-            {
-                var sum = 0;
-                foreach (var s in _sequencer.notesPlayedCount.Values)
-                    sum += s;
-                return sum;
-            }
-        }
+        public int TotalNoteCount => _sequencer.notesPlayedCount.Values.Sum();
 
         public List<int> CurrentNoteCountForTracks
         {
-            get
-            {
-                var t = new List<int>();
-                foreach (var s in _sequencer.notesPlayedCount)
-                    t.Add(s.Key.Count);
-                return t;
-            }
+            get { return _sequencer.notesPlayedCount.Select(static s => s.Key.Count).ToList(); }
         }
 
         public override bool IsValid()

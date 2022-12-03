@@ -24,10 +24,10 @@ namespace BardMusicPlayer.Siren.AlphaTab
 
         public abstract void Destroy();
 
-        public bool IsReady => Player != null && Player.IsReady;
-        public bool IsReadyForPlayback => Player != null && Player.IsReadyForPlayback;
+        public bool IsReady => Player is { IsReady: true };
+        public bool IsReadyForPlayback => Player is { IsReadyForPlayback: true };
 
-        public PlayerState State => Player == null ? PlayerState.Paused : Player.State;
+        public PlayerState State => Player?.State ?? PlayerState.Paused;
 
         public LogLevel LogLevel
         {
@@ -78,6 +78,7 @@ namespace BardMusicPlayer.Siren.AlphaTab
         public bool Play()
         {
             if (State == PlayerState.Playing || !IsReadyForPlayback) return false;
+
             DispatchOnWorkerThread(() => { Player.Play(); });
             return true;
         }

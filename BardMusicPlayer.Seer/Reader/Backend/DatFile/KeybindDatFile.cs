@@ -13,7 +13,7 @@ using BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
 {
-    internal class KeybindDatFile : IDisposable
+    internal sealed class KeybindDatFile : IDisposable
     {
         private readonly string _filePath;
         public readonly Dictionary<string, Keybind> KeybindList = new();

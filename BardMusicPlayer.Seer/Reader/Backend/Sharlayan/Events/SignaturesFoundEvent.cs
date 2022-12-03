@@ -8,7 +8,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Events
 {
-    internal class SignaturesFoundEvent : EventArgs
+    internal sealed class SignaturesFoundEvent : EventArgs
     {
         public SignaturesFoundEvent(object sender, Dictionary<string, Signature> signatures, long processingTime)
         {

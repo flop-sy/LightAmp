@@ -13,7 +13,7 @@ using BardMusicPlayer.Seer.Events;
 
 namespace BardMusicPlayer.Seer
 {
-    public partial class BmpSeer
+    public sealed partial class BmpSeer
     {
         private CancellationTokenSource _watcherTokenSource;
 
@@ -33,16 +33,12 @@ namespace BardMusicPlayer.Seer
                 {
                     var processes = Process.GetProcessesByName("ffxiv_dx11");
 
-                    foreach (var game in _games.Values)
+                    foreach (var game in _games.Values.TakeWhile(game => !token.IsCancellationRequested).Where(game =>
+                                 game.Process is null || game.Process.HasExited || !game.Process.Responding ||
+                                 processes.All(process => process.Id != game.Pid)))
                     {
-                        if (token.IsCancellationRequested) break;
-
-                        if (game.Process is null || game.Process.HasExited || !game.Process.Responding ||
-                            processes.All(process => process.Id != game.Pid))
-                        {
-                            _games.TryRemove(game.Pid, out _);
-                            game?.Dispose();
-                        }
+                        _games.TryRemove(game.Pid, out _);
+                        game?.Dispose();
                     }
 
                     foreach (var process in processes)
@@ -79,7 +75,7 @@ namespace BardMusicPlayer.Seer
                     PublishEvent(new SeerExceptionEvent(ex));
                 }
 
-                await Task.Delay(1, token).ContinueWith(tsk => { });
+                await Task.Delay(1, token).ContinueWith(static tsk => { }, token);
             }
         }
 

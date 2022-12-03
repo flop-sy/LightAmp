@@ -9,9 +9,9 @@ using BardMusicPlayer.Seer;
 
 namespace BardMusicPlayer.Grunt
 {
-    public class BmpGrunt
+    public sealed class BmpGrunt
     {
-        private static readonly Lazy<BmpGrunt> LazyInstance = new(() => new BmpGrunt());
+        private static readonly Lazy<BmpGrunt> LazyInstance = new(static () => new BmpGrunt());
 
         internal DalamudServer DalamudServer;
 
@@ -31,8 +31,10 @@ namespace BardMusicPlayer.Grunt
         public void Start()
         {
             if (Started) return;
+
             if (!BmpPigeonhole.Initialized) throw new BmpGruntException("Grunt requires Pigeonhole to be initialized.");
             if (!BmpSeer.Instance.Started) throw new BmpGruntException("Grunt requires Seer to be running.");
+
             DalamudServer = new DalamudServer();
             Started = true;
         }
@@ -43,6 +45,7 @@ namespace BardMusicPlayer.Grunt
         public void Stop()
         {
             if (!Started) return;
+
             DalamudServer?.Dispose();
             DalamudServer = null;
             Started = false;

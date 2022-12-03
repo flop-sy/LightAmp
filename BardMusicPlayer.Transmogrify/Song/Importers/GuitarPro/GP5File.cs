@@ -2,12 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 #endregion
 
 namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 {
-    public class GP5File : GPFile
+    public sealed class GP5File : GPFile
     {
         public RepeatGroup _currentRepeatGroup = new();
         public MidiChannel[] channels;
@@ -49,7 +50,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             header.song = this;
             measureHeaders.Add(header);
             if (header.isRepeatOpen || (_currentRepeatGroup.isClosed && header.repeatAlternatives.Count > 0 &&
-                                        header.repeatAlternatives[0] <= 0)) _currentRepeatGroup = new RepeatGroup();
+                                        header.repeatAlternatives[0] <= 0))
+                _currentRepeatGroup = new RepeatGroup();
+
             _currentRepeatGroup.addMeasureHeader(header);
         }
 
@@ -66,8 +69,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             //VERSION
             version = readVersion();
             versionTuple = readVersionTuple();
-            if (isClipboard())
-                clipboard = readClipboard();
+            if (isClipboard()) clipboard = readClipboard();
 
             //INFORMATION ABOUT THE PIECE
             readInfo();
@@ -76,7 +78,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             pageSetup = readPageSetup();
             tempoName = GPBase.readIntByteSizeString();
             tempo = GPBase.readInt()[0];
-            hideTempo = versionTuple[1] > 0 ? GPBase.readBool()[0] : false;
+            hideTempo = versionTuple[1] > 0 && GPBase.readBool()[0];
             key = (KeySignature)(GPBase.readSignedByte()[0] * 10); //key + 0
 
             GPBase.readInt(); //octave
@@ -102,12 +104,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             - 10-band equalizer. See :meth:`readEqualizer`.*/
 
             var masterEffect = new RSEMasterEffect();
-            if (versionTuple[1] > 0)
-            {
-                masterEffect.volume = GPBase.readInt()[0];
-                GPBase.readInt(); //???
-                masterEffect.equalizer = readEqualizer(11);
-            }
+            if (versionTuple[1] <= 0) return masterEffect;
+
+            masterEffect.volume = GPBase.readInt()[0];
+            GPBase.readInt(); //???
+            masterEffect.equalizer = readEqualizer(11);
 
             return masterEffect;
         }
@@ -159,8 +160,10 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                 Copyright Secured"*
               * pageNumber*/
 
-            var setup = new PageSetup();
-            setup.pageSize = new Point(GPBase.readInt()[0], GPBase.readInt()[0]);
+            var setup = new PageSetup
+            {
+                pageSize = new Point(GPBase.readInt()[0], GPBase.readInt()[0])
+            };
             var l = GPBase.readInt()[0];
             var r = GPBase.readInt()[0];
             var t = GPBase.readInt()[0];
@@ -180,32 +183,33 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             return setup;
         }
 
-        public List<DirectionSign> readDirections()
+        public static List<DirectionSign> readDirections()
         {
             /*
              * Directions is a list of 19 :ref:`ShortInts <short>` each
             pointing at the number of measure.*/
-            var ret_val = new List<DirectionSign>();
-            ret_val.Add(new DirectionSign("Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Double Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Segno", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Segno Segno", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Fine", GPBase.readShort()[0]));
-
-            ret_val.Add(new DirectionSign("Da Capo", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Capo al Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Capo al Double Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Capo al Fine", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno al Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno al Double Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno al Fine", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno Segno", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno Segno al Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno Segno al Double Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Segno Segno al Fine", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Coda", GPBase.readShort()[0]));
-            ret_val.Add(new DirectionSign("Da Double Coda", GPBase.readShort()[0]));
+            var ret_val = new List<DirectionSign>
+            {
+                new("Coda", GPBase.readShort()[0]),
+                new("Double Coda", GPBase.readShort()[0]),
+                new("Segno", GPBase.readShort()[0]),
+                new("Segno Segno", GPBase.readShort()[0]),
+                new("Fine", GPBase.readShort()[0]),
+                new("Da Capo", GPBase.readShort()[0]),
+                new("Da Capo al Coda", GPBase.readShort()[0]),
+                new("Da Capo al Double Coda", GPBase.readShort()[0]),
+                new("Da Capo al Fine", GPBase.readShort()[0]),
+                new("Da Segno", GPBase.readShort()[0]),
+                new("Da Segno al Coda", GPBase.readShort()[0]),
+                new("Da Segno al Double Coda", GPBase.readShort()[0]),
+                new("Da Segno al Fine", GPBase.readShort()[0]),
+                new("Da Segno Segno", GPBase.readShort()[0]),
+                new("Da Segno Segno al Coda", GPBase.readShort()[0]),
+                new("Da Segno Segno al Double Coda", GPBase.readShort()[0]),
+                new("Da Segno Segno al Fine", GPBase.readShort()[0]),
+                new("Da Coda", GPBase.readShort()[0]),
+                new("Da Double Coda", GPBase.readShort()[0])
+            };
 
             return ret_val;
         }
@@ -214,19 +218,18 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         {
             GP4File.Clipboard clipboard;
             if (!isClipboard())
-            {
                 clipboard = null;
-            }
             else
-            {
-                clipboard = new GP4File.Clipboard();
-                clipboard.startMeasure = GPBase.readInt()[0];
-                clipboard.stopMeasure = GPBase.readInt()[0];
-                clipboard.startTrack = GPBase.readInt()[0];
-                clipboard.stopTrack = GPBase.readInt()[0];
-            }
+                clipboard = new GP4File.Clipboard
+                {
+                    startMeasure = GPBase.readInt()[0],
+                    stopMeasure = GPBase.readInt()[0],
+                    startTrack = GPBase.readInt()[0],
+                    stopTrack = GPBase.readInt()[0]
+                };
 
             if (clipboard == null) return null;
+
             clipboard.startBeat = GPBase.readInt()[0];
             clipboard.stopBeat = GPBase.readInt()[0];
             clipboard.subBarCopy = GPBase.readInt()[0] != 0;
@@ -235,7 +238,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         private bool isClipboard()
         {
-            return version.StartsWith("CLIPBOARD");
+            return version.StartsWith("CLIPBOARD", StringComparison.Ordinal);
         }
 
         private string readVersion()
@@ -277,6 +280,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             {
                 cnt++;
                 if (cnt == 0x60) cnt += 0;
+
                 header.start = start;
                 foreach (var track in tracks)
                 {
@@ -353,11 +357,15 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                 beat.status = (BeatStatus)GPBase.readByte()[0];
             else
                 beat.status = BeatStatus.normal;
+
             var duration = readDuration(flags);
             var effect = new NoteEffect();
             if ((flags & 0x02) != 0) beat.effect.chord = readChord(voice.measure.track.strings.Count);
+
             if ((flags & 0x04) != 0) beat.text = readText();
+
             if ((flags & 0x08) != 0) beat.effect = readBeatEffects(effect);
+
             if ((flags & 0x10) != 0)
             {
                 var mixTableChange = readMixTableChange(voice.measure);
@@ -365,26 +373,36 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             }
 
             readNotes(voice.measure.track, beat, duration, effect);
-            var duration2 = !(beat.status == BeatStatus.empty) ? duration.time() : 0;
+            var duration2 = beat.status != BeatStatus.empty ? duration.time() : 0;
 
             //GP5 part
             beat = getBeat(voice, start);
             var flags2 = GPBase.readShort()[0];
             if ((flags2 & 0x0010) != 0) beat.octave = Octave.ottava;
+
             if ((flags2 & 0x0020) != 0) beat.octave = Octave.ottavaBassa;
+
             if ((flags2 & 0x0040) != 0) beat.octave = Octave.quindicesima;
+
             if ((flags2 & 0x0100) != 0) beat.octave = Octave.quindicesimaBassa;
 
-            var display = new BeatDisplay();
-            display.breakBeam = (flags2 & 0x0001) != 0;
-            display.forceBeam = (flags2 & 0x0004) != 0;
-            display.forceBracket = (flags2 & 0x2000) != 0;
-            display.breakSecondaryTuplet = (flags2 & 0x1000) != 0;
+            var display = new BeatDisplay
+            {
+                breakBeam = (flags2 & 0x0001) != 0,
+                forceBeam = (flags2 & 0x0004) != 0,
+                forceBracket = (flags2 & 0x2000) != 0,
+                breakSecondaryTuplet = (flags2 & 0x1000) != 0
+            };
             if ((flags2 & 0x0002) != 0) display.beamDirection = VoiceDirection.down;
+
             if ((flags2 & 0x0008) != 0) display.beamDirection = VoiceDirection.up;
+
             if ((flags2 & 0x0200) != 0) display.tupletBracket = TupletBracket.start;
+
             if ((flags2 & 0x0400) != 0) display.tupletBracket = TupletBracket.end;
+
             if ((flags2 & 0x0800) != 0) display.breakSecondary = GPBase.readByte()[0];
+
             beat.display = display;
 
             return duration2;
@@ -456,6 +474,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             note.effect.accentuatedNote = (flags & 0x40) != 0;
 
             if ((flags & 0x20) != 0) note.type = (NoteType)GPBase.readByte()[0];
+
             if ((flags & 0x10) != 0)
             {
                 var dyn = GPBase.readSignedByte()[0];
@@ -464,13 +483,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             if ((flags & 0x20) != 0)
             {
-                int value;
                 var fret = GPBase.readSignedByte()[0];
-                if (note.type == NoteType.tie)
-                    value = getTiedNoteValue(guitarString.number, track);
-                else
-                    value = fret;
-                note.value = 0 <= value && value < 100 ? value : 0;
+                var value = note.type == NoteType.tie ? getTiedNoteValue(guitarString.number, track) : fret;
+                note.value = value is >= 0 and < 100 ? value : 0;
             }
 
             if ((flags & 0x80) != 0)
@@ -480,6 +495,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             }
 
             if ((flags & 0x01) != 0) note.durationPercent = GPBase.readDouble()[0];
+
             var flags2 = GPBase.readByte()[0];
             note.swapAccidentals = (flags2 & 0x02) != 0;
 
@@ -502,8 +518,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             - Grace note. See :meth:`readGrace`.*/
 
-            var noteEffect = note.effect;
-            if (noteEffect == null) noteEffect = new NoteEffect();
+            var noteEffect = note.effect ?? new NoteEffect();
             var flags1 = GPBase.readSignedByte()[0];
             var flags2 = GPBase.readSignedByte()[0];
 
@@ -514,10 +529,15 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             noteEffect.vibrato = (flags2 & 0x40) != 0 || noteEffect.vibrato;
 
             if ((flags1 & 0x01) != 0) noteEffect.bend = readBend();
+
             if ((flags1 & 0x10) != 0) noteEffect.grace = readGrace();
+
             if ((flags2 & 0x04) != 0) noteEffect.tremoloPicking = readTremoloPicking();
+
             if ((flags2 & 0x08) != 0) noteEffect.slides = readSlides();
+
             if ((flags2 & 0x10) != 0) noteEffect.harmonic = readHarmonic(note);
+
             if ((flags2 & 0x20) != 0) noteEffect.trill = readTrill();
 
             return noteEffect;
@@ -526,24 +546,25 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         private TremoloPickingEffect readTremoloPicking()
         {
             var value = GPBase.readSignedByte()[0];
-            var tp = new TremoloPickingEffect();
-            tp.duration.value = fromTremoloValue(value);
+            var tp = new TremoloPickingEffect
+            {
+                duration =
+                {
+                    value = fromTremoloValue(value)
+                }
+            };
             return tp;
         }
 
         private int fromTremoloValue(sbyte value)
         {
-            switch (value)
+            return value switch
             {
-                case 1:
-                    return Duration.eigth;
-                case 2:
-                    return Duration.sixteenth;
-                case 3:
-                    return Duration.thirtySecond;
-            }
-
-            return 8;
+                1 => Duration.eigth,
+                2 => Duration.sixteenth,
+                3 => Duration.thirtySecond,
+                _ => 8
+            };
         }
 
         private List<SlideType> readSlides()
@@ -619,25 +640,26 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         private TrillEffect readTrill()
         {
-            var trill = new TrillEffect();
-            trill.fret = GPBase.readSignedByte()[0];
-            trill.duration.value = fromTrillPeriod(GPBase.readSignedByte()[0]);
+            var trill = new TrillEffect
+            {
+                fret = GPBase.readSignedByte()[0],
+                duration =
+                {
+                    value = fromTrillPeriod(GPBase.readSignedByte()[0])
+                }
+            };
             return trill;
         }
 
         private int fromTrillPeriod(sbyte period)
         {
-            switch (period)
+            return period switch
             {
-                case 1:
-                    return Duration.sixteenth;
-                case 2:
-                    return Duration.thirtySecond;
-                case 3:
-                    return Duration.sixtyFourth;
-            }
-
-            return Duration.sixteenth;
+                1 => Duration.sixteenth,
+                2 => Duration.thirtySecond,
+                3 => Duration.sixtyFourth,
+                _ => Duration.sixteenth
+            };
         }
 
         private GraceEffect readGrace()
@@ -655,11 +677,13 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
               - *1*: Thirty-second note.
               - *2*: Twenty-fourth note.
               - *3*: Sixteenth note.*/
-            var grace = new GraceEffect();
-            grace.fret = GPBase.readByte()[0];
-            grace.velocity = unpackVelocity(GPBase.readByte()[0]);
-            grace.transition = (GraceEffectTransition)GPBase.readByte()[0];
-            grace.duration = 1 << (7 - GPBase.readByte()[0]);
+            var grace = new GraceEffect
+            {
+                fret = GPBase.readByte()[0],
+                velocity = unpackVelocity(GPBase.readByte()[0]),
+                transition = (GraceEffectTransition)GPBase.readByte()[0],
+                duration = 1 << (7 - GPBase.readByte()[0])
+            };
             var flags = GPBase.readByte()[0];
             grace.isDead = (flags & 0x01) != 0;
 
@@ -687,9 +711,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
               * Value: :ref:`int`. Shows where point is set along *y*-axis.
 
               * Vibrato: :ref:`bool`. */
-            var bendEffect = new BendEffect();
-            bendEffect.type = (BendType)GPBase.readSignedByte()[0];
-            bendEffect.value = GPBase.readInt()[0];
+            var bendEffect = new BendEffect
+            {
+                type = (BendType)GPBase.readSignedByte()[0],
+                value = GPBase.readInt()[0]
+            };
             var pointCount = GPBase.readInt()[0];
             for (var x = 0; x < pointCount; x++)
             {
@@ -708,11 +734,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         {
             for (var measure = track.measures.Count - 1; measure >= 0; measure--)
             for (var voice = track.measures[measure].voices.Count - 1; voice >= 0; voice--)
-                foreach (var beat in track.measures[measure].voices[voice].beats)
-                    if (beat.status != BeatStatus.empty)
-                        foreach (var note in beat.notes)
-                            if (note.str == stringIndex)
-                                return note.value;
+                foreach (var note in track.measures[measure].voices[voice].beats
+                             .Where(static beat => beat.status != BeatStatus.empty).SelectMany(beat =>
+                                 beat.notes.Where(note => note.str == stringIndex)))
+                    return note.value;
+
             return -1;
         }
 
@@ -746,9 +772,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         private WahEffect readWahEffect(sbyte flags)
         {
-            var wah = new WahEffect();
-            wah.display = (flags & 0x80) != 0;
-            wah.state = (WahState)GPBase.readSignedByte()[0];
+            var wah = new WahEffect
+            {
+                display = (flags & 0x80) != 0,
+                state = (WahState)GPBase.readSignedByte()[0]
+            };
             return wah;
         }
 
@@ -765,11 +793,17 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             var flags = GPBase.readSignedByte()[0];
             if (tableChange.volume != null) tableChange.volume.allTracks = (flags & 0x01) != 0;
+
             if (tableChange.balance != null) tableChange.balance.allTracks = (flags & 0x02) != 0;
+
             if (tableChange.chorus != null) tableChange.chorus.allTracks = (flags & 0x04) != 0;
+
             if (tableChange.reverb != null) tableChange.reverb.allTracks = (flags & 0x08) != 0;
+
             if (tableChange.phaser != null) tableChange.phaser.allTracks = (flags & 0x10) != 0;
+
             if (tableChange.tremolo != null) tableChange.tremolo.allTracks = (flags & 0x20) != 0;
+
             tableChange.useRSE = (flags & 0x40) != 0;
 
             return flags;
@@ -795,32 +829,42 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             }
 
             if (volume >= 0) tableChange.volume = new MixTableItem(volume);
+
             if (balance >= 0) tableChange.balance = new MixTableItem(balance);
+
             if (chorus >= 0) tableChange.chorus = new MixTableItem(chorus);
+
             if (reverb >= 0) tableChange.reverb = new MixTableItem(reverb);
+
             if (phaser >= 0) tableChange.phaser = new MixTableItem(phaser);
+
             if (tremolo >= 0) tableChange.tremolo = new MixTableItem(tremolo);
-            if (tempo >= 0)
-            {
-                tableChange.tempo = new MixTableItem(tempo);
-                tableChange.tempoName = tempoName;
-                measure.tempo().value = tempo;
-            }
+
+            if (tempo < 0) return;
+
+            tableChange.tempo = new MixTableItem(tempo);
+            tableChange.tempoName = tempoName;
+            measure.tempo().value = tempo;
         }
 
         private void readMixTableChangeDurations(MixTableChange tableChange)
         {
             if (tableChange.volume != null) tableChange.volume.duration = GPBase.readSignedByte()[0];
+
             if (tableChange.balance != null) tableChange.balance.duration = GPBase.readSignedByte()[0];
+
             if (tableChange.chorus != null) tableChange.chorus.duration = GPBase.readSignedByte()[0];
+
             if (tableChange.reverb != null) tableChange.reverb.duration = GPBase.readSignedByte()[0];
+
             if (tableChange.phaser != null) tableChange.phaser.duration = GPBase.readSignedByte()[0];
+
             if (tableChange.tremolo != null) tableChange.tremolo.duration = GPBase.readSignedByte()[0];
-            if (tableChange.tempo != null)
-            {
-                tableChange.tempo.duration = GPBase.readSignedByte()[0];
-                tableChange.hideTempo = versionTuple[1] > 0 && GPBase.readBool()[0];
-            }
+
+            if (tableChange.tempo == null) return;
+
+            tableChange.tempo.duration = GPBase.readSignedByte()[0];
+            tableChange.hideTempo = versionTuple[1] > 0 && GPBase.readBool()[0];
         }
 
         private BeatEffect readBeatEffects(NoteEffect effect)
@@ -861,11 +905,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             if ((flags2 & 0x04) != 0) beatEffect.tremoloBar = readTremoloBar();
 
             if ((flags1 & 0x40) != 0) beatEffect.stroke = readBeatStroke();
-            if ((flags2 & 0x02) != 0)
-            {
-                var direction = GPBase.readSignedByte()[0];
-                beatEffect.pickStroke = (BeatStrokeDirection)direction;
-            }
+
+            if ((flags2 & 0x02) == 0) return beatEffect;
+
+            var direction = GPBase.readSignedByte()[0];
+            beatEffect.pickStroke = (BeatStrokeDirection)direction;
 
             return beatEffect;
         }
@@ -875,10 +919,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             BeatStroke ret_val;
             var strokeDown = GPBase.readSignedByte()[0];
             var strokeUp = GPBase.readSignedByte()[0];
-            if (strokeUp > 0)
-                ret_val = new BeatStroke(BeatStrokeDirection.up, toStrokeValue(strokeUp), 0.0f);
-            else
-                ret_val = new BeatStroke(BeatStrokeDirection.down, toStrokeValue(strokeDown), 0.0f);
+            ret_val = strokeUp > 0
+                ? new BeatStroke(BeatStrokeDirection.up, toStrokeValue(strokeUp), 0.0f)
+                : new BeatStroke(BeatStrokeDirection.down, toStrokeValue(strokeDown), 0.0f);
 
             return ret_val.swapDirection();
         }
@@ -895,16 +938,16 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             - *4*: sixteenth
             - *5*: eighth
             - *6*: quarter*/
-            switch (value)
+            return value switch
             {
-                case 1: return Duration.hundredTwentyEigth;
-                case 2: return Duration.sixtyFourth;
-                case 3: return Duration.thirtySecond;
-                case 4: return Duration.sixteenth;
-                case 5: return Duration.eigth;
-                case 6: return Duration.quarter;
-                default: return Duration.sixtyFourth;
-            }
+                1 => Duration.hundredTwentyEigth,
+                2 => Duration.sixtyFourth,
+                3 => Duration.thirtySecond,
+                4 => Duration.sixteenth,
+                5 => Duration.eigth,
+                6 => Duration.quarter,
+                _ => Duration.sixtyFourth
+            };
         }
 
         private BendEffect readTremoloBar()
@@ -914,21 +957,24 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         private BeatText readText()
         {
-            var text = new BeatText();
-            text.value = GPBase.readIntByteSizeString();
+            var text = new BeatText
+            {
+                value = GPBase.readIntByteSizeString()
+            };
             return text;
         }
 
         private Chord readChord(int stringCount)
         {
-            var chord = new Chord(stringCount);
-            chord.newFormat = GPBase.readBool()[0];
+            var chord = new Chord(stringCount)
+            {
+                newFormat = GPBase.readBool()[0]
+            };
             if (!chord.newFormat)
                 readOldChord(chord);
             else
                 readNewChord(chord);
-            if (chord.notes().Length > 0) return chord;
-            return null;
+            return chord.notes().Length > 0 ? chord : null;
         }
 
 
@@ -951,12 +997,13 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             chord.name = GPBase.readIntByteSizeString();
             chord.firstFret = GPBase.readInt()[0];
-            if (chord.firstFret > 0)
-                for (var i = 0; i < 6; i++)
-                {
-                    var fret = GPBase.readInt()[0];
-                    if (i < chord.strings.Length) chord.strings[i] = fret;
-                }
+            if (chord.firstFret <= 0) return;
+
+            for (var i = 0; i < 6; i++)
+            {
+                var fret = GPBase.readInt()[0];
+                if (i < chord.strings.Length) chord.strings[i] = fret;
+            }
         }
 
         private void readNewChord(Chord chord)
@@ -1075,47 +1122,48 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             If flag at *0x20* is true, the tuplet is read.*/
 
-            var duration = new Duration();
-            duration.value = 1 << (GPBase.readSignedByte()[0] + 2);
-            duration.isDotted = (flags & 0x01) != 0;
-            if ((flags & 0x20) != 0)
+            var duration = new Duration
             {
-                var iTuplet = GPBase.readInt()[0];
-                switch (iTuplet)
-                {
-                    case 3:
-                        duration.tuplet.enters = 3;
-                        duration.tuplet.times = 2;
-                        break;
-                    case 5:
-                        duration.tuplet.enters = 5;
-                        duration.tuplet.times = 4;
-                        break;
-                    case 6:
-                        duration.tuplet.enters = 6;
-                        duration.tuplet.times = 4;
-                        break;
-                    case 7:
-                        duration.tuplet.enters = 7;
-                        duration.tuplet.times = 4;
-                        break;
-                    case 9:
-                        duration.tuplet.enters = 9;
-                        duration.tuplet.times = 8;
-                        break;
-                    case 10:
-                        duration.tuplet.enters = 10;
-                        duration.tuplet.times = 8;
-                        break;
-                    case 11:
-                        duration.tuplet.enters = 11;
-                        duration.tuplet.times = 8;
-                        break;
-                    case 12:
-                        duration.tuplet.enters = 12;
-                        duration.tuplet.times = 8;
-                        break;
-                }
+                value = 1 << (GPBase.readSignedByte()[0] + 2),
+                isDotted = (flags & 0x01) != 0
+            };
+            if ((flags & 0x20) == 0) return duration;
+
+            var iTuplet = GPBase.readInt()[0];
+            switch (iTuplet)
+            {
+                case 3:
+                    duration.tuplet.enters = 3;
+                    duration.tuplet.times = 2;
+                    break;
+                case 5:
+                    duration.tuplet.enters = 5;
+                    duration.tuplet.times = 4;
+                    break;
+                case 6:
+                    duration.tuplet.enters = 6;
+                    duration.tuplet.times = 4;
+                    break;
+                case 7:
+                    duration.tuplet.enters = 7;
+                    duration.tuplet.times = 4;
+                    break;
+                case 9:
+                    duration.tuplet.enters = 9;
+                    duration.tuplet.times = 8;
+                    break;
+                case 10:
+                    duration.tuplet.enters = 10;
+                    duration.tuplet.times = 8;
+                    break;
+                case 11:
+                    duration.tuplet.enters = 11;
+                    duration.tuplet.times = 8;
+                    break;
+                case 12:
+                    duration.tuplet.enters = 12;
+                    duration.tuplet.times = 8;
+                    break;
             }
 
             return duration;
@@ -1126,13 +1174,16 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             for (var x = voice.beats.Count - 1; x >= 0; x--)
                 if (voice.beats[x].start == start)
                     return voice.beats[x];
-            var newBeat = new Beat(voice);
-            newBeat.start = start;
+
+            var newBeat = new Beat(voice)
+            {
+                start = start
+            };
             voice.beats.Add(newBeat);
             return newBeat;
         }
 
-        private void readTracks(int trackCount, MidiChannel[] channels)
+        private void readTracks(int trackCount, IReadOnlyList<MidiChannel> channels)
         {
             /*Tracks in Guitar Pro 5 have almost the same format as in Guitar
             Pro 3. If it's Guitar Pro 5.0 then 2 blank bytes are read after
@@ -1150,7 +1201,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
 
 
-        private void readTrack(Track track, MidiChannel[] channels)
+        private void readTrack(Track track, IReadOnlyList<MidiChannel> channels)
         {
             /*
              * If it's Guitar Pro 5.0 format and track is first then one blank
@@ -1234,37 +1285,41 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             for (var i = 0; i < 7; i++)
             {
                 var iTuning = GPBase.readInt()[0];
-                if (stringCount > i)
-                {
-                    var oString = new GuitarString(i + 1, iTuning);
-                    track.strings.Add(oString);
-                }
+                if (stringCount <= i) continue;
+
+                var oString = new GuitarString(i + 1, iTuning);
+                track.strings.Add(oString);
             }
 
             track.port = GPBase.readInt()[0];
             track.channel = readChannel(channels);
             if (track.channel.channel == 9) track.isPercussionTrack = true;
+
             track.fretCount = GPBase.readInt()[0];
             track.offset = GPBase.readInt()[0];
             track.color = readColor();
 
             //GP5 part
             var flags2 = GPBase.readShort()[0];
-            track.settings = new TrackSettings();
-            track.settings.tablature = (flags2 & 0x0001) != 0;
-            track.settings.notation = (flags2 & 0x0002) != 0;
-            track.settings.diagramsAreBelow = (flags2 & 0x0004) != 0;
-            track.settings.showRyhthm = (flags2 & 0x0008) != 0;
-            track.settings.forceHorizontal = (flags2 & 0x0010) != 0;
-            track.settings.forceChannels = (flags2 & 0x0020) != 0;
-            track.settings.diagramList = (flags2 & 0x0040) != 0;
-            track.settings.diagramsInScore = (flags2 & 0x0080) != 0;
-            track.settings.autoLetRing = (flags2 & 0x0200) != 0;
-            track.settings.autoBrush = (flags2 & 0x0400) != 0;
-            track.settings.extendRhythmic = (flags2 & 0x0800) != 0;
+            track.settings = new TrackSettings
+            {
+                tablature = (flags2 & 0x0001) != 0,
+                notation = (flags2 & 0x0002) != 0,
+                diagramsAreBelow = (flags2 & 0x0004) != 0,
+                showRyhthm = (flags2 & 0x0008) != 0,
+                forceHorizontal = (flags2 & 0x0010) != 0,
+                forceChannels = (flags2 & 0x0020) != 0,
+                diagramList = (flags2 & 0x0040) != 0,
+                diagramsInScore = (flags2 & 0x0080) != 0,
+                autoLetRing = (flags2 & 0x0200) != 0,
+                autoBrush = (flags2 & 0x0400) != 0,
+                extendRhythmic = (flags2 & 0x0800) != 0
+            };
 
-            track.rse = new TrackRSE();
-            track.rse.autoAccentuation = (Accentuation)GPBase.readByte()[0];
+            track.rse = new TrackRSE
+            {
+                autoAccentuation = (Accentuation)GPBase.readByte()[0]
+            };
             track.channel.bank = GPBase.readByte()[0];
             readTrackRSE(track.rse);
         }
@@ -1293,10 +1348,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         private RSEInstrument readRSEInstrument()
         {
-            var instrument = new RSEInstrument();
-            instrument.instrument = GPBase.readInt()[0];
-            instrument.unknown = GPBase.readInt()[0];
-            instrument.soundBank = GPBase.readInt()[0];
+            var instrument = new RSEInstrument
+            {
+                instrument = GPBase.readInt()[0],
+                unknown = GPBase.readInt()[0],
+                soundBank = GPBase.readInt()[0]
+            };
             if (versionTuple[1] == 0)
             {
                 instrument.effectNumber = GPBase.readShort()[0];
@@ -1313,19 +1370,17 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         public void readRSEInstrumentEffect(RSEInstrument rseInstrument)
         {
-            if (versionTuple[1] > 0)
-            {
-                var effect = GPBase.readIntByteSizeString();
-                var effectCategory = GPBase.readIntByteSizeString();
-                if (rseInstrument != null)
-                {
-                    rseInstrument.effect = effect;
-                    rseInstrument.effectCategory = effectCategory;
-                }
-            }
+            if (versionTuple[1] <= 0) return;
+
+            var effect = GPBase.readIntByteSizeString();
+            var effectCategory = GPBase.readIntByteSizeString();
+            if (rseInstrument == null) return;
+
+            rseInstrument.effect = effect;
+            rseInstrument.effectCategory = effectCategory;
         }
 
-        private MidiChannel readChannel(MidiChannel[] channels)
+        private MidiChannel readChannel(IReadOnlyList<MidiChannel> channels)
         {
             /*Read MIDI channel.
            
@@ -1335,17 +1390,17 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var index = GPBase.readInt()[0] - 1;
             var trackChannel = new MidiChannel();
             var effectChannel = GPBase.readInt()[0] - 1;
-            if (0 <= index && index < channels.Length)
-            {
-                trackChannel = channels[index];
-                if (trackChannel.instrument < 0) trackChannel.instrument = 0;
-                if (!trackChannel.isPercussionChannel()) trackChannel.effectChannel = effectChannel;
-            }
+            if (0 > index || index >= channels.Count) return trackChannel;
+
+            trackChannel = channels[index];
+            if (trackChannel.instrument < 0) trackChannel.instrument = 0;
+
+            if (!trackChannel.isPercussionChannel()) trackChannel.effectChannel = effectChannel;
 
             return trackChannel;
         }
 
-        private void readMeasureHeaders(int measureCount, List<DirectionSign> directions)
+        private void readMeasureHeaders(int measureCount, IReadOnlyList<DirectionSign> directions)
         {
             /*Read measure headers.
 
@@ -1362,7 +1417,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             }
 
             //GP5 Add-on:
-            var fromPosition = 5; //Index of first "Da .." direction sign. (Da Capo etc.)
+            const int fromPosition = 5; //Index of first "Da .." direction sign. (Da Capo etc.)
             for (var x = 0; x < fromPosition; x++)
                 if (directions[x].measure > -1)
                     measureHeaders[directions[x].measure - 1].direction.Add(directions[x].name);
@@ -1418,23 +1473,32 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             //GP4 part of this function
             var flags = GPBase.readByte()[0];
-            var header = new MeasureHeader();
-            header.number = number;
-            header.start = 0;
-            header.tempo.value = tempo;
-            header.tripletFeel = _tripletFeel;
-            if ((flags & 0x01) != 0)
-                header.timeSignature.numerator = GPBase.readSignedByte()[0];
-            else
-                header.timeSignature.numerator = previous.timeSignature.numerator;
-            if ((flags & 0x02) != 0)
-                header.timeSignature.denominator.value = GPBase.readSignedByte()[0];
-            else
-                header.timeSignature.denominator.value = previous.timeSignature.denominator.value;
-            header.isRepeatOpen = (flags & 0x04) != 0;
+            var header = new MeasureHeader
+            {
+                number = number,
+                start = 0,
+                tempo =
+                {
+                    value = tempo
+                },
+                tripletFeel = _tripletFeel,
+                timeSignature =
+                {
+                    numerator = (flags & 0x01) != 0 ? GPBase.readSignedByte()[0] : previous.timeSignature.numerator,
+                    denominator =
+                    {
+                        value = (flags & 0x02) != 0
+                            ? GPBase.readSignedByte()[0]
+                            : previous.timeSignature.denominator.value
+                    }
+                },
+                isRepeatOpen = (flags & 0x04) != 0
+            };
             if ((flags & 0x08) != 0) header.repeatClose = GPBase.readSignedByte()[0];
+
             if ((flags & 0x10) != 0) header.repeatAlternatives.Add(readRepeatAlternative(measureHeaders));
             if ((flags & 0x20) != 0) header.marker = readMarker(header);
+
             if ((flags & 0x40) != 0)
             {
                 var root = GPBase.readSignedByte()[0];
@@ -1451,20 +1515,21 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             //GP5 part
             if (header.repeatClose > -1) header.repeatClose -= 1;
-            if ((flags & 0x03) != 0)
-                header.timeSignature.beams = byteArrayToIntArray(GPBase.readByte(4));
-            else
-                header.timeSignature.beams = previous.timeSignature.beams;
+
+            header.timeSignature.beams = (flags & 0x03) != 0
+                ? byteArrayToIntArray(GPBase.readByte(4))
+                : previous.timeSignature.beams;
             if ((flags & 0x10) == 0) GPBase.skip(1);
             header.tripletFeel = (TripletFeel)GPBase.readByte()[0];
 
             return header;
         }
 
-        private int[] byteArrayToIntArray(byte[] arr)
+        private int[] byteArrayToIntArray(IReadOnlyList<byte> arr)
         {
-            var ret_val = new int[arr.Length];
-            for (var x = 0; x < arr.Length; x++) ret_val[x] = arr[x];
+            var ret_val = new int[arr.Count];
+            for (var x = 0; x < arr.Count; x++) ret_val[x] = arr[x];
+
             return ret_val;
         }
 
@@ -1475,10 +1540,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         private Marker readMarker(MeasureHeader header)
         {
-            var marker = new Marker();
-            marker.title = GPBase.readIntByteSizeString();
-            marker.color = readColor();
-            marker.measureHeader = header;
+            var marker = new Marker
+            {
+                title = GPBase.readIntByteSizeString(),
+                color = readColor(),
+                measureHeader = header
+            };
 
             return marker;
         }
@@ -1520,11 +1587,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var _channels = new MidiChannel[64];
             for (var i = 0; i < 64; i++)
             {
-                var newChannel = new MidiChannel();
-                newChannel.channel = i;
-                newChannel.effectChannel = i;
+                var newChannel = new MidiChannel
+                {
+                    channel = i,
+                    effectChannel = i
+                };
                 var instrument = GPBase.readInt()[0];
                 if (newChannel.isPercussionChannel() && instrument == -1) instrument = 0;
+
                 newChannel.instrument = instrument;
                 newChannel.volume = toChannelShort(GPBase.readByte()[0]);
                 newChannel.balance = toChannelShort(GPBase.readByte()[0]);
@@ -1555,12 +1625,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             constists of number of starting measure encoded in :ref:`int`
             and :ref:`int-size-string` holding text of the lyric line.*/
 
-            var _lyrics = new Lyrics();
-            _lyrics.trackChoice = GPBase.readInt()[0];
-            for (var x = 0; x < _lyrics.lines.Length; x++)
+            var _lyrics = new Lyrics
             {
-                _lyrics.lines[x].startingMeasure = GPBase.readInt()[0];
-                _lyrics.lines[x].lyrics = GPBase.readIntSizeString();
+                trackChoice = GPBase.readInt()[0]
+            };
+            foreach (var t in _lyrics.lines)
+            {
+                t.startingMeasure = GPBase.readInt()[0];
+                t.lyrics = GPBase.readIntSizeString();
             }
 
             lyrics.Add(_lyrics);

@@ -1,45 +1,15 @@
-#region License
-
-/* Copyright (c) 2006 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 using System.Diagnostics;
 
+#endregion
+
 namespace Sanford.Multimedia.Midi
 {
     /// <summary>
-    /// Represents a collection of MidiEvents and a MIDI track within a 
-    /// Sequence.
+    ///     Represents a collection of MidiEvents and a MIDI track within a
+    ///     Sequence.
     /// </summary>
     public sealed partial class Track
     {
@@ -49,22 +19,19 @@ namespace Sanford.Multimedia.Midi
 
         // The number of MidiEvents in the Track. Will always be at least 1
         // because the Track will always have an end of track message.
-        private int count = 1;
 
         // The number of ticks to offset the end of track message.
-        private int endOfTrackOffset = 0;
+        private int endOfTrackOffset;
 
         // The first MidiEvent in the Track.
-        private MidiEvent head = null;
+        private MidiEvent head;
 
         // The last MidiEvent in the Track, not including the end of track
         // message.
-        private MidiEvent tail = null;
+        private MidiEvent tail;
 
         // The end of track MIDI event.
-        private MidiEvent endOfTrackMidiEvent;
-
-		private bool listen = true;
+        private readonly MidiEvent endOfTrackMidiEvent;
 
         #endregion
 
@@ -80,71 +47,60 @@ namespace Sanford.Multimedia.Midi
         #region Methods
 
         /// <summary>
-        /// Inserts an IMidiMessage at the specified position in absolute ticks.
+        ///     Inserts an IMidiMessage at the specified position in absolute ticks.
         /// </summary>
         /// <param name="position">
-        /// The position in the Track in absolute ticks in which to insert the
-        /// IMidiMessage.
+        ///     The position in the Track in absolute ticks in which to insert the
+        ///     IMidiMessage.
         /// </param>
         /// <param name="message">
-        /// The IMidiMessage to insert.
+        ///     The IMidiMessage to insert.
         /// </param>
         public void Insert(int position, IMidiMessage message)
         {
             #region Require
 
-            if(position < 0)
-            {
-                throw new ArgumentOutOfRangeException("position", position,
+            if (position < 0)
+                throw new ArgumentOutOfRangeException(nameof(position), position,
                     "IMidiMessage position out of range.");
-            }
-            else if(message == null)
-            {
-                throw new ArgumentNullException("message");
-            }
 
-            #endregion            
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
-            MidiEvent newMidiEvent = new MidiEvent(this, position, message);
+            #endregion
 
-            if(head == null)
+            var newMidiEvent = new MidiEvent(this, position, message);
+
+            if (head == null)
             {
                 head = newMidiEvent;
                 tail = newMidiEvent;
             }
-            else if(position >= tail.AbsoluteTicks)
+            else if (position >= tail.AbsoluteTicks)
             {
                 newMidiEvent.Previous = tail;
                 tail.Next = newMidiEvent;
-                tail = newMidiEvent;  
+                tail = newMidiEvent;
                 endOfTrackMidiEvent.SetAbsoluteTicks(Length);
                 endOfTrackMidiEvent.Previous = tail;
             }
             else
             {
-                MidiEvent current = head;
+                var current = head;
 
-                while(current.AbsoluteTicks < position)
-                {
-                    current = current.Next;
-                }
+                while (current.AbsoluteTicks < position) current = current.Next;
 
                 newMidiEvent.Next = current;
                 newMidiEvent.Previous = current.Previous;
 
-                if(current.Previous != null)
-                {
+                if (current.Previous != null)
                     current.Previous.Next = newMidiEvent;
-                }
                 else
-                {
                     head = newMidiEvent;
-                }
 
                 current.Previous = newMidiEvent;
             }
 
-            count++;
+            Count++;
 
             #region Invariant
 
@@ -154,14 +110,14 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Clears all of the MidiEvents, with the exception of the end of track
-        /// message, from the Track.
+        ///     Clears all of the MidiEvents, with the exception of the end of track
+        ///     message, from the Track.
         /// </summary>
         public void Clear()
         {
             head = tail = null;
 
-            count = 1;
+            Count = 1;
 
             #region Invariant
 
@@ -171,32 +127,24 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Merges the specified Track with the current Track.
+        ///     Merges the specified Track with the current Track.
         /// </summary>
         /// <param name="trk">
-        /// The Track to merge with.
+        ///     The Track to merge with.
         /// </param>
         public void Merge(Track trk)
         {
             #region Require
 
-            if(trk == null)
-            {
-                throw new ArgumentNullException("trk");
-            }
+            if (trk == null) throw new ArgumentNullException(nameof(trk));
 
             #endregion
 
             #region Guard
 
-            if(trk == this)
-            {
-                return;
-            }
-            else if(trk.Count == 1)
-            {
-                return;
-            }
+            if (trk == this) return;
+
+            if (trk.Count == 1) return;
 
             #endregion
 
@@ -204,15 +152,15 @@ namespace Sanford.Multimedia.Midi
             int oldCount = Count;
 #endif
 
-            count += trk.Count - 1;
+            Count += trk.Count - 1;
 
-            MidiEvent a = head;
-            MidiEvent b = trk.head;
+            var a = head;
+            var b = trk.head;
             MidiEvent current = null;
 
             Debug.Assert(b != null);
 
-            if(a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
+            if (a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
             {
                 current = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
                 a = a.Next;
@@ -225,40 +173,47 @@ namespace Sanford.Multimedia.Midi
 
             head = current;
 
-            while(a != null && b != null)
+            while (a != null && b != null)
             {
-                while(a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
+                while (a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
                 {
-                    current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
-                    current.Next.Previous = current;
+                    current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage)
+                    {
+                        Previous = current
+                    };
                     current = current.Next;
                     a = a.Next;
                 }
 
-                if(a != null)
+                if (a == null) continue;
+
+                while (b != null && b.AbsoluteTicks <= a.AbsoluteTicks)
                 {
-                    while(b != null && b.AbsoluteTicks <= a.AbsoluteTicks)
+                    current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage)
                     {
-                        current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
-                        current.Next.Previous = current;
-                        current = current.Next;
-                        b = b.Next;
-                    }
+                        Previous = current
+                    };
+                    current = current.Next;
+                    b = b.Next;
                 }
             }
 
-            while(a != null)
+            while (a != null)
             {
-                current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
-                current.Next.Previous = current;
+                current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage)
+                {
+                    Previous = current
+                };
                 current = current.Next;
                 a = a.Next;
             }
 
-            while(b != null)
+            while (b != null)
             {
-                current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
-                current.Next.Previous = current;
+                current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage)
+                {
+                    Previous = current
+                };
                 current = current.Next;
                 b = b.Next;
             }
@@ -269,9 +224,11 @@ namespace Sanford.Multimedia.Midi
             endOfTrackMidiEvent.Previous = tail;
 
             #region Ensure
+
 #if(DEBUG)
             Debug.Assert(count == oldCount + trk.Count - 1);
 #endif
+
             #endregion
 
             #region Invariant
@@ -282,29 +239,24 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Removes the MidiEvent at the specified index.
+        ///     Removes the MidiEvent at the specified index.
         /// </summary>
         /// <param name="index">
-        /// The index into the Track at which to remove the MidiEvent.
+        ///     The index into the Track at which to remove the MidiEvent.
         /// </param>
         public void RemoveAt(int index)
         {
             #region Require
 
-            if(index < 0)
-            {
-                throw new ArgumentOutOfRangeException("index", index, "Track index out of range.");
-            }
-            else if(index == Count - 1)
-            {
-                throw new ArgumentException("Cannot remove the end of track event.", "index");
-            }
+            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Track index out of range.");
+
+            if (index == Count - 1) throw new ArgumentException("Cannot remove the end of track event.", nameof(index));
 
             #endregion
 
-            MidiEvent current = GetMidiEvent(index);
+            var current = GetMidiEvent(index);
 
-            if(current.Previous != null)
+            if (current.Previous != null)
             {
                 current.Previous.Next = current.Next;
             }
@@ -315,7 +267,7 @@ namespace Sanford.Multimedia.Midi
                 head = head.Next;
             }
 
-            if(current.Next != null)
+            if (current.Next != null)
             {
                 current.Next.Previous = current.Previous;
             }
@@ -331,7 +283,7 @@ namespace Sanford.Multimedia.Midi
 
             current.Next = current.Previous = null;
 
-            count--;
+            Count--;
 
             #region Invariant
 
@@ -341,51 +293,43 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Gets the MidiEvent at the specified index.
+        ///     Gets the MidiEvent at the specified index.
         /// </summary>
         /// <param name="index">
-        /// The index of the MidiEvent to get.
+        ///     The index of the MidiEvent to get.
         /// </param>
         /// <returns>
-        /// The MidiEvent at the specified index.
+        ///     The MidiEvent at the specified index.
         /// </returns>
         public MidiEvent GetMidiEvent(int index)
         {
             #region Require
 
-            if(index < 0 || index >= Count)
-            {
-                throw new ArgumentOutOfRangeException("index", index,
+            if (index < 0 || index >= Count)
+                throw new ArgumentOutOfRangeException(nameof(index), index,
                     "Track index out of range.");
-            }
 
             #endregion
 
             MidiEvent result;
 
-            if(index == Count - 1)
+            if (index == Count - 1)
             {
                 result = endOfTrackMidiEvent;
             }
             else
             {
-                if(index < Count / 2)
+                if (index < Count / 2)
                 {
                     result = head;
 
-                    for(int i = 0; i < index; i++)
-                    {
-                        result = result.Next;
-                    }
+                    for (var i = 0; i < index; i++) result = result.Next;
                 }
                 else
                 {
                     result = tail;
 
-                    for(int i = Count - 2; i > index; i--)
-                    {
-                        result = result.Previous;
-                    }
+                    for (var i = Count - 2; i > index; i--) result = result.Previous;
                 }
             }
 
@@ -419,79 +363,55 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(e.Owner != this)
-            {
-                throw new ArgumentException("MidiEvent does not belong to this Track.");
-            }
-            else if(newPosition < 0)
-            {
-                throw new ArgumentOutOfRangeException("newPosition");
-            }
-            else if(e == endOfTrackMidiEvent)
-            {
+            if (e.Owner != this) throw new ArgumentException("MidiEvent does not belong to this Track.");
+
+            if (newPosition < 0) throw new ArgumentOutOfRangeException(nameof(newPosition));
+
+            if (e == endOfTrackMidiEvent)
                 throw new InvalidOperationException(
                     "Cannot move end of track message. Use the EndOfTrackOffset property instead.");
-            }
 
             #endregion
 
-            MidiEvent previous = e.Previous;
-            MidiEvent next = e.Next;
+            var previous = e.Previous;
+            var next = e.Next;
 
-            if(e.Previous != null && e.Previous.AbsoluteTicks > newPosition)
+            if (e.Previous != null && e.Previous.AbsoluteTicks > newPosition)
             {
                 e.Previous.Next = e.Next;
 
-                if(e.Next != null)
-                {
-                    e.Next.Previous = e.Previous;
-                }
+                if (e.Next != null) e.Next.Previous = e.Previous;
 
-                while(previous != null && previous.AbsoluteTicks > newPosition)
+                while (previous != null && previous.AbsoluteTicks > newPosition)
                 {
                     next = previous;
                     previous = previous.Previous;
-                }                
+                }
             }
-            else if(e.Next != null && e.Next.AbsoluteTicks < newPosition)
+            else if (e.Next != null && e.Next.AbsoluteTicks < newPosition)
             {
                 e.Next.Previous = e.Previous;
 
-                if(e.Previous != null)
-                {
-                    e.Previous.Next = e.Next;
-                }
+                if (e.Previous != null) e.Previous.Next = e.Next;
 
-                while(next != null && next.AbsoluteTicks < newPosition)
+                while (next != null && next.AbsoluteTicks < newPosition)
                 {
                     previous = next;
                     next = next.Next;
                 }
             }
 
-            if(previous != null)
-            {
-                previous.Next = e;
-            }
+            if (previous != null) previous.Next = e;
 
-            if(next != null)
-            {
-                next.Previous = e;
-            }
+            if (next != null) next.Previous = e;
 
             e.Previous = previous;
             e.Next = next;
             e.SetAbsoluteTicks(newPosition);
 
-            if(newPosition < head.AbsoluteTicks)
-            {
-                head = e;
-            }
+            if (newPosition < head.AbsoluteTicks) head = e;
 
-            if(newPosition > tail.AbsoluteTicks)
-            {
-                tail = e;                
-            }
+            if (newPosition > tail.AbsoluteTicks) tail = e;
 
             endOfTrackMidiEvent.SetAbsoluteTicks(Length);
             endOfTrackMidiEvent.Previous = tail;
@@ -506,24 +426,21 @@ namespace Sanford.Multimedia.Midi
         [Conditional("MIDIDEBUG")]
         private void AssertValid()
         {
-            int c = 1;
-            MidiEvent current = head;
-            int ticks = 1;
+            var c = 1;
+            var current = head;
+            var ticks = 1;
 
-            while(current != null)
+            while (current != null)
             {
                 ticks += current.DeltaTicks;
 
-                if(current.Previous != null)
+                if (current.Previous != null)
                 {
                     Debug.Assert(current.AbsoluteTicks >= current.Previous.AbsoluteTicks);
                     Debug.Assert(current.DeltaTicks == current.AbsoluteTicks - current.Previous.AbsoluteTicks);
                 }
 
-                if(current.Next == null)
-                {
-                    Debug.Assert(tail == current);
-                }
+                if (current.Next == null) Debug.Assert(tail == current);
 
                 current = current.Next;
 
@@ -541,52 +458,38 @@ namespace Sanford.Multimedia.Midi
         #region Properties
 
         /// <summary>
-        /// Gets the number of MidiEvents in the Track.
+        ///     Gets the number of MidiEvents in the Track.
         /// </summary>
-        public int Count
-        {
-            get
-            {
-                return count;
-            }
-        }
+        public int Count { get; private set; } = 1;
 
         /// <summary>
-        /// Gets the length of the Track in ticks.
+        ///     Gets the length of the Track in ticks.
         /// </summary>
         public int Length
         {
             get
             {
-                int length = EndOfTrackOffset;
+                var length = EndOfTrackOffset;
 
-                if(tail != null)
-                {
-                    length += tail.AbsoluteTicks;
-                }
+                if (tail != null) length += tail.AbsoluteTicks;
 
                 return length + 1;
             }
         }
 
         /// <summary>
-        /// Gets or sets the end of track meta message position offset.
+        ///     Gets or sets the end of track meta message position offset.
         /// </summary>
         public int EndOfTrackOffset
         {
-            get
-            {
-                return endOfTrackOffset;
-            }
+            get { return endOfTrackOffset; }
             set
             {
                 #region Require
 
-                if(value < 0)
-                {
+                if (value < 0)
                     throw new ArgumentOutOfRangeException("EndOfTrackOffset", value,
                         "End of track offset out of range.");
-                }
 
                 #endregion
 
@@ -597,24 +500,11 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Gets an object that can be used to synchronize access to the Track.
+        ///     Gets an object that can be used to synchronize access to the Track.
         /// </summary>
-        public object SyncRoot
-        {
-            get
-            {
-                return this;
-            }
-        }
+        public object SyncRoot => this;
 
-		public bool Listen {
-			set {
-				listen = value;
-			}
-			get {
-				return listen;
-			}
-		}
+        public static bool Listen => true;
 
         #endregion
 

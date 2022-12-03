@@ -36,7 +36,7 @@ using System;
 
 namespace Sanford.Multimedia.Midi.UI
 {
-    public class PianoKeyEventArgs : EventArgs
+    public sealed class PianoKeyEventArgs : EventArgs
     {
         private int noteID;
 
@@ -45,12 +45,6 @@ namespace Sanford.Multimedia.Midi.UI
             this.noteID = noteID;
         }
 
-        public int NoteID
-        {
-            get
-            {
-                return noteID;
-            }
-        }
+        public int NoteID => noteID;
     }
 }

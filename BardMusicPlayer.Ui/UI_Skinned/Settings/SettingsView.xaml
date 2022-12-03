@@ -30,6 +30,7 @@
                 <ColumnDefinition Width="75" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="24" />
+                <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <Rectangle PreviewMouseDown="TitleBar_MouseDown" Grid.Column="0" x:Name="BARDS_TOP_LEFT"
                        HorizontalAlignment="Left" Width="75" Height="23" VerticalAlignment="Top">
@@ -173,10 +174,10 @@
                                       Unchecked="LocalOrchestraBox_Checked" Checked="LocalOrchestraBox_Checked"
                                       ToolTip="{StaticResource LO_ENABLE}" />
                             <CheckBox Grid.Column="1" Grid.Row="2" x:Name="AutoEquipBox"
-                                      Content="Debras Autoequip bards" Unchecked="AutoEquipBox_Checked"
+                                      Content="Auto-Equip Performer(s)" Unchecked="AutoEquipBox_Checked"
                                       Checked="AutoEquipBox_Checked" ToolTip="{StaticResource LO_AUTOEQ}" />
                             <CheckBox Grid.Column="1" Grid.Row="3" x:Name="KeepTrackSettingsBox"
-                                      Content="Thymms I know what I'm doing box"
+                                      Content="Keep Tracks"
                                       Unchecked="KeepTrackSettingsBox_Checked" Checked="KeepTrackSettingsBox_Checked"
                                       ToolTip="{StaticResource LO_KEEPTRACKS}" />
                         </Grid>

@@ -71,10 +71,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         {
             if (other is null)
                 return 1;
+
             var ct = InternalTimestamp.CompareTo(other.InternalTimestamp);
-            if (ct != 0)
-                return ct;
-            return string.Compare(Content, other.Content);
+            return ct != 0 ? ct : string.CompareOrdinal(Content, other.Content);
         }
 
         internal StringBuilder ToString(StringBuilder sb)
@@ -100,7 +99,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
     ///     Represents single line of lyrics with specified speaker.
     ///     Format: <c>"[mm:ss.ff]Spearker: Lyrics"</c>
     /// </summary>
-    public class LineWithSpeaker : Line
+    public sealed class LineWithSpeaker : Line
     {
         private static readonly char[] invalidSpeakerChars = ":".ToCharArray();
 
@@ -135,7 +134,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             get => speaker;
             set
             {
-                value = value ?? "";
+                value ??= "";
                 Helper.CheckString(nameof(value), value, invalidSpeakerChars);
                 speaker = value.Trim();
             }
@@ -161,6 +160,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                     return Lyrics;
                 if (string.IsNullOrEmpty(Lyrics))
                     return Speaker + ":";
+
                 return Speaker + ": " + Lyrics;
             }
             set

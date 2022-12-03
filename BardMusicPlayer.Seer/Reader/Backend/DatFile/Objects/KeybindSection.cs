@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 {
-    internal class KeybindSection : IDisposable
+    internal sealed class KeybindSection : IDisposable
     {
         public byte Type { get; set; }
 

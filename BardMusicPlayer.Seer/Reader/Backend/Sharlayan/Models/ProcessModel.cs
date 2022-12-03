@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models
 {
-    internal class ProcessModel
+    internal sealed class ProcessModel
     {
         public Process Process { get; set; }
 

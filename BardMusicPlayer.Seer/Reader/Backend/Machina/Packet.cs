@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Machina
 {
-    internal partial class Packet : IDisposable
+    internal sealed partial class Packet : IDisposable
     {
         private readonly Dictionary<ulong, uint> _contentId2ActorId = new();
         private readonly MachinaReaderBackend _machinaReader;
@@ -24,12 +24,12 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Machina
 
         private static bool ValidTimeSig(byte timeSig)
         {
-            return timeSig > 1 && timeSig < 8;
+            return timeSig is > 1 and < 8;
         }
 
         private static bool ValidTempo(byte tempo)
         {
-            return tempo > 29 && tempo < 201;
+            return tempo is > 29 and < 201;
         }
 
         ~Packet()

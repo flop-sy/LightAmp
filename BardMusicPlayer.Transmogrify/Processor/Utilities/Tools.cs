@@ -37,9 +37,12 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
             int highClamp = 120, int size = 0)
         {
             if (lowClamp < 12 || highClamp > 120) throw new BmpTransmogrifyException("Clamp out of range.");
+
             var notesDictionary = new Dictionary<int, Dictionary<long, Note>>(size);
             for (var j = 0; j < 5; j++) notesDictionary[j] = new Dictionary<long, Note>();
+
             for (var j = lowClamp; j <= highClamp; j++) notesDictionary[j] = new Dictionary<long, Note>();
+
             return notesDictionary;
         }
 

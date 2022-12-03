@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Quotidian.UtcMilliTime
 {
-    public class NTPEventArgs : EventArgs
+    public sealed class NTPEventArgs : EventArgs
     {
         public NTPEventArgs(string server, long latency, long skew)
         {

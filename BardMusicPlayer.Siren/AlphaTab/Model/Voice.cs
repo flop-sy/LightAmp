@@ -11,14 +11,14 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     ///     A voice represents a group of beats
     ///     that can be played during a bar.
     /// </summary>
-    internal class Voice
+    internal abstract class Voice
     {
         private FastDictionary<int, Beat> _beatLookup;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="Voice" /> class.
         /// </summary>
-        public Voice()
+        protected Voice()
         {
             Beats = new FastList<Beat>();
             IsEmpty = true;
@@ -116,9 +116,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
         internal Beat GetBeatAtDisplayStart(int displayStart)
         {
-            if (_beatLookup.ContainsKey(displayStart)) return _beatLookup[displayStart];
-
-            return null;
+            return _beatLookup.ContainsKey(displayStart) ? _beatLookup[displayStart] : null;
         }
 
         internal void Finish()
@@ -139,7 +137,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                 beat.Index = i;
                 beat.Finish();
 
-                if (beat.GraceType == GraceType.None || beat.GraceType == GraceType.BendGrace)
+                if (beat.GraceType is GraceType.None or GraceType.BendGrace)
                 {
                     beat.DisplayStart = currentDisplayTick;
                     beat.PlaybackStart = currentPlaybackTick;
@@ -161,14 +159,14 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
                         var graceDuration = Duration.Eighth;
                         var stolenDuration = 0;
-                        if (numberOfGraceBeats == 1)
-                            graceDuration = Duration.Eighth;
-                        else if (numberOfGraceBeats == 2)
-                            graceDuration = Duration.Sixteenth;
-                        else
-                            graceDuration = Duration.ThirtySecond;
+                        graceDuration = numberOfGraceBeats switch
+                        {
+                            1 => Duration.Eighth,
+                            2 => Duration.Sixteenth,
+                            _ => Duration.ThirtySecond
+                        };
 
-                        if (nonGrace != null) nonGrace.UpdateDurations();
+                        nonGrace?.UpdateDurations();
 
                         // grace beats have 1/4 size of the non grace beat preceeding them
                         var perGraceDisplayDuration = beat.PreviousBeat == null

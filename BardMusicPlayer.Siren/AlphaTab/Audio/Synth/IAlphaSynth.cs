@@ -99,6 +99,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth
         ///     Loads a soundfont from the given data
         /// </summary>
         /// <param name="data">a byte array to load the data from </param>
+        /// <param name="append"></param>
         void LoadSoundFont(byte[] data, bool append);
 
         /// <summary>

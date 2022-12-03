@@ -1,3 +1,6 @@
+using System.ComponentModel;
+using System.Windows.Forms;
+
 namespace Sanford.Multimedia.Midi.UI
 {
     partial class OutputDeviceDialog
@@ -5,7 +8,7 @@ namespace Sanford.Multimedia.Midi.UI
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private System.ComponentModel.IContainer components = null;
+        private IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -99,9 +102,9 @@ namespace Sanford.Multimedia.Midi.UI
 
         #endregion
 
-        private System.Windows.Forms.Label outputLabel;
-        private System.Windows.Forms.ComboBox outputComboBox;
-        private System.Windows.Forms.Button cancelButton;
-        private System.Windows.Forms.Button okButton;
+        private Label outputLabel;
+        private ComboBox outputComboBox;
+        private Button cancelButton;
+        private Button okButton;
     }
 }

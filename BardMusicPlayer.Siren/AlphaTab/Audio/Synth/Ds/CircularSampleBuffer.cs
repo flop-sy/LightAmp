@@ -9,7 +9,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
     /// <summary>
     ///     Represents a fixed size circular sample buffer that can be written to and read from.
     /// </summary>
-    internal class CircularSampleBuffer
+    internal sealed class CircularSampleBuffer
     {
         private float[] _buffer;
         private int _readPosition;

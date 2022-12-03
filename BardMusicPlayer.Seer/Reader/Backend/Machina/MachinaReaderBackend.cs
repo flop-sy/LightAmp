@@ -11,7 +11,7 @@ using BardMusicPlayer.Seer.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Machina
 {
-    internal class MachinaReaderBackend : IReaderBackend
+    internal sealed class MachinaReaderBackend : IReaderBackend
     {
         private ConcurrentQueue<byte[]> _messageQueue;
         private bool _messageQueueOpen;
@@ -113,6 +113,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Machina
         private void OnMessageReceived(int processId, byte[] message)
         {
             if (!_messageQueueOpen || ReaderHandler.Game.Pid != processId) return;
+
             _messageQueue.Enqueue(message);
         }
     }

@@ -28,8 +28,8 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
 
             //if it doesn't contain any virtual methods, notify developer about it.
             if (!settings.GetType().GetProperties()
-                    .Where(p => _jsonSettingsAbstractionVirtuals.All(av => !p.Name.Equals(av)))
-                    .Any(p => p.GetGetMethod().IsVirtual))
+                    .Where(static p => _jsonSettingsAbstractionVirtuals.All(av => !p.Name.Equals(av)))
+                    .Any(static p => p.GetGetMethod().IsVirtual))
             {
                 var msg =
                     $"JsonSettings: During proxy creation of {settings.GetType().Name}, no virtual properties were found which will make Autosaving redundant.";
@@ -39,7 +39,7 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
                 return settings;
             }
 
-            _generator = _generator ?? new ProxyGenerator();
+            _generator ??= new ProxyGenerator();
             return _generator.CreateClassProxyWithTarget(settings, new JsonSettingsInterceptor(settings));
         }
 
@@ -60,15 +60,14 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Autosave
             public void Intercept(IInvocation invocation)
             {
                 invocation.Proceed();
-                if (invocation.Method.Name.StartsWith("set_", StringComparison.Ordinal))
-                {
-                    var propname = invocation.Method.Name.Substring(4);
-                    if (_jsonSettingsAbstractionVirtuals.Any(av => av == propname))
-                        return;
+                if (!invocation.Method.Name.StartsWith("set_", StringComparison.Ordinal)) return;
 
-                    //save.
-                    _settings.Save();
-                }
+                var propname = invocation.Method.Name.Substring(4);
+                if (_jsonSettingsAbstractionVirtuals.Any(av => av == propname))
+                    return;
+
+                //save.
+                _settings.Save();
             }
         }
     }

@@ -41,8 +41,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
                         var data = "";
                         using (var reader = new StreamReader(memoryStream, Encoding.ASCII))
                         {
-                            string line;
-                            while ((line = reader.ReadLine()) != null) data += line;
+                            while (reader.ReadLine() is { } line) data += line;
                         }
 
                         memoryStream.Close();
@@ -54,7 +53,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
 
             var midiFile = new MidiFile();
             foreach (var msong in songContainer.songs)
-                if (msong.bards.Count() == 0)
+                if (!msong.bards.Any())
                 {
                 }
                 else
@@ -85,8 +84,6 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers
 
                         midiFile.Chunks.Add(thisTrack);
                     }
-
-                    ;
 
                     foreach (var lyrics in msong.lyrics)
                     {

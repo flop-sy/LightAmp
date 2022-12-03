@@ -4,7 +4,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     ///     This public class stores the midi specific information of a track needed
     ///     for playback.
     /// </summary>
-    internal class PlaybackInformation
+    internal sealed class PlaybackInformation
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="PlaybackInformation" /> class.

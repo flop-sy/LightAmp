@@ -19,14 +19,18 @@ namespace BardMusicPlayer.Pigeonhole.JsonSettings.Inline
         public static object CreateInstance(this Type t)
         {
             var ctrs = t.GetAllConstructors()
-                .Where(c => c.GetParameters().Length == 0 || c.GetParameters().All(p => p.IsOptional)).ToArray();
-            if (ReflectionHelpers.IsValueType(t) || ctrs.Any(c => c.IsPublic)) //is valuetype or has public constractor.
+                .Where(static c => c.GetParameters().Length == 0 || c.GetParameters().All(static p => p.IsOptional))
+                .ToArray();
+            if (ReflectionHelpers.IsValueType(t) ||
+                ctrs.Any(static c => c.IsPublic)) //is valuetype or has public constractor.
                 return Activator.CreateInstance(t);
-            var prv = ctrs.FirstOrDefault(c =>
+
+            var prv = ctrs.FirstOrDefault(static c =>
                 c.IsAssembly || c.IsFamily || c.IsPrivate); //check protected/internal/private constructor
             if (prv == null)
                 throw new BmpPigeonholeException(
                     $"Type {t.FullName} does not have empty constructor (public or private)");
+
             return prv.Invoke(null);
         }
     }

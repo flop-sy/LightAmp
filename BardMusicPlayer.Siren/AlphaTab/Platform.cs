@@ -23,12 +23,12 @@ namespace BardMusicPlayer.Siren.AlphaTab
 
         public static bool IsCharNumber(int c, bool allowSign = true)
         {
-            return (allowSign && c == 0x2D) || (c >= 0x30 && c <= 0x39);
+            return (allowSign && c == 0x2D) || c is >= 0x30 and <= 0x39;
         }
 
         public static bool IsWhiteSpace(int c)
         {
-            return c == 0x20 || c == 0x0B || c == 0x0D || c == 0x0A || c == 0x09;
+            return c is 0x20 or 0x0B or 0x0D or 0x0A or 0x09;
         }
 
         public static bool IsAlmostEqualTo(this float a, float b)
@@ -73,17 +73,14 @@ namespace BardMusicPlayer.Siren.AlphaTab
 
         internal static string DetectEncoding(byte[] data)
         {
-            if (data.Length > 2 && data[0] == 0xFE && data[1] == 0xFF) return "utf-16be";
-
-            if (data.Length > 2 && data[0] == 0xFF && data[1] == 0xFE) return "utf-16le";
-
-            if (data.Length > 4 && data[0] == 0x00 && data[1] == 0x00 && data[2] == 0xFE && data[3] == 0xFF)
-                return "utf-32be";
-
-            if (data.Length > 4 && data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00)
-                return "utf-32le";
-
-            return null;
+            return data.Length switch
+            {
+                > 2 when data[0] == 0xFE && data[1] == 0xFF => "utf-16be",
+                > 2 when data[0] == 0xFF && data[1] == 0xFE => "utf-16le",
+                > 4 when data[0] == 0x00 && data[1] == 0x00 && data[2] == 0xFE && data[3] == 0xFF => "utf-32be",
+                > 4 when data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00 => "utf-32le",
+                _ => null
+            };
         }
 
         public static void Log(LogLevel logLevel, string category, string msg, object details = null)
@@ -98,8 +95,7 @@ namespace BardMusicPlayer.Siren.AlphaTab
 
         public static int ParseInt(string s)
         {
-            float f;
-            if (!float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out f)) return int.MinValue;
+            if (!float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out var f)) return int.MinValue;
 
             return (int)f;
         }
@@ -129,7 +125,7 @@ namespace BardMusicPlayer.Siren.AlphaTab
             var detectedEncoding = DetectEncoding(data);
             if (detectedEncoding != null) encoding = detectedEncoding;
 
-            if (encoding == null) encoding = "utf-8";
+            encoding ??= "utf-8";
 
             Encoding enc;
             try

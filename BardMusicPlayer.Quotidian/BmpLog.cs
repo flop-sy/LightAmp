@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Quotidian
 {
-    public class BmpLog
+    public sealed class BmpLog
     {
         public delegate void LogEventHandler(string output);
 
@@ -32,7 +32,7 @@ namespace BardMusicPlayer.Quotidian
             Error
         }
 
-        private static readonly Lazy<BmpLog> Arbiter = new(() => new BmpLog());
+        private static readonly Lazy<BmpLog> Arbiter = new(static () => new BmpLog());
 
         private Verbosity _minVerbosity;
 
@@ -70,9 +70,10 @@ namespace BardMusicPlayer.Quotidian
 
         public event LogEventHandler LogEvent;
 
-        protected void Log(Verbosity verbosity, Source source, string format, params object[] args)
+        private void Log(Verbosity verbosity, Source source, string format, params object[] args)
         {
             if (verbosity < _minVerbosity) return;
+
             format = "[" + verbosity + "] - [" + source + "] - " + format;
             var output = string.Format(format, args);
 

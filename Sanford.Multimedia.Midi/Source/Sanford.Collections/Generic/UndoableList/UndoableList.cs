@@ -1,58 +1,46 @@
-#region License
-
-/* Copyright (c) 2006 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
 
+#endregion
+
 namespace Sanford.Collections.Generic
 {
     /// <summary>
-    /// Represents a list with undo/redo functionality.
+    ///     Represents a list with undo/redo functionality.
     /// </summary>
     /// <typeparam name="T">
-    /// The type of elements in the list.
+    ///     The type of elements in the list.
     /// </typeparam>
     public partial class UndoableList<T> : IList<T>
     {
+        #region IEnumerable<T> Members
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return theList.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return theList.GetEnumerator();
+        }
+
+        #endregion
+
         #region UndoableList<T> Members
 
         #region Fields
 
-        private List<T> theList;
+        private readonly List<T> theList;
 
-        private UndoManager undoManager = new UndoManager();
+        private readonly UndoManager undoManager = new UndoManager();
 
         #endregion
 
@@ -78,11 +66,11 @@ namespace Sanford.Collections.Generic
         #region Methods
 
         /// <summary>
-        /// Undoes the last operation.
+        ///     Undoes the last operation.
         /// </summary>
         /// <returns>
-        /// <b>true</b> if the last operation was undone, <b>false</b> if there
-        /// are no more operations left to undo.
+        ///     <b>true</b> if the last operation was undone, <b>false</b> if there
+        ///     are no more operations left to undo.
         /// </returns>
         public bool Undo()
         {
@@ -90,11 +78,11 @@ namespace Sanford.Collections.Generic
         }
 
         /// <summary>
-        /// Redoes the last operation.
+        ///     Redoes the last operation.
         /// </summary>
         /// <returns>
-        /// <b>true</b> if the last operation was redone, <b>false</b> if there
-        /// are no more operations left to redo.
+        ///     <b>true</b> if the last operation was redone, <b>false</b> if there
+        ///     are no more operations left to redo.
         /// </returns>
         public bool Redo()
         {
@@ -102,7 +90,7 @@ namespace Sanford.Collections.Generic
         }
 
         /// <summary>
-        /// Clears the undo/redo history.
+        ///     Clears the undo/redo history.
         /// </summary>
         public void ClearHistory()
         {
@@ -133,7 +121,7 @@ namespace Sanford.Collections.Generic
 
         public List<TOutput> ConvertAll<TOutput>(Converter<T, TOutput> converter)
         {
-            return theList.ConvertAll<TOutput>(converter);
+            return theList.ConvertAll(converter);
         }
 
         public bool Exists(Predicate<T> match)
@@ -218,35 +206,35 @@ namespace Sanford.Collections.Generic
 
         public void AddRange(IEnumerable<T> collection)
         {
-            InsertRangeCommand command = new InsertRangeCommand(theList, theList.Count, collection);
+            var command = new InsertRangeCommand(theList, theList.Count, collection);
 
             undoManager.Execute(command);
         }
 
         public void InsertRange(int index, IEnumerable<T> collection)
         {
-            InsertRangeCommand command = new InsertRangeCommand(theList, index, collection);
+            var command = new InsertRangeCommand(theList, index, collection);
 
             undoManager.Execute(command);
         }
 
         public void RemoveRange(int index, int count)
         {
-            RemoveRangeCommand command = new RemoveRangeCommand(theList, index, count);
+            var command = new RemoveRangeCommand(theList, index, count);
 
             undoManager.Execute(command);
         }
 
         public void Reverse()
         {
-            ReverseCommand command = new ReverseCommand(theList);
+            var command = new ReverseCommand(theList);
 
             undoManager.Execute(command);
         }
 
         public void Reverse(int index, int count)
         {
-            ReverseCommand command = new ReverseCommand(theList, index, count);
+            var command = new ReverseCommand(theList, index, count);
 
             undoManager.Execute(command);
         }
@@ -258,26 +246,14 @@ namespace Sanford.Collections.Generic
         #region Properties
 
         /// <summary>
-        /// The number of operations left to undo.
+        ///     The number of operations left to undo.
         /// </summary>
-        public int UndoCount
-        {
-            get
-            {
-                return undoManager.UndoCount;
-            }
-        }
+        public int UndoCount => undoManager.UndoCount;
 
         /// <summary>
-        /// The number of operations left to redo.
+        ///     The number of operations left to redo.
         /// </summary>
-        public int RedoCount
-        {
-            get
-            {
-                return undoManager.RedoCount;
-            }
-        }
+        public int RedoCount => undoManager.RedoCount;
 
         #endregion
 
@@ -292,27 +268,24 @@ namespace Sanford.Collections.Generic
 
         public void Insert(int index, T item)
         {
-            InsertCommand command = new InsertCommand(theList, index, item);
+            var command = new InsertCommand(theList, index, item);
 
             undoManager.Execute(command);
         }
 
         public void RemoveAt(int index)
         {
-            RemoveAtCommand command = new RemoveAtCommand(theList, index);
+            var command = new RemoveAtCommand(theList, index);
 
             undoManager.Execute(command);
         }
 
         public T this[int index]
         {
-            get
-            {
-                return theList[index];
-            }
+            get => theList[index];
             set
             {
-                SetCommand command = new SetCommand(theList, index, value);
+                var command = new SetCommand(theList, index, value);
 
                 undoManager.Execute(command);
             }
@@ -324,7 +297,7 @@ namespace Sanford.Collections.Generic
 
         public void Add(T item)
         {
-            InsertCommand command = new InsertCommand(theList, Count, item);
+            var command = new InsertCommand(theList, Count, item);
 
             undoManager.Execute(command);
         }
@@ -333,14 +306,11 @@ namespace Sanford.Collections.Generic
         {
             #region Guard
 
-            if(Count == 0)
-            {
-                return;
-            }
+            if (Count == 0) return;
 
             #endregion
 
-            ClearCommand command = new ClearCommand(theList);
+            var command = new ClearCommand(theList);
 
             undoManager.Execute(command);
         }
@@ -350,30 +320,18 @@ namespace Sanford.Collections.Generic
             theList.CopyTo(array, arrayIndex);
         }
 
-        public int Count
-        {
-            get 
-            {
-                return theList.Count;
-            }
-        }
+        public int Count => theList.Count;
 
-        public bool IsReadOnly
-        {
-            get 
-            { 
-                return false; 
-            }
-        }
+        public bool IsReadOnly => false;
 
         public bool Remove(T item)
         {
-            int index = IndexOf(item);
+            var index = IndexOf(item);
             bool result;
 
-            if(index >= 0)
+            if (index >= 0)
             {
-                RemoveAtCommand command = new RemoveAtCommand(theList, index);
+                var command = new RemoveAtCommand(theList, index);
 
                 undoManager.Execute(command);
 
@@ -385,24 +343,6 @@ namespace Sanford.Collections.Generic
             }
 
             return result;
-        }
-
-        #endregion
-
-        #region IEnumerable<T> Members
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            return theList.GetEnumerator();
-        }
-
-        #endregion
-
-        #region IEnumerable Members
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return theList.GetEnumerator();
         }
 
         #endregion

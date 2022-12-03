@@ -36,6 +36,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         {
             if (currentPosition >= Data.Length)
                 return -1;
+
             currentPosition = Data.IndexOf('[', currentPosition);
             if (currentPosition < 0)
             {
@@ -51,8 +52,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             if (nextPosition < 0) return Data.Length;
 
             nextPosition = Data.IndexOf('[', nextPosition);
-            if (nextPosition < 0) return Data.Length;
-            return nextPosition;
+            return nextPosition < 0 ? Data.Length : nextPosition;
         }
 
         private bool readTag(int next, out int tagStart, out int tagEnd)
@@ -65,6 +65,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 return false; // empty range
             if (Data[lbPos] != '[')
                 return false; // not a tag
+
             currentPosition++;
             skipWhitespaces();
             if (currentPosition >= next)
@@ -75,12 +76,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
 
             tagStart = currentPosition;
             var rbPos = default(int);
-            if (char.IsDigit(Data[tagStart]))
-                // timestamp
-                rbPos = Data.IndexOf(']', tagStart, next - tagStart);
-            else
+            // timestamp
+            rbPos = char.IsDigit(Data[tagStart])
+                ? Data.IndexOf(']', tagStart, next - tagStart)
+                :
                 // ID tag
-                rbPos = Data.LastIndexOf(']', next - 1, next - tagStart);
+                Data.LastIndexOf(']', next - 1, next - tagStart);
             if (rbPos < 0)
             {
                 currentPosition = lbPos;
@@ -104,6 +105,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 var oldPos = currentPosition;
                 if (!readTag(next, out var tagStart, out var tagEnd))
                     break;
+
                 if (DateTimeExtension.TryParseLrcString(Data, tagStart, tagEnd, out var time))
                 {
                     Lines.Add(new TLine { InternalTimestamp = time });
@@ -156,6 +158,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 var nextPosition = readLine();
                 if (nextPosition < 0)
                     return;
+
                 analyzeLine(nextPosition);
             }
         }

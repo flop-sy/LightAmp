@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using BardMusicPlayer.Quotidian.Structs;
+using BasicSharp;
 
 #endregion
 
-namespace BasicSharp
+namespace BardMusicPlayer.Script.BasicSharp
 {
-    public class Interpreter
+    public sealed class Interpreter
     {
         public delegate Value BasicFunction(Interpreter interpreter, List<Value> args);
 
@@ -24,7 +25,7 @@ namespace BasicSharp
         private readonly Dictionary<string, BasicFunction> funcs; // all maped functions
 
         private readonly int ifcounter; // counter used for matching "if" with "else"
-        private readonly Dictionary<string, Marker> labels; // already seen labels 
+        private readonly Dictionary<string, Marker> labels; // already seen labels
 
         private readonly Lexer lex;
         private readonly Dictionary<string, Marker> loops; // for loops
@@ -63,13 +64,15 @@ namespace BasicSharp
         {
             if (!vars.ContainsKey(name))
                 throw new BasicException("Variable with name " + name + " does not exist.", lineMarker.Line);
+
             return vars[name];
         }
 
         public void SetVar(string name, Value val)
         {
             if (!vars.ContainsKey(name)) vars.Add(name, val);
-            else vars[name] = val;
+            else
+                vars[name] = val;
         }
 
         public string GetLine()
@@ -80,7 +83,8 @@ namespace BasicSharp
         public void AddFunction(string name, BasicFunction function)
         {
             if (!funcs.ContainsKey(name)) funcs.Add(name, function);
-            else funcs[name] = function;
+            else
+                funcs[name] = function;
         }
 
         private void Error(string text)
@@ -133,68 +137,77 @@ namespace BasicSharp
 
         private void Statment()
         {
-            var keyword = lastToken;
-            GetNextToken();
-            switch (keyword)
+            while (true)
             {
-                case Token.Print:
-                    Print();
-                    break;
-                case Token.Macro:
-                    Macro();
-                    break;
-                case Token.Input:
-                    Input();
-                    break;
-                case Token.Goto:
-                    Goto();
-                    break;
-                case Token.If:
-                    If();
-                    break;
-                case Token.Else:
-                    Else();
-                    break;
-                case Token.EndIf: break;
-                case Token.For:
-                    For();
-                    break;
-                case Token.Next:
-                    Next();
-                    break;
-                case Token.Let:
-                    Let();
-                    break;
-                case Token.End:
-                    End();
-                    break;
-                case Token.Assert:
-                    Assert();
-                    break;
-                case Token.Select:
-                    Select();
-                    break;
-                case Token.Sleep:
-                    Sleep();
-                    break;
-                case Token.Identifier:
-                    if (lastToken == Token.Equal) Let();
-                    else if (lastToken == Token.Colon) Label();
-                    else goto default;
-                    break;
-                case Token.EOF:
-                    exit = true;
-                    break;
-                default:
-                    Error("Expect keyword got " + keyword);
-                    break;
-            }
-
-            if (lastToken == Token.Colon)
-            {
-                // we can execute more statments in single line if we use ";"
+                var keyword = lastToken;
                 GetNextToken();
-                Statment();
+                switch (keyword)
+                {
+                    case Token.Print:
+                        Print();
+                        break;
+                    case Token.Macro:
+                        Macro();
+                        break;
+                    case Token.Input:
+                        Input();
+                        break;
+                    case Token.Goto:
+                        Goto();
+                        break;
+                    case Token.If:
+                        If();
+                        break;
+                    case Token.Else:
+                        Else();
+                        break;
+                    case Token.EndIf:
+                        break;
+                    case Token.For:
+                        For();
+                        break;
+                    case Token.Next:
+                        Next();
+                        break;
+                    case Token.Let:
+                        Let();
+                        break;
+                    case Token.End:
+                        End();
+                        break;
+                    case Token.Assert:
+                        Assert();
+                        break;
+                    case Token.Select:
+                        Select();
+                        break;
+                    case Token.Sleep:
+                        Sleep();
+                        break;
+                    case Token.Identifier:
+                        if (lastToken == Token.Equal)
+                            Let();
+                        else if (lastToken == Token.Colon)
+                            Label();
+                        else
+                            goto default;
+                        break;
+                    case Token.EOF:
+                        exit = true;
+                        break;
+                    default:
+                        Error("Expect keyword got " + keyword);
+                        break;
+                }
+
+                if (lastToken == Token.Colon)
+                {
+                    // we can execute more statments in single line if we use ";"
+                    GetNextToken();
+                    continue;
+                }
+
+                break;
             }
         }
 
@@ -217,15 +230,15 @@ namespace BasicSharp
                 if (!vars.ContainsKey(lex.Identifier)) vars.Add(lex.Identifier, new Value());
 
                 var input = inputHandler?.Invoke();
-                double d;
                 // try to parse as double, if failed read value as string
-                if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out d))
+                if (double.TryParse(input, NumberStyles.Float, CultureInfo.InvariantCulture, out var d))
                     vars[lex.Identifier] = new Value(d);
                 else
                     vars[lex.Identifier] = new Value(input);
 
                 GetNextToken();
                 if (lastToken != Token.Comma) break;
+
                 GetNextToken();
             }
         }
@@ -262,37 +275,28 @@ namespace BasicSharp
             Match(Token.Then);
             GetNextToken();
 
-            if (result)
+            if (!result) return;
+            // in case "if" evaulate to zero skip to matching else or endif
+            var i = ifcounter;
+            while (true)
             {
-                // in case "if" evaulate to zero skip to matching else or endif
-                var i = ifcounter;
-                while (true)
+                switch (lastToken)
                 {
-                    if (lastToken == Token.If)
-                    {
+                    case Token.If:
                         i++;
-                    }
-                    else if (lastToken == Token.Else)
-                    {
-                        if (i == ifcounter)
-                        {
-                            GetNextToken();
-                            return;
-                        }
-                    }
-                    else if (lastToken == Token.EndIf)
-                    {
-                        if (i == ifcounter)
-                        {
-                            GetNextToken();
-                            return;
-                        }
-
+                        break;
+                    case Token.Else when i == ifcounter:
+                        GetNextToken();
+                        return;
+                    case Token.EndIf when i == ifcounter:
+                        GetNextToken();
+                        return;
+                    case Token.EndIf:
                         i--;
-                    }
-
-                    GetNextToken();
+                        break;
                 }
+
+                GetNextToken();
             }
         }
 
@@ -302,19 +306,17 @@ namespace BasicSharp
             var i = ifcounter;
             while (true)
             {
-                if (lastToken == Token.If)
+                switch (lastToken)
                 {
-                    i++;
-                }
-                else if (lastToken == Token.EndIf)
-                {
-                    if (i == ifcounter)
-                    {
+                    case Token.If:
+                        i++;
+                        break;
+                    case Token.EndIf when i == ifcounter:
                         GetNextToken();
                         return;
-                    }
-
-                    i--;
+                    case Token.EndIf:
+                        i--;
+                        break;
                 }
 
                 GetNextToken();
@@ -378,18 +380,21 @@ namespace BasicSharp
             GetNextToken();
             v = Expr();
 
-            if (vars[var].BinOp(v, Token.More).Real == 1)
-                while (true)
+            if (vars[var].BinOp(v, Token.More).Real != 1) return;
+
+            while (true)
+            {
+                while (!(GetNextToken() == Token.Identifier && prevToken == Token.Next))
                 {
-                    while (!(GetNextToken() == Token.Identifier && prevToken == Token.Next)) ;
-                    if (lex.Identifier == var)
-                    {
-                        loops.Remove(var);
-                        GetNextToken();
-                        Match(Token.NewLine);
-                        break;
-                    }
                 }
+
+                if (lex.Identifier != var) continue;
+
+                loops.Remove(var);
+                GetNextToken();
+                Match(Token.NewLine);
+                break;
+            }
         }
 
         private void Next()
@@ -406,7 +411,9 @@ namespace BasicSharp
         {
             var result = Expr().BinOp(new Value(0), Token.Equal).Real == 1;
 
-            if (result) Error("Assertion fault"); // if out assert evaluate to false, throw error with souce code line
+            if (!result) return;
+
+            Error("Assertion fault"); // if out assert evaluate to false, throw error with souce code line
         }
 
         private void Select()
@@ -421,16 +428,15 @@ namespace BasicSharp
         private void Sleep()
         {
             var v = Expr();
-            if (v.Type == ValueType.Real)
-            {
-                var sleeptime = (int)v.Real;
-                Task.Delay(sleeptime).Wait();
-            }
+            if (v.Type != ValueType.Real) return;
+
+            var sleeptime = (int)v.Real;
+            Task.Delay(sleeptime).Wait();
         }
 
         private Value Expr(int min = 0)
         {
-            // originally we were using shunting-yard algorithm, but now we parse it recursively 
+            // originally we were using shunting-yard algorithm, but now we parse it recursively
             var precedens = new Dictionary<Token, int>
             {
                 { Token.Or, 0 }, { Token.And, 0 },
@@ -446,13 +452,12 @@ namespace BasicSharp
 
             while (true)
             {
-                if (lastToken < Token.Plus || lastToken > Token.And || precedens[lastToken] < min)
+                if (lastToken is < Token.Plus or > Token.And || precedens[lastToken] < min)
                     break;
 
                 var op = lastToken;
                 var prec = precedens[lastToken]; // Operator Precedence
-                var assoc = 0; // 0 left, 1 right; Operator associativity
-                var nextmin = assoc == 0 ? prec : prec + 1;
+                var nextmin = prec;
                 GetNextToken();
                 var rhs = Expr(nextmin);
                 lhs = lhs.BinOp(rhs, op);
@@ -465,62 +470,66 @@ namespace BasicSharp
         {
             var prim = Value.Zero;
 
-            if (lastToken == Token.Value)
+            switch (lastToken)
             {
-                // number | string
-                prim = lex.Value;
-                GetNextToken();
-            }
-            else if (lastToken == Token.Identifier)
-            {
-                // ident | ident '(' args ')'
-                if (vars.ContainsKey(lex.Identifier))
-                {
-                    prim = vars[lex.Identifier];
-                }
-                else if (funcs.ContainsKey(lex.Identifier))
-                {
-                    var name = lex.Identifier;
-                    var args = new List<Value>();
+                case Token.Value:
+                    // number | string
+                    prim = lex.Value;
                     GetNextToken();
-                    Match(Token.LParen);
-
-                    start:
-                    if (GetNextToken() != Token.RParen)
+                    break;
+                case Token.Identifier:
+                {
+                    // ident | ident '(' args ')'
+                    if (vars.ContainsKey(lex.Identifier))
                     {
-                        args.Add(Expr());
-                        if (lastToken == Token.Comma)
-                            goto start;
+                        prim = vars[lex.Identifier];
+                    }
+                    else if (funcs.ContainsKey(lex.Identifier))
+                    {
+                        var name = lex.Identifier;
+                        var args = new List<Value>();
+                        GetNextToken();
+                        Match(Token.LParen);
+
+                        start:
+                        if (GetNextToken() != Token.RParen)
+                        {
+                            args.Add(Expr());
+                            if (lastToken == Token.Comma)
+                                goto start;
+                        }
+
+                        prim = funcs[name](null, args);
+                    }
+                    else
+                    {
+                        Error("Undeclared variable " + lex.Identifier);
                     }
 
-                    prim = funcs[name](null, args);
+                    GetNextToken();
+                    break;
                 }
-                else
+                case Token.LParen:
+                    // '(' expr ')'
+                    GetNextToken();
+                    prim = Expr();
+                    Match(Token.RParen);
+                    GetNextToken();
+                    break;
+                case Token.Plus:
+                case Token.Minus:
+                case Token.Not:
                 {
-                    Error("Undeclared variable " + lex.Identifier);
+                    // unary operator
+                    // '-' | '+' primary
+                    var op = lastToken;
+                    GetNextToken();
+                    prim = Primary().UnaryOp(op);
+                    break;
                 }
-
-                GetNextToken();
-            }
-            else if (lastToken == Token.LParen)
-            {
-                // '(' expr ')'
-                GetNextToken();
-                prim = Expr();
-                Match(Token.RParen);
-                GetNextToken();
-            }
-            else if (lastToken == Token.Plus || lastToken == Token.Minus || lastToken == Token.Not)
-            {
-                // unary operator
-                // '-' | '+' primary
-                var op = lastToken;
-                GetNextToken();
-                prim = Primary().UnaryOp(op);
-            }
-            else
-            {
-                Error("Unexpexted token in primary!");
+                default:
+                    Error("Unexpected token in primary!");
+                    break;
             }
 
             return prim;

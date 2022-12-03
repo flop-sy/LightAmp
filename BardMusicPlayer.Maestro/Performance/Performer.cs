@@ -1,8 +1,8 @@
 #region
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using BardMusicPlayer.DalamudBridge;
@@ -21,7 +21,7 @@ using Sequencer = BardMusicPlayer.Maestro.Sequencing.Sequencer;
 
 namespace BardMusicPlayer.Maestro.Performance
 {
-    public class Performer
+    public sealed class Performer
     {
         private readonly FFXIVHook _hook = new();
         private long _lastNoteTimestamp;
@@ -34,7 +34,7 @@ namespace BardMusicPlayer.Maestro.Performance
         private Sequencer mainSequencer { get; set; }
         private int _trackNumber { get; set; } = 1;
         private bool _livePlayDelay { get; set; }
-        public int SingerTrackNr { get; set; } = 0;
+        public int SingerTrackNr { get; set; }
         public Instrument ChosenInstrument { get; set; } = Instrument.Piano;
         public int OctaveShift { get; set; }
 
@@ -46,7 +46,7 @@ namespace BardMusicPlayer.Maestro.Performance
                 if (value == _trackNumber)
                     return;
 
-                if (_sequencer == null || _sequencer.LoadedTrack == null)
+                if (_sequencer?.LoadedTrack == null)
                 {
                     BmpMaestro.Instance.PublishEvent(new TrackNumberChangedEvent(game, _trackNumber, HostProcess));
                     return;
@@ -61,17 +61,16 @@ namespace BardMusicPlayer.Maestro.Performance
                 _trackNumber = value;
                 BmpMaestro.Instance.PublishEvent(new TrackNumberChangedEvent(game, _trackNumber, HostProcess));
                 var tOctaveShift = mainSequencer.GetTrackPreferredOctaveShift(_sequencer.Sequence[_trackNumber]);
-                if (tOctaveShift != OctaveShift)
-                {
-                    OctaveShift = tOctaveShift;
-                    BmpMaestro.Instance.PublishEvent(new OctaveShiftChangedEvent(game, OctaveShift, HostProcess));
-                }
+                if (tOctaveShift == OctaveShift) return;
+
+                OctaveShift = tOctaveShift;
+                BmpMaestro.Instance.PublishEvent(new OctaveShiftChangedEvent(game, OctaveShift, HostProcess));
             }
         }
 
         public bool PerformerEnabled { get; set; } = true;
         public bool UsesDalamud => BmpPigeonhole.Instance.UsePluginForInstrumentOpen && GameExtensions.IsConnected(PId);
-        public bool HostProcess { get; set; } = false;
+        public bool HostProcess { get; set; }
         public string PlayerName => game.PlayerName ?? "Unknown";
         public string HomeWorld => game.HomeWorld ?? "Unknown";
 
@@ -85,10 +84,10 @@ namespace BardMusicPlayer.Maestro.Performance
                 if (_sequencer.LoadedBmpSong.DisplayedTitle == null) //no displayed title, pretent the normal title
                     return _sequencer.LoadedBmpSong.Title;
 
-                if (_sequencer.LoadedBmpSong.DisplayedTitle.Length < 2) //title with 1 char makes no sence for me
-                    return _sequencer.LoadedBmpSong.Title;
-
-                return _sequencer.LoadedBmpSong.DisplayedTitle; //finally, display the title
+                return _sequencer.LoadedBmpSong.DisplayedTitle.Length < 2
+                    ? //title with 1 char makes no sense for me
+                    _sequencer.LoadedBmpSong.Title
+                    : _sequencer.LoadedBmpSong.DisplayedTitle; //finally, display the title
             }
         }
 
@@ -96,7 +95,7 @@ namespace BardMusicPlayer.Maestro.Performance
         {
             get
             {
-                if (_sequencer == null || _sequencer.LoadedBmpSong == null)
+                if (_sequencer?.LoadedBmpSong == null)
                     return "Unknown";
                 if (TrackNumber == 0)
                     return "None";
@@ -114,51 +113,47 @@ namespace BardMusicPlayer.Maestro.Performance
             get => _sequencer;
             set
             {
-                if (value != null)
+                if (value == null) return;
+                if (value.LoadedFileType == Sequencer.FILETYPES.None && !HostProcess)
+                    return;
+
+                //Close the input else it will hang
+                _sequencer?.CloseInputDevice();
+
+                _startDelayTimer.Enabled = false;
+                mainSequencer = value;
+
+                _sequencer = new Sequencer();
+                if (value.LoadedFileType == Sequencer.FILETYPES.BmpSong)
                 {
-                    if (value.LoadedFileType == Sequencer.FILETYPES.None && !HostProcess)
-                        return;
-
-                    //Close the input else it will hang
-                    if (_sequencer is Sequencer)
-                        _sequencer.CloseInputDevice();
-
-                    _startDelayTimer.Enabled = false;
-                    mainSequencer = value;
-
-                    _sequencer = new Sequencer();
-                    if (value.LoadedFileType == Sequencer.FILETYPES.BmpSong)
-                    {
-                        _sequencer.Sequence = mainSequencer.Sequence;
-                        OctaveShift = 0;
-                    }
-
-                    if (HostProcess)
-                        if (BmpPigeonhole.Instance.MidiInputDev != -1)
-                            _sequencer.OpenInputDevice(BmpPigeonhole.Instance.MidiInputDev);
-
-                    _sequencer.OnNote += InternalNote;
-                    _sequencer.OffNote += InternalNote;
-                    _sequencer.ProgChange += InternalProg;
-                    _sequencer.OnLyric += IntenalLyrics;
-                    _sequencer.ChannelAfterTouch += InternalAT;
-
-                    _holdNotes = BmpPigeonhole.Instance.HoldNotes;
-                    _lastNoteTimestamp = 0;
-                    _livePlayDelay = BmpPigeonhole.Instance.LiveMidiPlayDelay;
-
-                    if (HostProcess && BmpPigeonhole.Instance.ForcePlayback)
-                        _forcePlayback = true;
-
-                    // set the initial octave shift here, if we have a track to play
-                    if (_trackNumber < _sequencer.Sequence.Count)
-                    {
-                        OctaveShift = mainSequencer.GetTrackPreferredOctaveShift(_sequencer.Sequence[_trackNumber]);
-                        BmpMaestro.Instance.PublishEvent(new OctaveShiftChangedEvent(game, OctaveShift, HostProcess));
-                    }
-
-                    Update(value);
+                    _sequencer.Sequence = mainSequencer.Sequence;
+                    OctaveShift = 0;
                 }
+
+                if (HostProcess)
+                    if (BmpPigeonhole.Instance.MidiInputDev != -1)
+                        _sequencer.OpenInputDevice(BmpPigeonhole.Instance.MidiInputDev);
+
+                _sequencer.OnNote += InternalNote;
+                _sequencer.OffNote += InternalNote;
+                _sequencer.ProgChange += InternalProg;
+                _sequencer.OnLyric += IntenalLyrics;
+                _sequencer.ChannelAfterTouch += InternalAT;
+
+                _holdNotes = BmpPigeonhole.Instance.HoldNotes;
+                _lastNoteTimestamp = 0;
+                _livePlayDelay = BmpPigeonhole.Instance.LiveMidiPlayDelay;
+
+                if (HostProcess && BmpPigeonhole.Instance.ForcePlayback) _forcePlayback = true;
+
+                // set the initial octave shift here, if we have a track to play
+                if (_trackNumber < _sequencer.Sequence.Count)
+                {
+                    OctaveShift = mainSequencer.GetTrackPreferredOctaveShift(_sequencer.Sequence[_trackNumber]);
+                    BmpMaestro.Instance.PublishEvent(new OctaveShiftChangedEvent(game, OctaveShift, HostProcess));
+                }
+
+                Update(value);
             }
         }
 
@@ -168,13 +163,12 @@ namespace BardMusicPlayer.Maestro.Performance
         {
             ChosenInstrument = ChosenInstrument;
 
-            if (arg != null)
-            {
-                _hook.Hook(arg.Process, false);
-                PId = arg.Pid;
-                game = arg;
-                _startDelayTimer.Elapsed += startDelayTimer_Elapsed;
-            }
+            if (arg == null) return;
+
+            _hook.Hook(arg.Process, false);
+            PId = arg.Pid;
+            game = arg;
+            _startDelayTimer.Elapsed += startDelayTimer_Elapsed;
         }
 
         public void ProcessOnNote(NoteEvent note)
@@ -188,10 +182,10 @@ namespace BardMusicPlayer.Maestro.Performance
                     return;
             }
 
-            if (note.note < 0 || note.note > 36)
+            if (note.note is < 0 or > 36)
                 return;
 
-            if (game.NoteKeys[(NoteKey)note.note] is Keys keybind)
+            if (game.NoteKeys[(NoteKey)note.note] is var keybind)
             {
                 if (game.ChatStatus && !_forcePlayback)
                     return;
@@ -214,10 +208,10 @@ namespace BardMusicPlayer.Maestro.Performance
                     return;
             }
 
-            if (note.note < 0 || note.note > 36)
+            if (note.note is < 0 or > 36)
                 return;
 
-            if (game.NoteKeys[(NoteKey)note.note] is Keys keybind)
+            if (game.NoteKeys[(NoteKey)note.note] is var keybind)
             {
                 var diff = Stopwatch.GetTimestamp() / 10000 - _lastNoteTimestamp;
                 if (diff < 15)
@@ -243,10 +237,10 @@ namespace BardMusicPlayer.Maestro.Performance
             if (!PerformerEnabled)
                 return;
 
-            if (note.note < 0 || note.note > 36)
+            if (note.note is < 0 or > 36)
                 return;
 
-            if (game.NoteKeys[(NoteKey)note.note] is Keys keybind)
+            if (game.NoteKeys[(NoteKey)note.note] is var keybind)
             {
                 if (game.ChatStatus && !_forcePlayback)
                     return;
@@ -258,78 +252,69 @@ namespace BardMusicPlayer.Maestro.Performance
 
         public void SetProgress(int progress)
         {
-            if (_sequencer is Sequencer) _sequencer.Position = progress;
+            if (_sequencer != null) _sequencer.Position = progress;
         }
 
         public void Play(bool play, int delay = 0)
         {
-            if (_sequencer is Sequencer)
-            {
-                if (play)
-                {
-                    if (_sequencer.IsPlaying)
-                        return;
+            if (_sequencer is null) return;
 
-                    if (delay == 0)
-                    {
-                        _sequencer.Play();
-                    }
-                    else
-                    {
-                        if (_startDelayTimer.Enabled)
-                            return;
-                        _startDelayTimer.Interval = delay;
-                        _startDelayTimer.Enabled = true;
-                    }
+            if (play)
+            {
+                if (_sequencer.IsPlaying)
+                    return;
+
+                if (delay == 0)
+                {
+                    _sequencer.Play();
                 }
                 else
                 {
-                    _sequencer.Pause();
+                    if (_startDelayTimer.Enabled)
+                        return;
+
+                    _startDelayTimer.Interval = delay;
+                    _startDelayTimer.Enabled = true;
                 }
+            }
+            else
+            {
+                _sequencer.Pause();
             }
         }
 
         public void Stop()
         {
-            if (_startDelayTimer.Enabled)
-                _startDelayTimer.Enabled = false;
+            if (_startDelayTimer.Enabled) _startDelayTimer.Enabled = false;
 
-            if (_sequencer is Sequencer)
-            {
-                _sequencer.Stop();
-                _hook.ClearLastPerformanceKeybinds();
-            }
+            if (_sequencer is null) return;
+
+            _sequencer.Stop();
+            _hook.ClearLastPerformanceKeybinds();
         }
 
         public void Update(Sequencer bmpSeq)
         {
             var tn = _trackNumber;
 
-            if (!(bmpSeq is Sequencer)) return;
+            var seq = bmpSeq?.Sequence;
+            if (seq == null) return;
 
-            var seq = bmpSeq.Sequence;
-            if (!(seq is Sequence)) return;
+            if (tn < 0 || tn >= seq.Count || seq[tn] is not { } track) return;
+            // OctaveNum now holds the track octave and the selected octave together
+            Console.WriteLine("Track #{0}/{1} setOctave: {2} prefOctave: {3}", tn, bmpSeq.MaxTrack, OctaveShift,
+                bmpSeq.GetTrackPreferredOctaveShift(track));
+            var notes = (from ev in track.Iterator()
+                where ev.MidiMessage.MessageType == MessageType.Channel
+                select ev.MidiMessage as ChannelMessage
+                into msg
+                where msg.Command == ChannelCommand.NoteOn
+                let note = msg.Data1
+                let vel = msg.Data2
+                where vel > 0
+                select NoteHelper.ApplyOctaveShift(note, OctaveShift)).ToList();
 
-            if (tn >= 0 && tn < seq.Count && seq[tn] is Track track)
-            {
-                // OctaveNum now holds the track octave and the selected octave together
-                Console.WriteLine("Track #{0}/{1} setOctave: {2} prefOctave: {3}", tn, bmpSeq.MaxTrack, OctaveShift,
-                    bmpSeq.GetTrackPreferredOctaveShift(track));
-                var notes = new List<int>();
-                foreach (var ev in track.Iterator())
-                    if (ev.MidiMessage.MessageType == MessageType.Channel)
-                    {
-                        var msg = ev.MidiMessage as ChannelMessage;
-                        if (msg.Command == ChannelCommand.NoteOn)
-                        {
-                            var note = msg.Data1;
-                            var vel = msg.Data2;
-                            if (vel > 0) notes.Add(NoteHelper.ApplyOctaveShift(note, OctaveShift));
-                        }
-                    }
-
-                ChosenInstrument = bmpSeq.GetTrackPreferredInstrument(track);
-            }
+            ChosenInstrument = bmpSeq.GetTrackPreferredInstrument(track);
         }
 
         /// <summary>
@@ -484,7 +469,7 @@ namespace BardMusicPlayer.Maestro.Performance
         /// </summary>
         public void Close()
         {
-            if (_sequencer is Sequencer)
+            if (_sequencer != null)
             {
                 _sequencer.CloseInputDevice();
                 _sequencer.Dispose();
@@ -539,22 +524,19 @@ namespace BardMusicPlayer.Maestro.Performance
         private bool trackAndChannelOk()
         {
             // don't open instrument if we don't have anything loaded
-            if (_sequencer == null || _sequencer.Sequence == null)
+            if (_sequencer?.Sequence == null)
                 return false;
 
             // don't open instrument if we're not on a valid track
-            if (_trackNumber == 0 || _trackNumber >= _sequencer.Sequence.Count)
-                return false;
-            return true;
+            return _trackNumber != 0 && _trackNumber < _sequencer.Sequence.Count;
         }
 
         private void startDelayTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (_sequencer is Sequencer)
-            {
-                _sequencer.Play();
-                _startDelayTimer.Enabled = false;
-            }
+            if (_sequencer is null) return;
+
+            _sequencer.Play();
+            _startDelayTimer.Enabled = false;
         }
 
         private void InternalNote(object o, ChannelMessageEventArgs args)
@@ -569,22 +551,20 @@ namespace BardMusicPlayer.Maestro.Performance
                 track = args.MidiTrack
             };
 
-            if (_sequencer.GetTrackNum(noteEvent.track) == _trackNumber || !_sequencer.IsPlaying)
-            {
-                noteEvent.note = NoteHelper.ApplyOctaveShift(noteEvent.note, OctaveShift);
+            if (_sequencer.GetTrackNum(noteEvent.track) != _trackNumber && _sequencer.IsPlaying) return;
 
-                var cmd = args.Message.Command;
-                var vel = builder.Data2;
-                if (cmd == ChannelCommand.NoteOff || (cmd == ChannelCommand.NoteOn && vel == 0))
-                    ProcessOffNote(noteEvent);
-                if (cmd == ChannelCommand.NoteOn && vel > 0)
-                {
-                    if (_livePlayDelay)
-                        ProcessOnNoteLive(noteEvent);
-                    else
-                        ProcessOnNote(noteEvent);
-                }
-            }
+            noteEvent.note = NoteHelper.ApplyOctaveShift(noteEvent.note, OctaveShift);
+
+            var cmd = args.Message.Command;
+            var vel = builder.Data2;
+            if (cmd == ChannelCommand.NoteOff || (cmd == ChannelCommand.NoteOn && vel == 0))
+                ProcessOffNote(noteEvent);
+            if (cmd != ChannelCommand.NoteOn || vel <= 0) return;
+
+            if (_livePlayDelay)
+                ProcessOnNoteLive(noteEvent);
+            else
+                ProcessOnNote(noteEvent);
         }
 
         private void InternalProg(object sender, ChannelMessageEventArgs args)
@@ -604,37 +584,30 @@ namespace BardMusicPlayer.Maestro.Performance
                 trackNum = _sequencer.GetTrackNum(args.MidiTrack),
                 voice = args.Message.Data1
             };
-            if (programEvent.voice < 27 || programEvent.voice > 31)
+            if (programEvent.voice is < 27 or > 31)
                 return;
 
-            if (_sequencer.GetTrackNum(programEvent.track) == _trackNumber)
+            if (_sequencer.GetTrackNum(programEvent.track) != _trackNumber) return;
+            if (game.ChatStatus && !_forcePlayback)
+                return;
+
+            var tone = programEvent.voice switch
             {
-                if (game.ChatStatus && !_forcePlayback)
-                    return;
+                29 => // overdriven guitar
+                    0,
+                27 => // clean guitar
+                    1,
+                28 => // muted guitar
+                    2,
+                30 => // power chords
+                    3,
+                31 => // special guitar
+                    4,
+                _ => -1
+            };
 
-                var tone = -1;
-                switch (programEvent.voice)
-                {
-                    case 29: // overdriven guitar
-                        tone = 0;
-                        break;
-                    case 27: // clean guitar
-                        tone = 1;
-                        break;
-                    case 28: // muted guitar
-                        tone = 2;
-                        break;
-                    case 30: // power chords
-                        tone = 3;
-                        break;
-                    case 31: // special guitar
-                        tone = 4;
-                        break;
-                }
-
-                if (tone > -1 && tone < 5 && game.InstrumentToneMenuKeys[(InstrumentToneMenuKey)tone] is Keys keybind)
-                    _hook.SendSyncKey(keybind);
-            }
+            if (tone is > -1 and < 5 && game.InstrumentToneMenuKeys[(InstrumentToneMenuKey)tone] is var keybind)
+                _hook.SendSyncKey(keybind);
         }
 
         private void InternalAT(object sender, ChannelMessageEventArgs args)

@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class VoiceLowPass
+    internal sealed class VoiceLowPass
     {
         public VoiceLowPass()
         {

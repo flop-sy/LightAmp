@@ -13,7 +13,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     The songbrowser but much faster than the BMP 1.x had
     /// </summary>
-    public partial class NetworkControl : UserControl
+    public sealed partial class NetworkControl : UserControl
     {
         public NetworkControl()
         {
@@ -26,13 +26,13 @@ namespace BardMusicPlayer.Ui.Controls
         private void Instance_PartyCreated(object sender, PartyCreatedEvent e)
         {
             var Token = e.Token;
-            Dispatcher.BeginInvoke(new Action(() => PartyToken_Text.Text = Token));
+            Dispatcher.BeginInvoke(new Action(() => { PartyToken_Text.Text = Token; }));
         }
 
         private void Instance_PartyDebugLog(object sender, PartyDebugLogEvent e)
         {
             var logtext = e.LogString;
-            Dispatcher.BeginInvoke(new Action(() => PartyLog_Text.Text = PartyLog_Text.Text + logtext));
+            Dispatcher.BeginInvoke(new Action(() => { PartyLog_Text.Text += logtext; }));
         }
 
         private void Join_Click(object sender, RoutedEventArgs e)

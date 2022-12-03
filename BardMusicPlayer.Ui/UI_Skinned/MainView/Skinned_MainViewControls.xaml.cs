@@ -1,5 +1,6 @@
 ﻿#region
 
+using System.Globalization;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,7 +15,7 @@ using BardMusicPlayer.Ui.Globals.SkinContainer;
 
 namespace BardMusicPlayer.Ui.Skinned
 {
-    public partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView : UserControl
     {
         /// <summary>
         ///     load the prev song in the playlist
@@ -117,13 +118,12 @@ namespace BardMusicPlayer.Ui.Skinned
         private void Load_Button_Click(object sender, RoutedEventArgs e)
         {
             Load_Button.Background = SkinContainer.CBUTTONS[SkinContainer.CBUTTON_TYPES.MAIN_EJECT_BUTTON];
-            if (PlaybackFunctions.LoadSong())
-            {
-                Scroller.Cancel();
-                Scroller = new CancellationTokenSource();
-                UpdateScroller(Scroller.Token, PlaybackFunctions.GetSongName()).ConfigureAwait(false);
-                WriteInstrumentDigitField(PlaybackFunctions.GetInstrumentNameForHostPlayer());
-            }
+            if (!PlaybackFunctions.LoadSong()) return;
+
+            Scroller.Cancel();
+            Scroller = new CancellationTokenSource();
+            UpdateScroller(Scroller.Token, PlaybackFunctions.GetSongName()).ConfigureAwait(false);
+            WriteInstrumentDigitField(PlaybackFunctions.GetInstrumentNameForHostPlayer());
         }
 
         private void Load_Button_Down(object sender, MouseButtonEventArgs e)
@@ -143,8 +143,9 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             if (Trackbar_Slider.Value > MaxTracks)
                 return;
+
             Trackbar_Background.Fill = SkinContainer.VOLUME[(SkinContainer.VOLUME_TYPES)Trackbar_Slider.Value];
-            WriteSmallDigitField(Trackbar_Slider.Value.ToString());
+            WriteSmallDigitField(Trackbar_Slider.Value.ToString(CultureInfo.InvariantCulture));
         }
 
         private void Trackbar_Slider_DragStarted(object sender, DragStartedEventArgs e)
@@ -154,12 +155,9 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void Trackbar_Slider_DragCompleted(object sender, DragCompletedEventArgs e)
         {
-            if (Trackbar_Slider.Value > MaxTracks)
-                Trackbar_Slider.Value = MaxTracks;
-            if (Trackbar_Slider.Value == 0)
-                BmpPigeonhole.Instance.PlayAllTracks = true;
-            else
-                BmpPigeonhole.Instance.PlayAllTracks = false;
+            if (Trackbar_Slider.Value > MaxTracks) Trackbar_Slider.Value = MaxTracks;
+
+            BmpPigeonhole.Instance.PlayAllTracks = Trackbar_Slider.Value == 0;
 
             BmpMaestro.Instance.SetTracknumberOnHost((int)Trackbar_Slider.Value);
             _Trackbar_dragStarted = false;
@@ -171,7 +169,7 @@ namespace BardMusicPlayer.Ui.Skinned
         private void Octavebar_Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             Octavebar_Background.Fill = SkinContainer.BALANCE[(SkinContainer.BALANCE_TYPES)Octavebar_Slider.Value];
-            WriteSmallOctaveDigitField((Octavebar_Slider.Value - 4).ToString());
+            WriteSmallOctaveDigitField((Octavebar_Slider.Value - 4).ToString(CultureInfo.InvariantCulture));
         }
 
         private void Octavebar_Slider_DragStarted(object sender, DragStartedEventArgs e)
@@ -246,21 +244,16 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void Playlist_Button_Down(object sender, MouseButtonEventArgs e)
         {
-            if (_PlaylistView.Visibility == Visibility.Visible)
-                Playlist_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON_DEPRESSED];
-            else
-                Playlist_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON_DEPRESSED_SELECTED];
+            Playlist_Button.Background = _PlaylistView.Visibility == Visibility.Visible
+                ? SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON_DEPRESSED]
+                : SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON_DEPRESSED_SELECTED];
         }
 
         private void Playlist_Button_Up(object sender, MouseButtonEventArgs e)
         {
-            if (_PlaylistView.Visibility == Visibility.Visible)
-                Playlist_Button.Background = SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON];
-            else
-                Playlist_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON_SELECTED];
+            Playlist_Button.Background = _PlaylistView.Visibility == Visibility.Visible
+                ? SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON]
+                : SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_PLAYLIST_BUTTON_SELECTED];
         }
 
         /// <summary>
@@ -283,21 +276,16 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void Random_Button_Down(object sender, MouseButtonEventArgs e)
         {
-            if (_PlaylistView.NormalPlay)
-                Random_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON_DEPRESSED];
-            else
-                Random_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON_SELECTED_DEPRESSED];
+            Random_Button.Background = _PlaylistView.NormalPlay
+                ? SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON_DEPRESSED]
+                : SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON_SELECTED_DEPRESSED];
         }
 
         private void Random_Button_Up(object sender, MouseButtonEventArgs e)
         {
-            if (_PlaylistView.NormalPlay)
-                Random_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON_SELECTED];
-            else
-                Random_Button.Background = SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON];
+            Random_Button.Background = _PlaylistView.NormalPlay
+                ? SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON_SELECTED]
+                : SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_SHUFFLE_BUTTON];
         }
 
         /// <summary>
@@ -319,20 +307,16 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void Loop_Button_Down(object sender, MouseButtonEventArgs e)
         {
-            if (_PlaylistView.LoopPlay)
-                Loop_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON_DEPRESSED];
-            else
-                Loop_Button.Background =
-                    SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON_SELECTED_DEPRESSED];
+            Loop_Button.Background = _PlaylistView.LoopPlay
+                ? SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON_DEPRESSED]
+                : SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON_SELECTED_DEPRESSED];
         }
 
         private void Loop_Button_Up(object sender, MouseButtonEventArgs e)
         {
-            if (_PlaylistView.LoopPlay)
-                Loop_Button.Background = SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON];
-            else
-                Loop_Button.Background = SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON_SELECTED];
+            Loop_Button.Background = _PlaylistView.LoopPlay
+                ? SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON]
+                : SkinContainer.SHUFREP[SkinContainer.SHUFREP_TYPES.MAIN_REPEAT_BUTTON_SELECTED];
         }
     }
 }

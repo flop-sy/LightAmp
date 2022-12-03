@@ -50,21 +50,17 @@ internal class Unzip : IDisposable
     /// </summary>
     public IEnumerable<string> FileNames
     {
-        get { return Entries.Select(e => e.Name).Where(f => !f.EndsWith("/")).OrderBy(f => f); }
+        get
+        {
+            return Entries.Select(static e => e.Name).Where(static f => !f.EndsWith("/", StringComparison.Ordinal))
+                .OrderBy(static f => f);
+        }
     }
 
     /// <summary>
     ///     Gets zip file entries.
     /// </summary>
-    public Entry[] Entries
-    {
-        get
-        {
-            if (entries == null) entries = ReadZipEntries().ToArray();
-
-            return entries;
-        }
-    }
+    public IEnumerable<Entry> Entries => entries ??= ReadZipEntries().ToArray();
 
     /// <summary>
     ///     Performs application-defined tasks associated with
@@ -76,11 +72,10 @@ internal class Unzip : IDisposable
             //Stream.Dispose();
             Stream = null;
 
-        if (Reader != null)
-        {
-            Reader.Close();
-            Reader = null;
-        }
+        if (Reader == null) return;
+
+        Reader.Close();
+        Reader = null;
     }
 
     /// <summary>
@@ -240,7 +235,7 @@ internal class Unzip : IDisposable
     /// <summary>
     ///     Zip archive entry.
     /// </summary>
-    public class Entry
+    public sealed class Entry
     {
         /// <summary>
         ///     Gets or sets the name of a file or a directory.
@@ -275,7 +270,7 @@ internal class Unzip : IDisposable
         /// <summary>
         ///     Gets a value indicating whether this <see cref="Entry" /> is a directory.
         /// </summary>
-        public bool IsDirectory => Name.EndsWith("/");
+        public bool IsDirectory => Name.EndsWith("/", StringComparison.Ordinal);
 
         /// <summary>
         ///     Gets or sets the timestamp.
@@ -297,7 +292,7 @@ internal class Unzip : IDisposable
     /// <summary>
     ///     CRC32 calculation helper.
     /// </summary>
-    public class Crc32Calculator
+    public sealed class Crc32Calculator
     {
         private static readonly uint[] Crc32Table =
         {

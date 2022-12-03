@@ -11,7 +11,7 @@ using Melanchall.DryWetMidi.Core;
 
 namespace BardMusicPlayer.Transmogrify.Processor
 {
-    internal class VSTProcessor : BaseProcessor
+    internal sealed class VSTProcessor : BaseProcessor
     {
         internal VSTProcessor(VSTProcessorConfig processorConfig, BmpSong song) : base(song)
         {

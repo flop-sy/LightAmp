@@ -24,7 +24,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für Settings.xaml
     /// </summary>
-    public partial class SettingsView : Window
+    public sealed partial class SettingsView : Window
     {
         public SettingsView()
         {
@@ -62,32 +62,29 @@ namespace BardMusicPlayer.Ui.Skinned
             SkinsDir.Text = BmpPigeonhole.Instance.SkinDirectory;
 
             //Load the skin previews
-            if (Directory.Exists(BmpPigeonhole.Instance.SkinDirectory))
+            if (!Directory.Exists(BmpPigeonhole.Instance.SkinDirectory)) return;
+
+            var files = Directory
+                .EnumerateFiles(BmpPigeonhole.Instance.SkinDirectory, "*.wsz", SearchOption.TopDirectoryOnly)
+                .ToArray();
+            Parallel.ForEach(files, file =>
             {
-                var files = Directory
-                    .EnumerateFiles(BmpPigeonhole.Instance.SkinDirectory, "*.wsz", SearchOption.TopDirectoryOnly)
-                    .ToArray();
-                Parallel.ForEach(files, file =>
+                var name = Path.GetFileNameWithoutExtension(file);
+                Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    var name = Path.GetFileNameWithoutExtension(file);
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        var bmap =
-                            ((Skinned_MainView)Application.Current.MainWindow.DataContext).ExtractBitmapFromZip(file,
-                                "Screenshot.png");
-                        if (bmap == null)
-                            bmap = ((Skinned_MainView)Application.Current.MainWindow.DataContext).ExtractBitmapFromZip(
-                                file, "MAIN.BMP");
-                        SkinPreviewBox.Items.Add(new SkinData { Title = name, ImageData = bmap });
-                    }));
-                });
-            }
+                    var bmap =
+                        Skinned_MainView.ExtractBitmapFromZip(file,
+                            "Screenshot.png") ?? Skinned_MainView.ExtractBitmapFromZip(
+                            file, "MAIN.BMP");
+                    SkinPreviewBox.Items.Add(new SkinData { Title = name, ImageData = bmap });
+                }));
+            });
         }
 
         /// <summary>
         ///     Helper class to get skin preview working
         /// </summary>
-        public class SkinData
+        public sealed class SkinData
         {
             public string Title { get; set; }
 
@@ -186,11 +183,12 @@ namespace BardMusicPlayer.Ui.Skinned
         /// </summary>
         private void SkinPreviewBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            var d = SkinPreviewBox.SelectedItem as SkinData;
-            if (d == null)
+            if (SkinPreviewBox.SelectedItem is not SkinData d)
                 return;
+
             var fileName = BmpPigeonhole.Instance.SkinDirectory + d.Title + ".wsz";
-            ((Skinned_MainView)Application.Current.MainWindow.DataContext).LoadSkin(fileName);
+            if (Application.Current.MainWindow != null)
+                ((Skinned_MainView)Application.Current.MainWindow.DataContext).LoadSkin(fileName);
             BmpPigeonhole.Instance.LastSkin = fileName;
         }
 
@@ -286,54 +284,54 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void SongsDir_TextChanged(object sender, TextChangedEventArgs e)
         {
-            BmpPigeonhole.Instance.SongDirectory = SongsDir.Text + (SongsDir.Text.EndsWith("\\") ? "" : "\\");
+            BmpPigeonhole.Instance.SongDirectory =
+                SongsDir.Text + (SongsDir.Text.EndsWith("\\", StringComparison.Ordinal) ? "" : "\\");
         }
 
         private void SongsDir_Button_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new FolderPicker();
-
-            if (Directory.Exists(BmpPigeonhole.Instance.SongDirectory))
-                dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory);
-            else
-                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            if (dlg.ShowDialog() == true)
+            var dlg = new FolderPicker
             {
-                var path = dlg.ResultPath;
-                if (!Directory.Exists(path))
-                    return;
+                InputPath = Directory.Exists(BmpPigeonhole.Instance.SongDirectory)
+                    ? Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory)
+                    : Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+            };
 
-                path = path + (path.EndsWith("\\") ? "" : "\\");
-                SongsDir.Text = path;
-                BmpPigeonhole.Instance.SongDirectory = path;
-            }
+            if (dlg.ShowDialog() != true) return;
+
+            var path = dlg.ResultPath;
+            if (!Directory.Exists(path))
+                return;
+
+            path += path.EndsWith("\\", StringComparison.Ordinal) ? "" : "\\";
+            SongsDir.Text = path;
+            BmpPigeonhole.Instance.SongDirectory = path;
         }
 
         private void SkinsDir_TextChanged(object sender, TextChangedEventArgs e)
         {
-            BmpPigeonhole.Instance.SkinDirectory = SkinsDir.Text + (SkinsDir.Text.EndsWith("\\") ? "" : "\\");
+            BmpPigeonhole.Instance.SkinDirectory =
+                SkinsDir.Text + (SkinsDir.Text.EndsWith("\\", StringComparison.Ordinal) ? "" : "\\");
         }
 
         private void SkinsDir_Button_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new FolderPicker();
-
-            if (Directory.Exists(BmpPigeonhole.Instance.SkinDirectory))
-                dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SkinDirectory);
-            else
-                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            if (dlg.ShowDialog() == true)
+            var dlg = new FolderPicker
             {
-                var path = dlg.ResultPath;
-                if (!Directory.Exists(path))
-                    return;
+                InputPath = Directory.Exists(BmpPigeonhole.Instance.SkinDirectory)
+                    ? Path.GetFullPath(BmpPigeonhole.Instance.SkinDirectory)
+                    : Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+            };
 
-                path = path + (path.EndsWith("\\") ? "" : "\\");
-                SkinsDir.Text = path;
-                BmpPigeonhole.Instance.SkinDirectory = path;
-            }
+            if (dlg.ShowDialog() != true) return;
+
+            var path = dlg.ResultPath;
+            if (!Directory.Exists(path))
+                return;
+
+            path += path.EndsWith("\\", StringComparison.Ordinal) ? "" : "\\";
+            SkinsDir.Text = path;
+            BmpPigeonhole.Instance.SkinDirectory = path;
         }
 
         #endregion

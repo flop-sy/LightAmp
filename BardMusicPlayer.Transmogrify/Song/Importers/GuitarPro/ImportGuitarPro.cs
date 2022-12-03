@@ -20,12 +20,15 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             //Detect Version by Filename
             var version = 7;
             var fileEnding = Path.GetExtension(path);
-            if (fileEnding.Equals(".gp3")) version = 3;
-            if (fileEnding.Equals(".gp4")) version = 4;
-            if (fileEnding.Equals(".gp5")) version = 5;
-            if (fileEnding.Equals(".gpx")) version = 6;
-            if (fileEnding.Equals(".gp")) version = 7;
-
+            version = fileEnding switch
+            {
+                ".gp3" => 3,
+                ".gp4" => 4,
+                ".gp5" => 5,
+                ".gpx" => 6,
+                ".gp" => 7,
+                _ => version
+            };
 
             switch (version)
             {

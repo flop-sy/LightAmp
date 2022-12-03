@@ -9,7 +9,7 @@ using BardMusicPlayer.Seer.Events;
 
 namespace BardMusicPlayer.Seer
 {
-    public partial class BmpSeer
+    public sealed partial class BmpSeer
     {
         public delegate void ActorIdChangedHandler(ActorIdChanged seerEvent);
 
@@ -361,7 +361,7 @@ namespace BardMusicPlayer.Seer
                     }
                 }
 
-                await Task.Delay(1, token).ContinueWith(tsk => { });
+                await Task.Delay(1, token).ContinueWith(static tsk => { }, token);
             }
         }
 

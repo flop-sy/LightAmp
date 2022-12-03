@@ -7,7 +7,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.ReadResults
 {
-    internal class ChatLogResult
+    internal sealed class ChatLogResult
     {
         public List<ChatLogItem> ChatLogItems { get; } = new();
 

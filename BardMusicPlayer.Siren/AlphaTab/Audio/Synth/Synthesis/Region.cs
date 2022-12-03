@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.SoundFont;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class Region
+    internal sealed class Region
     {
         public Region()
         {

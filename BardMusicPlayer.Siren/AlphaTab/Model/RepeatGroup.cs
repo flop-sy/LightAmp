@@ -9,7 +9,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     /// <summary>
     ///     This public class can store the information about a group of measures which are repeated
     /// </summary>
-    internal class RepeatGroup
+    internal sealed class RepeatGroup
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="RepeatGroup" /> class.
@@ -58,11 +58,10 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             {
                 Closings.Add(masterBar);
                 IsClosed = true;
-                if (!IsOpened)
-                {
-                    MasterBars[0].IsRepeatStart = true;
-                    IsOpened = true;
-                }
+                if (IsOpened) return;
+
+                MasterBars[0].IsRepeatStart = true;
+                IsOpened = true;
             }
             // a new item after the header was closed? -> repeat alternative reopens the group
             else if (IsClosed)

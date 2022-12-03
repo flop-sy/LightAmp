@@ -15,6 +15,7 @@ namespace BardMusicPlayer.DalamudBridge
         public static bool IsDalamudHooked(this Game game)
         {
             if (!DalamudBridge.Instance.Started) throw new DalamudBridgeException("Grunt not started.");
+
             return DalamudBridge.Instance.DalamudServer.IsConnected(game.Pid);
         }
     }

@@ -6,7 +6,7 @@ using Sanford.Multimedia.Midi;
 
 namespace BardMusicPlayer.Maestro.Utils
 {
-    public class NoteEvent
+    public sealed class NoteEvent
     {
         public int note;
         public int origNote;
@@ -14,7 +14,7 @@ namespace BardMusicPlayer.Maestro.Utils
         public int trackNum;
     }
 
-    public class ProgChangeEvent
+    public sealed class ProgChangeEvent
     {
         public Track track;
         public int trackNum;

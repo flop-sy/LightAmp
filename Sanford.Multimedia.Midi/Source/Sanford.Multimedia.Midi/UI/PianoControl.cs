@@ -48,22 +48,22 @@ namespace Sanford.Multimedia.Midi.UI
             Black
         }
 
-        private readonly static Hashtable keyTable = new Hashtable();
+        private static readonly Hashtable keyTable = new Hashtable();
 
-        private static readonly KeyType[] KeyTypeTable = 
-            {
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
-                KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White
-            };
+        private static readonly KeyType[] KeyTypeTable =
+        {
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White,
+            KeyType.White, KeyType.Black, KeyType.White, KeyType.Black, KeyType.White, KeyType.White, KeyType.Black, KeyType.White
+        };
 
         private delegate void NoteMessageCallback(ChannelMessage message);
 
@@ -83,7 +83,7 @@ namespace Sanford.Multimedia.Midi.UI
 
         private Color noteOnColor = Color.SkyBlue;
 
-        private PianoKey[] keys = null;
+        private PianoKey[] keys;
 
         private int whiteKeyCount;
 
@@ -125,14 +125,10 @@ namespace Sanford.Multimedia.Midi.UI
 
             noteOnCallback = delegate(ChannelMessage message)
             {
-                if(message.Data2 > 0)
-                {
+                if (message.Data2 > 0)
                     keys[message.Data1 - lowNoteID].PressPianoKey();
-                }
                 else
-                {
                     keys[message.Data1 - lowNoteID].ReleasePianoKey();
-                }
             };
 
             noteOffCallback = delegate(ChannelMessage message)
@@ -144,26 +140,24 @@ namespace Sanford.Multimedia.Midi.UI
         private void CreatePianoKeys()
         {
             // If piano keys have already been created.
-            if(keys != null)
-            {
+            if (keys != null)
                 // Remove and dispose of current piano keys.
-                foreach(PianoKey key in keys)
+                foreach (var key in keys)
                 {
                     Controls.Remove(key);
                     key.Dispose();
                 }
-            }
 
             keys = new PianoKey[HighNoteID - LowNoteID];
 
             whiteKeyCount = 0;
 
-            for(int i = 0; i < keys.Length; i++)
+            for (var i = 0; i < keys.Length; i++)
             {
                 keys[i] = new PianoKey(this);
                 keys[i].NoteID = i + LowNoteID;
 
-                if(KeyTypeTable[keys[i].NoteID] == KeyType.White)
+                if (KeyTypeTable[keys[i].NoteID] == KeyType.White)
                 {
                     whiteKeyCount++;
                 }
@@ -183,31 +177,27 @@ namespace Sanford.Multimedia.Midi.UI
         {
             #region Guard
 
-            if(keys.Length == 0)
-            {
-                return;
-            }
+            if (keys.Length == 0) return;
 
             #endregion
 
-            int whiteKeyWidth = Width / whiteKeyCount;
-            int blackKeyWidth = (int)(whiteKeyWidth * BlackKeyScale);
-            int blackKeyHeight = (int)(Height * BlackKeyScale);
-            int offset = whiteKeyWidth - blackKeyWidth / 2;
-            int n = 0;
-            int w = 0;
+            var whiteKeyWidth = Width / whiteKeyCount;
+            var blackKeyWidth = (int)(whiteKeyWidth * BlackKeyScale);
+            var blackKeyHeight = (int)(Height * BlackKeyScale);
+            var offset = whiteKeyWidth - blackKeyWidth / 2;
+            var n = 0;
+            var w = 0;
 
-            int widthsum = 0; // Sum of white keys' width
-            int LastWhiteWidth = 0; // Last white key width
-            int remainder = Width % whiteKeyCount; // The remaining pixels
-            int counter = 1;
-            double step = remainder != 0 ? whiteKeyCount / (double)remainder : 0; // The ternary operator prevents a division by zero
+            var widthsum = 0; // Sum of white keys' width
+            var LastWhiteWidth = 0; // Last white key width
+            var remainder = Width % whiteKeyCount; // The remaining pixels
+            var counter = 1;
+            var step = remainder != 0 ? whiteKeyCount / (double)remainder : 0; // The ternary operator prevents a division by zero
 
             while (n < keys.Length)
             {
                 if (KeyTypeTable[keys[n].NoteID] == KeyType.White)
                 {
-
                     keys[n].Height = Height;
                     keys[n].Width = whiteKeyWidth;
 
@@ -216,6 +206,7 @@ namespace Sanford.Multimedia.Midi.UI
                         counter++;
                         keys[n].Width++;
                     }
+
                     // See the Location property of black keys to understand
                     widthsum += LastWhiteWidth;
                     LastWhiteWidth = keys[n].Width;
@@ -233,34 +224,32 @@ namespace Sanford.Multimedia.Midi.UI
                     keys[n].BringToFront();
                     //n++; // Move?
                 }
+
                 n++; // Moved
             }
         }
 
         public void Send(ChannelMessage message)
         {
-            if(message.Command == ChannelCommand.NoteOn &&
-                message.Data1 >= LowNoteID && message.Data1 <= HighNoteID)
+            switch (message.Command)
             {
-                if(InvokeRequired)
+                case ChannelCommand.NoteOn when message.Data1 >= LowNoteID && message.Data1 <= HighNoteID:
                 {
-                    BeginInvoke(noteOnCallback, message);
+                    if (InvokeRequired)
+                        BeginInvoke(noteOnCallback, message);
+                    else
+                        noteOnCallback(message);
+
+                    break;
                 }
-                else
+                case ChannelCommand.NoteOff when message.Data1 >= LowNoteID && message.Data1 <= HighNoteID:
                 {
-                    noteOnCallback(message);
-                }
-            }
-            else if(message.Command == ChannelCommand.NoteOff &&
-                message.Data1 >= LowNoteID && message.Data1 <= HighNoteID)
-            {
-                if(InvokeRequired)
-                {
-                    BeginInvoke(noteOffCallback, message);
-                }
-                else
-                {
-                    noteOffCallback(message);
+                    if (InvokeRequired)
+                        BeginInvoke(noteOffCallback, message);
+                    else
+                        noteOffCallback(message);
+
+                    break;
                 }
             }
         }
@@ -269,10 +258,7 @@ namespace Sanford.Multimedia.Midi.UI
         {
             #region Require
 
-            if(noteID < lowNoteID || noteID > highNoteID)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (noteID < lowNoteID || noteID > highNoteID) throw new ArgumentOutOfRangeException();
 
             #endregion
 
@@ -283,10 +269,7 @@ namespace Sanford.Multimedia.Midi.UI
         {
             #region Require
 
-            if(noteID < lowNoteID || noteID > highNoteID)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (noteID < lowNoteID || noteID > highNoteID) throw new ArgumentOutOfRangeException();
 
             #endregion
 
@@ -295,64 +278,50 @@ namespace Sanford.Multimedia.Midi.UI
 
         public void PressPianoKey(Keys k)
         {
-            if(!Focused)
-            {
-                return;
-            }
+            if (!Focused) return;
 
-            if(keyTable.Contains(k))
+            if (keyTable.Contains(k))
             {
-                int noteID = (int)keyTable[k] + 12 * octaveOffset;
+                var noteID = (int)keyTable[k] + 12 * octaveOffset;
 
-                if(noteID >= LowNoteID && noteID <= HighNoteID)
-                {
-                    if(!keys[noteID - lowNoteID].IsPianoKeyPressed)
-                    {
-                        keys[noteID - lowNoteID].PressPianoKey();
-                    }
-                }
+                if (noteID < LowNoteID || noteID > HighNoteID) return;
+
+                if (!keys[noteID - lowNoteID].IsPianoKeyPressed) keys[noteID - lowNoteID].PressPianoKey();
             }
             else
             {
-                if(k == Keys.D0)
+                switch (k)
                 {
-                    octaveOffset = 0;
-                }
-                else if(k == Keys.D1)
-                {
-                    octaveOffset = 1;
-                }
-                else if(k == Keys.D2)
-                {
-                    octaveOffset = 2;
-                }
-                else if(k == Keys.D3)
-                {
-                    octaveOffset = 3;
-                }
-                else if(k == Keys.D4)
-                {
-                    octaveOffset = 4;
-                }
-                else if(k == Keys.D5)
-                {
-                    octaveOffset = 5;
-                }
-                else if(k == Keys.D6)
-                {
-                    octaveOffset = 6;
-                }
-                else if(k == Keys.D7)
-                {
-                    octaveOffset = 7;
-                }
-                else if(k == Keys.D8)
-                {
-                    octaveOffset = 8;
-                }
-                else if(k == Keys.D9)
-                {
-                    octaveOffset = 9;
+                    case Keys.D0:
+                        octaveOffset = 0;
+                        break;
+                    case Keys.D1:
+                        octaveOffset = 1;
+                        break;
+                    case Keys.D2:
+                        octaveOffset = 2;
+                        break;
+                    case Keys.D3:
+                        octaveOffset = 3;
+                        break;
+                    case Keys.D4:
+                        octaveOffset = 4;
+                        break;
+                    case Keys.D5:
+                        octaveOffset = 5;
+                        break;
+                    case Keys.D6:
+                        octaveOffset = 6;
+                        break;
+                    case Keys.D7:
+                        octaveOffset = 7;
+                        break;
+                    case Keys.D8:
+                        octaveOffset = 8;
+                        break;
+                    case Keys.D9:
+                        octaveOffset = 9;
+                        break;
                 }
             }
         }
@@ -361,19 +330,13 @@ namespace Sanford.Multimedia.Midi.UI
         {
             #region Guard
 
-            if(!keyTable.Contains(k))
-            {
-                return;
-            }
+            if (!keyTable.Contains(k)) return;
 
-            #endregion            
+            #endregion
 
-            int noteID = (int)keyTable[k] + 12 * octaveOffset;
+            var noteID = (int)keyTable[k] + 12 * octaveOffset;
 
-            if(noteID >= LowNoteID && noteID <= HighNoteID)
-            {
-                keys[noteID - lowNoteID].ReleasePianoKey();
-            }
+            if (noteID >= LowNoteID && noteID <= HighNoteID) keys[noteID - lowNoteID].ReleasePianoKey();
         }
 
         protected override void OnResize(EventArgs e)
@@ -385,35 +348,25 @@ namespace Sanford.Multimedia.Midi.UI
 
         protected override void Dispose(bool disposing)
         {
-            if(disposing)
-            {
-                foreach(PianoKey key in keys)
-                {
+            if (disposing)
+                foreach (var key in keys)
                     key.Dispose();
-                }
-            }
 
             base.Dispose(disposing);
         }
 
         protected virtual void OnPianoKeyDown(PianoKeyEventArgs e)
         {
-            EventHandler<PianoKeyEventArgs> handler = PianoKeyDown;
+            var handler = PianoKeyDown;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         protected virtual void OnPianoKeyUp(PianoKeyEventArgs e)
         {
-            EventHandler<PianoKeyEventArgs> handler = PianoKeyUp;
+            var handler = PianoKeyUp;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         public int LowNoteID
@@ -426,29 +379,21 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 #region Require
 
-                if(value < 0 || value > ShortMessage.DataMaxValue)
-                {
+                if (value < 0 || value > ShortMessage.DataMaxValue)
                     throw new ArgumentOutOfRangeException("LowNoteID", value,
                         "Low note ID out of range.");
-                }
 
                 #endregion
 
                 #region Guard
 
-                if(value == lowNoteID)
-                {
-                    return;
-                }
+                if (value == lowNoteID) return;
 
                 #endregion
 
                 lowNoteID = value;
 
-                if(lowNoteID > highNoteID)
-                {
-                    highNoteID = lowNoteID;
-                }
+                if (lowNoteID > highNoteID) highNoteID = lowNoteID;
 
                 CreatePianoKeys();
                 InitializePianoKeys();
@@ -465,29 +410,21 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 #region Require
 
-                if(value < 0 || value > ShortMessage.DataMaxValue)
-                {
+                if (value < 0 || value > ShortMessage.DataMaxValue)
                     throw new ArgumentOutOfRangeException("HighNoteID", value,
                         "High note ID out of range.");
-                }
 
                 #endregion
 
                 #region Guard
 
-                if(value == highNoteID)
-                {
-                    return;
-                }
+                if (value == highNoteID) return;
 
                 #endregion
 
                 highNoteID = value;
 
-                if(highNoteID < lowNoteID)
-                {
-                    lowNoteID = highNoteID;
-                }
+                if (highNoteID < lowNoteID) lowNoteID = highNoteID;
 
                 CreatePianoKeys();
                 InitializePianoKeys();
@@ -504,19 +441,13 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 #region Guard
 
-                if(value == noteOnColor)
-                {
-                    return;
-                }
+                if (value == noteOnColor) return;
 
                 #endregion
 
                 noteOnColor = value;
 
-                foreach(PianoKey key in keys)
-                {
-                    key.NoteOnColor = noteOnColor;
-                }
+                foreach (var key in keys) key.NoteOnColor = noteOnColor;
             }
         }
     }

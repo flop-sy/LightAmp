@@ -122,9 +122,7 @@ namespace BardMusicPlayer.Ui.Functions
         /// <returns>song name as string</returns>
         public static string GetSongName()
         {
-            if (CurrentSong == null)
-                return "please load a song";
-            return CurrentSong.Title;
+            return CurrentSong == null ? "please load a song" : CurrentSong.Title;
         }
 
         /// <summary>
@@ -140,6 +138,7 @@ namespace BardMusicPlayer.Ui.Functions
                 return "No song loaded";
             if (tracknumber > CurrentSong.TrackContainers.Count)
                 return "None";
+
             try
             {
                 var classicConfig = (ClassicProcessorConfig)CurrentSong.TrackContainers[tracknumber - 1]
@@ -166,6 +165,7 @@ namespace BardMusicPlayer.Ui.Functions
                 return "No song loaded";
             if (tracknumber > CurrentSong.TrackContainers.Count)
                 return "None";
+
             try
             {
                 var classicConfig =
@@ -185,6 +185,7 @@ namespace BardMusicPlayer.Ui.Functions
         {
             if (!BmpPigeonhole.Instance.BringBMPtoFront)
                 return;
+
             try
             {
                 var mainWindow = Application.Current.MainWindow;
@@ -199,6 +200,7 @@ namespace BardMusicPlayer.Ui.Functions
             }
             catch
             {
+                // ignored
             }
         }
     }

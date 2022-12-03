@@ -17,14 +17,14 @@ using H.Pipes.Args;
 
 namespace BardMusicPlayer.DalamudBridge.Helper.Dalamud
 {
-    public class Message
+    public sealed class Message
     {
         public MessageType msgType { get; set; } = MessageType.None;
         public int msgChannel { get; set; }
         public string message { get; set; } = "";
     }
 
-    internal class DalamudServer : IDisposable
+    internal sealed class DalamudServer : IDisposable
     {
         private readonly ConcurrentDictionary<int, string> _clients;
         private readonly PipeServer<Message> _pipe;
@@ -66,12 +66,14 @@ namespace BardMusicPlayer.DalamudBridge.Helper.Dalamud
         internal async void Start()
         {
             if (_pipe.IsStarted) return;
+
             await _pipe.StartAsync();
         }
 
         internal async void Stop()
         {
             if (!_pipe.IsStarted) return;
+
             await _pipe.StopAsync();
         }
 
@@ -192,25 +194,31 @@ namespace BardMusicPlayer.DalamudBridge.Helper.Dalamud
             if (inMsg == null)
                 return;
 
-            if (inMsg.msgType == MessageType.Handshake)
+            switch (inMsg.msgType)
             {
-                var t = Convert.ToInt32(inMsg.message);
-                _clients.TryAdd(t, e.Connection.PipeName);
-                Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} {t} connected");
-            }
+                case MessageType.Handshake:
+                {
+                    var t = Convert.ToInt32(inMsg.message);
+                    _clients.TryAdd(t, e.Connection.PipeName);
+                    Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} {t} connected");
+                    break;
+                }
+                case MessageType.SetGfx:
+                    try
+                    {
+                        var t = inMsg.message;
+                        var pid = Convert.ToInt32(t.Split(':')[0]);
+                        var lowsettings = Convert.ToBoolean(t.Split(':')[1]);
+                        if (BmpSeer.Instance.Games.ContainsKey(pid))
+                            BmpSeer.Instance.Games[pid].GfxSettingsLow = lowsettings;
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
 
-            if (inMsg.msgType == MessageType.SetGfx)
-                try
-                {
-                    var t = inMsg.message;
-                    var pid = Convert.ToInt32(t.Split(':')[0]);
-                    var lowsettings = Convert.ToBoolean(t.Split(':')[1]);
-                    if (BmpSeer.Instance.Games.ContainsKey(pid))
-                        BmpSeer.Instance.Games[pid].GfxSettingsLow = lowsettings;
-                }
-                catch
-                {
-                }
+                    break;
+            }
         }
 
         /// <summary>
@@ -230,7 +238,7 @@ namespace BardMusicPlayer.DalamudBridge.Helper.Dalamud
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void OnConnected(object sender, ConnectionEventArgs<Message> e)
+        private static void OnConnected(object sender, ConnectionEventArgs<Message> e)
         {
             Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} connected");
         }

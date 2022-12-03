@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth
 {
-    internal class SynthEvent
+    internal sealed class SynthEvent
     {
         public SynthEvent(int eventIndex, MidiEvent e)
         {

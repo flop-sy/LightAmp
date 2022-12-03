@@ -16,7 +16,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 {
-    internal class MemoryHandler
+    internal sealed class MemoryHandler
     {
         private bool _isNewInstance = true;
 
@@ -43,9 +43,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 
         private List<ProcessModule> SystemModules { get; } = new();
 
-        public event EventHandler<ExceptionEvent> ExceptionEvent = delegate { };
+        public event EventHandler<ExceptionEvent> ExceptionEvent = static delegate { };
 
-        public event EventHandler<SignaturesFoundEvent> SignaturesFoundEvent = delegate { };
+        public event EventHandler<SignaturesFoundEvent> SignaturesFoundEvent = static delegate { };
 
         ~MemoryHandler()
         {
@@ -61,7 +61,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 
         public byte[] GetByteArray(IntPtr address, int length)
         {
-            if (length < 1) return new byte[0];
+            if (length < 1) return Array.Empty<byte>();
 
             var array = new byte[length];
             Peek(address, array);
@@ -96,7 +96,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             return GetPlatformIntFromBytes(array);
         }
 
-        public long GetPlatformIntFromBytes(byte[] source, int index = 0)
+        public static long GetPlatformIntFromBytes(byte[] source, int index = 0)
         {
             return SBitConverter.TryToInt64(source, index);
         }
@@ -108,7 +108,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             return GetPlatformUIntFromBytes(array);
         }
 
-        public long GetPlatformUIntFromBytes(byte[] source, int index = 0)
+        public static long GetPlatformUIntFromBytes(byte[] source, int index = 0)
         {
             return (long)SBitConverter.TryToUInt64(source, index);
         }
@@ -135,10 +135,11 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             return Encoding.UTF8.GetString(array);
         }
 
-        public string GetStringFromBytes(byte[] source, int offset = 0, int size = 256)
+        public static string GetStringFromBytes(byte[] source, int offset = 0, int size = 256)
         {
             var num = source.Length - offset;
             if (num < size) size = num;
+
             var array = new byte[size];
             Array.Copy(source, offset, array, 0, size);
             var newSize = 0;
@@ -158,7 +159,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
         {
             var intPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(T)));
             UnsafeNativeMethods.ReadProcessMemory(ProcessModel.Process.Handle, address + offset, intPtr,
-                new IntPtr(Marshal.SizeOf(typeof(T))), out var _);
+                new IntPtr(Marshal.SizeOf(typeof(T))), out _);
             var result = (T)Marshal.PtrToStructure(intPtr, typeof(T));
             Marshal.FreeCoTaskMem(intPtr);
             return result;
@@ -293,12 +294,12 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             Structures = new APIHelper(this).GetStructures();
         }
 
-        protected internal virtual void RaiseException(Exception ex)
+        internal void RaiseException(Exception ex)
         {
             ExceptionEvent?.Invoke(this, new ExceptionEvent(this, ex));
         }
 
-        protected internal virtual void RaiseSignaturesFound(Dictionary<string, Signature> signatures,
+        internal void RaiseSignaturesFound(Dictionary<string, Signature> signatures,
             long processingTime)
         {
             SignaturesFoundEvent?.Invoke(this, new SignaturesFoundEvent(this, signatures, processingTime));

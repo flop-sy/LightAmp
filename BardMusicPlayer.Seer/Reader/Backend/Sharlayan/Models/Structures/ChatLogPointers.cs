@@ -1,6 +1,6 @@
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.Structures
 {
-    internal class ChatLogPointers
+    internal sealed class ChatLogPointers
     {
         public int LogEnd { get; set; }
 

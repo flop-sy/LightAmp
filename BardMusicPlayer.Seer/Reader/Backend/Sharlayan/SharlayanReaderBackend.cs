@@ -17,7 +17,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 {
-    internal class SharlayanReaderBackend : IReaderBackend
+    internal sealed class SharlayanReaderBackend : IReaderBackend
     {
         private ScanItems _lastScan;
 
@@ -108,6 +108,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             }
             catch
             {
+                // ignored
             }
 
             try
@@ -116,6 +117,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             }
             catch
             {
+                // ignored
             }
 
             try
@@ -124,6 +126,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             }
             catch
             {
+                // ignored
             }
 
             try
@@ -132,6 +135,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             }
             catch
             {
+                // ignored
             }
 
             try
@@ -140,6 +144,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             }
             catch
             {
+                // ignored
             }
 
             _reader = null;
@@ -208,6 +213,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             {
                 if (cancellationToken.IsCancellationRequested)
                     return;
+
                 ReaderHandler.Game.PublishEvent(new ChatLog(EventSource.Sharlayan, ReaderHandler.Game, item));
             }
 
@@ -259,13 +265,13 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
                 if (cancellationToken.IsCancellationRequested)
                     return;
 
-                if (item.Code.Equals("000E"))
-                    if (item.Line.Split(':')[1].StartsWith("switchto"))
-                    {
-                        var id = Convert.ToInt32(item.Line.Split(' ')[2]);
-                        ReaderHandler.Game.PublishEvent(new MidibardPlaylistEvent(EventSource.Sharlayan,
-                            ReaderHandler.Game, id));
-                    }
+                if (!item.Code.Equals("000E")) continue;
+
+                if (!item.Line.Split(':')[1].StartsWith("switchto", StringComparison.Ordinal)) continue;
+
+                var id = Convert.ToInt32(item.Line.Split(' ')[2]);
+                ReaderHandler.Game.PublishEvent(new MidibardPlaylistEvent(EventSource.Sharlayan,
+                    ReaderHandler.Game, id));
             }
         }
 

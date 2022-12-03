@@ -16,7 +16,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan;
 
 namespace BardMusicPlayer.Seer
 {
-    public partial class Game : IDisposable, IEquatable<Game>
+    public sealed partial class Game : IDisposable, IEquatable<Game>
     {
         private readonly string _uuid;
 
@@ -42,14 +42,13 @@ namespace BardMusicPlayer.Seer
 
         public void Dispose()
         {
-            if (_eventQueueHighPriority != null && _eventQueueHighPriority != null && _eventDedupeHistory != null)
+            if (_eventQueueHighPriority is { } && _eventDedupeHistory != null)
                 BmpSeer.Instance.PublishEvent(new GameStopped(Pid));
 
             _eventQueueOpen = false;
             try
             {
-                if (_eventTokenSource != null)
-                    _eventTokenSource.Cancel();
+                _eventTokenSource?.Cancel();
             }
             catch (Exception ex)
             {
@@ -95,8 +94,7 @@ namespace BardMusicPlayer.Seer
                     {
                     }
 
-                if (_eventDedupeHistory != null)
-                    _eventDedupeHistory.Clear();
+                _eventDedupeHistory?.Clear();
             }
             catch (Exception ex)
             {
@@ -224,6 +222,7 @@ namespace BardMusicPlayer.Seer
         {
             if (AffinityMask == 0)
                 return;
+
             Process.ProcessorAffinity = (IntPtr)AffinityMask;
         }
     }

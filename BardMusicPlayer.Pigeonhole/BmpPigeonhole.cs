@@ -25,7 +25,7 @@ namespace BardMusicPlayer.Pigeonhole
         /// <summary>
         ///     Sets PlayAllTracks
         /// </summary>
-        public virtual bool PlayAllTracks { get; set; } = false;
+        public virtual bool PlayAllTracks { get; set; }
 
         /// <summary>
         ///     Sets PlaylistDelay
@@ -75,12 +75,12 @@ namespace BardMusicPlayer.Pigeonhole
         /// <summary>
         ///     brings the bmp to front
         /// </summary>
-        public virtual bool LiveMidiPlayDelay { get; set; } = false;
+        public virtual bool LiveMidiPlayDelay { get; set; }
 
         /// <summary>
         ///     force the playback
         /// </summary>
-        public virtual bool ForcePlayback { get; set; } = false;
+        public virtual bool ForcePlayback { get; set; }
 
         /// <summary>
         ///     brings the game to front
@@ -127,37 +127,37 @@ namespace BardMusicPlayer.Pigeonhole
         /// <summary>
         ///     open local orchestra after hooking new proc
         /// </summary>
-        public virtual bool LocalOrchestra { get; set; } = false;
+        public virtual bool LocalOrchestra { get; set; }
 
         /// <summary>
         ///     Enable the 16 voice limit in Synthesizer
         /// </summary>
-        public virtual bool EnableSynthVoiceLimiter { get; set; } = true;
+        public virtual bool EnableSynthVoiceLimiter => true;
 
         /// <summary>
         ///     milliseconds till ready check confirmation.
         /// </summary>
-        public virtual int EnsembleReadyDelay { get; set; } = 500;
+        public virtual int EnsembleReadyDelay => 500;
 
         /// <summary>
         ///     autoequip bards after song loaded
         /// </summary>
-        public virtual bool AutoEquipBards { get; set; } = false;
+        public virtual bool AutoEquipBards { get; set; }
 
         /// <summary>
         ///     keep the ensmble track settings
         /// </summary>
-        public virtual bool EnsembleKeepTrackSetting { get; set; } = false;
+        public virtual bool EnsembleKeepTrackSetting { get; set; }
 
         /// <summary>
         ///     ignores the progchange
         /// </summary>
-        public virtual bool IgnoreProgChange { get; set; } = false;
+        public virtual bool IgnoreProgChange { get; set; }
 
         /// <summary>
         ///     milliseconds between game process scans / seer scanner startups.
         /// </summary>
-        public virtual int SeerGameScanCooldown { get; set; } = 20;
+        public virtual int SeerGameScanCooldown => 20;
 
         /// <summary>
         ///     Contains the last path of an opened midi file
@@ -167,7 +167,7 @@ namespace BardMusicPlayer.Pigeonhole
         /// <summary>
         ///     Contains the delay used for note pressing. This should be no less then 1 and no greater then 25.
         /// </summary>
-        public virtual int NoteKeyDelay { get; set; } = 1;
+        public virtual int NoteKeyDelay => 1;
 
         /// <summary>
         ///     Contains the delay used for tone pressing. This should be no less then 1 and no greater then 25.
@@ -177,19 +177,19 @@ namespace BardMusicPlayer.Pigeonhole
         /// <summary>
         ///     Compatmode for MidiBard
         /// </summary>
-        public virtual bool MidiBardCompatMode { get; set; } = false;
+        public virtual bool MidiBardCompatMode { get; set; }
 
         /// <summary>
         ///     Use the Hypnotoad for instruemtn eq
         /// </summary>
-        public virtual bool UsePluginForInstrumentOpen { get; set; } = false;
+        public virtual bool UsePluginForInstrumentOpen { get; set; }
 
         /// <summary>
         ///     Defaults to log level Info
         /// </summary>
         public virtual BmpLog.Verbosity DefaultLogLevel { get; set; } = BmpLog.Verbosity.Info;
 
-        public virtual bool SkinnedUi_UseExtendedView { get; set; } = false;
+        public virtual bool SkinnedUi_UseExtendedView { get; set; }
 
         /// <summary>
         ///     Initializes the pigeonhole file
@@ -198,6 +198,7 @@ namespace BardMusicPlayer.Pigeonhole
         public static void Initialize(string filename)
         {
             if (Initialized) return;
+
             _instance = Load<BmpPigeonhole>(filename).EnableAutosave();
         }
     }

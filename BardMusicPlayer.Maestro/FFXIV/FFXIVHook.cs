@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ using BardMusicPlayer.Quotidian.Enums;
 
 namespace BardMusicPlayer.Maestro.FFXIV
 {
-    public class FFXIVHook
+    public sealed class FFXIVHook
     {
         private static MessageProc proc;
         private IntPtr _hookID = IntPtr.Zero;
@@ -28,30 +29,25 @@ namespace BardMusicPlayer.Maestro.FFXIV
         public bool Hook(Process process, bool useCallback = true)
         {
             if (process == null) return false;
+
             if (_hookID != IntPtr.Zero) Unhook();
             Process = process;
             mainWindowHandle = process.MainWindowHandle;
 
-            if (useCallback)
-            {
-                proc = HookCallback;
-                _hookID = SetWindowsHookEx(WH_KEYBOARD_LL, proc, IntPtr.Zero, 0);
-                if (_hookID != IntPtr.Zero)
-                    return true;
-                return false;
-            }
+            if (!useCallback) return true;
 
-            return true;
+            proc = HookCallback;
+            _hookID = SetWindowsHookEx(WH_KEYBOARD_LL, proc, IntPtr.Zero, 0);
+            return _hookID != IntPtr.Zero;
         }
 
         public void Unhook()
         {
-            if (_hookID != IntPtr.Zero)
-            {
-                UnhookWindowsHookEx(_hookID);
-                Process = null;
-                _hookID = IntPtr.Zero;
-            }
+            if (_hookID == IntPtr.Zero) return;
+
+            UnhookWindowsHookEx(_hookID);
+            Process = null;
+            _hookID = IntPtr.Zero;
         }
 
         public void FocusWindow()
@@ -82,30 +78,27 @@ namespace BardMusicPlayer.Maestro.FFXIV
                     Thread.Sleep(50);
                 }
 
-                if (sendUp)
+                if (!sendUp) return;
+
+                SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)key2, (IntPtr)0);
+                if (!modifier) return;
+
+                if ((key & Keys.Shift) == Keys.Shift)
                 {
-                    SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)key2, (IntPtr)0);
-                    if (modifier)
-                    {
-                        if ((key & Keys.Shift) == Keys.Shift)
-                        {
-                            Thread.Sleep(5);
-                            SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ShiftKey, (IntPtr)0);
-                        }
-
-                        if ((key & Keys.Alt) == Keys.Alt)
-                        {
-                            Thread.Sleep(5);
-                            SendMessage(mainWindowHandle, WM_SYSKEYUP, (IntPtr)Keys.AltKey, (IntPtr)0);
-                        }
-
-                        if ((key & Keys.Control) == Keys.Control)
-                        {
-                            Thread.Sleep(5);
-                            SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ControlKey, (IntPtr)0);
-                        }
-                    }
+                    Thread.Sleep(5);
+                    SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ShiftKey, (IntPtr)0);
                 }
+
+                if ((key & Keys.Alt) == Keys.Alt)
+                {
+                    Thread.Sleep(5);
+                    SendMessage(mainWindowHandle, WM_SYSKEYUP, (IntPtr)Keys.AltKey, (IntPtr)0);
+                }
+
+                if ((key & Keys.Control) != Keys.Control) return;
+
+                Thread.Sleep(5);
+                SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ControlKey, (IntPtr)0);
             });
         }
 
@@ -127,19 +120,17 @@ namespace BardMusicPlayer.Maestro.FFXIV
                 SendMessage(mainWindowHandle, WM_KEYDOWN, (IntPtr)key2, (IntPtr)0);
             }
 
-            if (sendUp)
-            {
-                SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)key2, (IntPtr)0);
-                if (modifier)
-                {
-                    if ((key & Keys.Control) == Keys.Control)
-                        SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ControlKey, (IntPtr)0);
-                    if ((key & Keys.Alt) == Keys.Alt)
-                        SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.AltKey, (IntPtr)0);
-                    if ((key & Keys.Shift) == Keys.Shift)
-                        SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ShiftKey, (IntPtr)0);
-                }
-            }
+            if (!sendUp) return;
+
+            SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)key2, (IntPtr)0);
+            if (!modifier) return;
+
+            if ((key & Keys.Control) == Keys.Control)
+                SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ControlKey, (IntPtr)0);
+            if ((key & Keys.Alt) == Keys.Alt)
+                SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.AltKey, (IntPtr)0);
+            if ((key & Keys.Shift) == Keys.Shift)
+                SendMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ShiftKey, (IntPtr)0);
         }
 
         public void SendAsyncKey(Keys key, bool modifier = true, bool sendDown = true, bool sendUp = true)
@@ -158,17 +149,15 @@ namespace BardMusicPlayer.Maestro.FFXIV
                 PostMessage(mainWindowHandle, WM_KEYDOWN, (IntPtr)key2, (IntPtr)0);
             }
 
-            if (sendUp)
-            {
-                PostMessage(mainWindowHandle, WM_KEYUP, (IntPtr)key2, (IntPtr)0);
-                if (modifier)
-                {
-                    if ((key & Keys.Control) == Keys.Control)
-                        PostMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ControlKey, (IntPtr)0);
-                    if ((key & Keys.Shift) == Keys.Shift)
-                        PostMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ShiftKey, (IntPtr)0);
-                }
-            }
+            if (!sendUp) return;
+
+            PostMessage(mainWindowHandle, WM_KEYUP, (IntPtr)key2, (IntPtr)0);
+            if (!modifier) return;
+
+            if ((key & Keys.Control) == Keys.Control)
+                PostMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ControlKey, (IntPtr)0);
+            if ((key & Keys.Shift) == Keys.Shift)
+                PostMessage(mainWindowHandle, WM_KEYUP, (IntPtr)Keys.ShiftKey, (IntPtr)0);
         }
 
         public void SendKeyStroke(Keys keyDown = Keys.None, Keys modDown = Keys.None, Keys keyUp = Keys.None,
@@ -178,18 +167,10 @@ namespace BardMusicPlayer.Maestro.FFXIV
             if (keyUp != Keys.None) SendAsyncKey(keyDown | modDown, true, false);
         }
 
-        public void SendKeyInput(List<KEYBDINPUT> KeybdInput)
+        public void SendKeyInput(IEnumerable<KEYBDINPUT> KeybdInput)
         {
-            var keyList = new List<INPUT>();
-            foreach (var input in KeybdInput)
-                keyList.Add(new INPUT
-                {
-                    type = 1,
-                    un = new InputUnion
-                    {
-                        ki = input
-                    }
-                });
+            var keyList = KeybdInput.Select(static input => new INPUT { type = 1, un = new InputUnion { ki = input } })
+                .ToList();
             SendInput((uint)keyList.Count, keyList.ToArray(), Marshal.SizeOf(typeof(INPUT)));
         }
 
@@ -297,26 +278,22 @@ namespace BardMusicPlayer.Maestro.FFXIV
 
         public RECT GetClientRect()
         {
-            if (mainWindowHandle != null)
-                if (GetClientRect(new HandleRef(this, mainWindowHandle), out var rect))
-                    return rect;
-            return new RECT();
+            return GetClientRect(new HandleRef(this, mainWindowHandle), out var rect) ? rect : new RECT();
         }
 
         public bool GetScreenFromClientPoint(ref POINT point)
         {
-            if (mainWindowHandle != null) return ClientToScreen(new HandleRef(this, mainWindowHandle), ref point);
-            return false;
+            return ClientToScreen(new HandleRef(this, mainWindowHandle), ref point);
         }
 
         public IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (GetForegroundWindow() == mainWindowHandle)
-                if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
-                {
-                    var vkCode = Marshal.ReadInt32(lParam);
-                    OnKeyPressed?.Invoke(this, (Keys)vkCode);
-                }
+            if (GetForegroundWindow() != mainWindowHandle) return CallNextHookEx(_hookID, nCode, wParam, lParam);
+
+            if (nCode < 0 || wParam != (IntPtr)WM_KEYDOWN) return CallNextHookEx(_hookID, nCode, wParam, lParam);
+
+            var vkCode = Marshal.ReadInt32(lParam);
+            OnKeyPressed?.Invoke(this, (Keys)vkCode);
 
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
         }
@@ -438,12 +415,12 @@ namespace BardMusicPlayer.Maestro.FFXIV
             public int Right;
             public int Bottom;
 
-            public int Width()
+            public readonly int Width()
             {
                 return Right - Left;
             }
 
-            public int Height()
+            public readonly int Height()
             {
                 return Bottom - Top;
             }

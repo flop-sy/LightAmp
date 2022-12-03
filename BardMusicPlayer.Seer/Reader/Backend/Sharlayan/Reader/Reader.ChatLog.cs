@@ -12,7 +12,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.ReadResults;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
 {
-    internal partial class Reader
+    internal sealed partial class Reader
     {
         private readonly ChatLogReader _chatLogReader;
 
@@ -102,7 +102,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
                 MemoryHandler?.RaiseException(ex);
             }
 
-            foreach (var bytes in buffered.Where(b => b.Count > 0))
+            foreach (var bytes in buffered.Where(static b => b.Count > 0))
                 try
                 {
                     var chatLogEntry = ChatEntry.Process(MemoryHandler, bytes.ToArray());

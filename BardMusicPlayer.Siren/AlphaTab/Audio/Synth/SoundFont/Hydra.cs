@@ -8,7 +8,7 @@ using BardMusicPlayer.Siren.AlphaTab.IO;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.SoundFont
 {
-    internal class Hydra
+    internal sealed class Hydra
     {
         public Hydra()
         {
@@ -44,72 +44,84 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.SoundFont
             while (RiffChunk.Load(chunkHead, chunkFastList, readable))
             {
                 var chunk = new RiffChunk();
-                if (chunkFastList.Id == "pdta")
-                    while (RiffChunk.Load(chunkFastList, chunk, readable))
-                        switch (chunk.Id)
-                        {
-                            case "phdr":
-                                for (uint i = 0, count = chunk.Size / HydraPhdr.SizeInFile; i < count; i++)
-                                    Phdrs.Add(HydraPhdr.Load(readable));
+                switch (chunkFastList.Id)
+                {
+                    case "pdta":
+                    {
+                        while (RiffChunk.Load(chunkFastList, chunk, readable))
+                            switch (chunk.Id)
+                            {
+                                case "phdr":
+                                    for (uint i = 0, count = chunk.Size / HydraPhdr.SizeInFile; i < count; i++)
+                                        Phdrs.Add(HydraPhdr.Load(readable));
 
-                                break;
-                            case "pbag":
-                                for (uint i = 0, count = chunk.Size / HydraPbag.SizeInFile; i < count; i++)
-                                    Pbags.Add(HydraPbag.Load(readable));
+                                    break;
+                                case "pbag":
+                                    for (uint i = 0, count = chunk.Size / HydraPbag.SizeInFile; i < count; i++)
+                                        Pbags.Add(HydraPbag.Load(readable));
 
-                                break;
-                            case "pmod":
-                                for (uint i = 0, count = chunk.Size / HydraPmod.SizeInFile; i < count; i++)
-                                    Pmods.Add(HydraPmod.Load(readable));
+                                    break;
+                                case "pmod":
+                                    for (uint i = 0, count = chunk.Size / HydraPmod.SizeInFile; i < count; i++)
+                                        Pmods.Add(HydraPmod.Load(readable));
 
-                                break;
-                            case "pgen":
-                                for (uint i = 0, count = chunk.Size / HydraPgen.SizeInFile; i < count; i++)
-                                    Pgens.Add(HydraPgen.Load(readable));
+                                    break;
+                                case "pgen":
+                                    for (uint i = 0, count = chunk.Size / HydraPgen.SizeInFile; i < count; i++)
+                                        Pgens.Add(HydraPgen.Load(readable));
 
-                                break;
-                            case "inst":
-                                for (uint i = 0, count = chunk.Size / HydraInst.SizeInFile; i < count; i++)
-                                    Insts.Add(HydraInst.Load(readable));
+                                    break;
+                                case "inst":
+                                    for (uint i = 0, count = chunk.Size / HydraInst.SizeInFile; i < count; i++)
+                                        Insts.Add(HydraInst.Load(readable));
 
-                                break;
-                            case "ibag":
-                                for (uint i = 0, count = chunk.Size / HydraIbag.SizeInFile; i < count; i++)
-                                    Ibags.Add(HydraIbag.Load(readable));
+                                    break;
+                                case "ibag":
+                                    for (uint i = 0, count = chunk.Size / HydraIbag.SizeInFile; i < count; i++)
+                                        Ibags.Add(HydraIbag.Load(readable));
 
-                                break;
-                            case "imod":
-                                for (uint i = 0, count = chunk.Size / HydraImod.SizeInFile; i < count; i++)
-                                    Imods.Add(HydraImod.Load(readable));
+                                    break;
+                                case "imod":
+                                    for (uint i = 0, count = chunk.Size / HydraImod.SizeInFile; i < count; i++)
+                                        Imods.Add(HydraImod.Load(readable));
 
-                                break;
-                            case "igen":
-                                for (uint i = 0, count = chunk.Size / HydraIgen.SizeInFile; i < count; i++)
-                                    Igens.Add(HydraIgen.Load(readable));
+                                    break;
+                                case "igen":
+                                    for (uint i = 0, count = chunk.Size / HydraIgen.SizeInFile; i < count; i++)
+                                        Igens.Add(HydraIgen.Load(readable));
 
-                                break;
-                            case "shdr":
-                                for (uint i = 0, count = chunk.Size / HydraShdr.SizeInFile; i < count; i++)
-                                    SHdrs.Add(HydraShdr.Load(readable));
+                                    break;
+                                case "shdr":
+                                    for (uint i = 0, count = chunk.Size / HydraShdr.SizeInFile; i < count; i++)
+                                        SHdrs.Add(HydraShdr.Load(readable));
 
-                                break;
-                            default:
-                                readable.Position += (int)chunk.Size;
-                                break;
-                        }
-                else if (chunkFastList.Id == "sdta")
-                    while (RiffChunk.Load(chunkFastList, chunk, readable))
-                        switch (chunk.Id)
-                        {
-                            case "smpl":
-                                FontSamples = LoadSamples(chunk, readable);
-                                break;
-                            default:
-                                readable.Position += (int)chunk.Size;
-                                break;
-                        }
-                else
-                    readable.Position += (int)chunkFastList.Size;
+                                    break;
+                                default:
+                                    readable.Position += (int)chunk.Size;
+                                    break;
+                            }
+
+                        break;
+                    }
+                    case "sdta":
+                    {
+                        while (RiffChunk.Load(chunkFastList, chunk, readable))
+                            switch (chunk.Id)
+                            {
+                                case "smpl":
+                                    FontSamples = LoadSamples(chunk, readable);
+                                    break;
+                                default:
+                                    readable.Position += (int)chunk.Size;
+                                    break;
+                            }
+
+                        break;
+                    }
+                    default:
+                        readable.Position += (int)chunkFastList.Size;
+                        break;
+                }
             }
         }
 

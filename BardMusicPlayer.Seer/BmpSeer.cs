@@ -15,9 +15,9 @@ using WindowsFirewallHelper;
 
 namespace BardMusicPlayer.Seer
 {
-    public partial class BmpSeer : IDisposable
+    public sealed partial class BmpSeer : IDisposable
     {
-        private static readonly Lazy<BmpSeer> LazyInstance = new(() => new BmpSeer());
+        private static readonly Lazy<BmpSeer> LazyInstance = new(static () => new BmpSeer());
 
         private readonly ConcurrentDictionary<int, Game> _games;
 

@@ -15,7 +15,7 @@ using H.Pipes.Args;
 
 namespace BardMusicPlayer.Grunt.Helper.Dalamud
 {
-    internal class DalamudServer : IDisposable
+    internal sealed class DalamudServer : IDisposable
     {
         private readonly ConcurrentDictionary<int, string> _clients;
         private readonly PipeServer<string> _pipe;
@@ -54,12 +54,14 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
         internal async void Start()
         {
             if (_pipe.IsStarted) return;
+
             await _pipe.StartAsync();
         }
 
         internal async void Stop()
         {
             if (!_pipe.IsStarted) return;
+
             await _pipe.StopAsync();
         }
 
@@ -81,6 +83,7 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
         internal bool SendChat(int pid, string text)
         {
             if (!IsConnected(pid)) return false;
+
             _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected)
                 ?.WriteAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes(text)));
             return true;
@@ -90,7 +93,7 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
         {
             if (string.IsNullOrEmpty(e.Message)) return;
 
-            var fields = e.Message?.Split(':') ?? new string[0];
+            var fields = e.Message?.Split(':') ?? Array.Empty<string>();
 
             if (fields.Length != 3) return;
 
@@ -115,7 +118,7 @@ namespace BardMusicPlayer.Grunt.Helper.Dalamud
             Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} disconnected");
         }
 
-        private void OnConnected(object sender, ConnectionEventArgs<string> e)
+        private static void OnConnected(object sender, ConnectionEventArgs<string> e)
         {
             Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} connected");
         }

@@ -27,6 +27,7 @@ namespace UI.Resources
         protected virtual int SetOptions(int options)
         {
             if (ForceFileSystem) options |= (int)FOS.FOS_FORCEFILESYSTEM;
+
             return options;
         }
 
@@ -83,14 +84,16 @@ namespace UI.Resources
 
             if (CheckHr(result.GetDisplayName(SIGDN.SIGDN_DESKTOPABSOLUTEEDITING, out path), false) == 0)
                 ResultName = path;
+
             return true;
         }
 
         private static int CheckHr(int hr, bool throwOnError)
         {
-            if (hr != 0)
-                if (throwOnError)
-                    Marshal.ThrowExceptionForHR(hr);
+            if (hr == 0) return hr;
+
+            if (throwOnError)
+                Marshal.ThrowExceptionForHR(hr);
             return hr;
         }
 

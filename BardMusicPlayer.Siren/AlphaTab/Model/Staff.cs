@@ -1,5 +1,6 @@
 #region
 
+using System;
 using BardMusicPlayer.Siren.AlphaTab.Collections;
 
 #endregion
@@ -10,7 +11,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     ///     This class describes a single staff within a track. There are instruments like pianos
     ///     where a single track can contain multiple staffs.
     /// </summary>
-    internal class Staff
+    internal sealed class Staff
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="Staff" /> class.
@@ -18,7 +19,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         public Staff()
         {
             Bars = new FastList<Bar>();
-            Tuning = new int[0];
+            Tuning = Array.Empty<int>();
             Chords = new FastDictionary<string, Chord>();
             ShowStandardNotation = true;
             ShowTablature = true;

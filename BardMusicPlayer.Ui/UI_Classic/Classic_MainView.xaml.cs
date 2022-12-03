@@ -20,7 +20,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
-    public partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView : UserControl
     {
         private int MaxTracks = 1;
 
@@ -90,12 +90,11 @@ namespace BardMusicPlayer.Ui.Classic
         /// </summary>
         private void Instance_SongBrowserLoadedSong(object sender, string filename)
         {
-            if (PlaybackFunctions.LoadSong(filename))
-            {
-                SongName.Text = PlaybackFunctions.GetSongName();
-                InstrumentInfo.Content = PlaybackFunctions.GetInstrumentNameForHostPlayer();
-                _directLoaded = true;
-            }
+            if (!PlaybackFunctions.LoadSong(filename)) return;
+
+            SongName.Text = PlaybackFunctions.GetSongName();
+            InstrumentInfo.Content = PlaybackFunctions.GetInstrumentNameForHostPlayer();
+            _directLoaded = true;
         }
 
         #region EventHandler
@@ -117,12 +116,12 @@ namespace BardMusicPlayer.Ui.Classic
 
         private void Instance_PlaybackStarted(object sender, bool e)
         {
-            Dispatcher.BeginInvoke(new Action(() => PlaybackStarted()));
+            Dispatcher.BeginInvoke(new Action(PlaybackStarted));
         }
 
         private void Instance_PlaybackStopped(object sender, bool e)
         {
-            Dispatcher.BeginInvoke(new Action(() => PlaybackStopped()));
+            Dispatcher.BeginInvoke(new Action(PlaybackStopped));
         }
 
         private void Instance_TrackNumberChanged(object sender, TrackNumberChangedEvent e)
@@ -158,24 +157,21 @@ namespace BardMusicPlayer.Ui.Classic
 
         private void PlaybackTimeChanged(CurrentPlayPositionEvent e)
         {
-            string time;
             var Seconds = e.timeSpan.Seconds.ToString();
             var Minutes = e.timeSpan.Minutes.ToString();
-            time = (Minutes.Length == 1 ? "0" + Minutes : Minutes) + ":" +
-                   (Seconds.Length == 1 ? "0" + Seconds : Seconds);
+            var time = (Minutes.Length == 1 ? "0" + Minutes : Minutes) + ":" +
+                       (Seconds.Length == 1 ? "0" + Seconds : Seconds);
             ElapsedTime.Content = time;
 
-            if (!_Playbar_dragStarted)
-                Playbar_Slider.Value = e.tick;
+            if (!_Playbar_dragStarted) Playbar_Slider.Value = e.tick;
         }
 
         private void PlaybackMaxTime(MaxPlayTimeEvent e)
         {
-            string time;
             var Seconds = e.timeSpan.Seconds.ToString();
             var Minutes = e.timeSpan.Minutes.ToString();
-            time = (Minutes.Length == 1 ? "0" + Minutes : Minutes) + ":" +
-                   (Seconds.Length == 1 ? "0" + Seconds : Seconds);
+            var time = (Minutes.Length == 1 ? "0" + Minutes : Minutes) + ":" +
+                       (Seconds.Length == 1 ? "0" + Seconds : Seconds);
             TotalTime.Content = time;
 
             Playbar_Slider.Maximum = e.tick;
@@ -194,6 +190,7 @@ namespace BardMusicPlayer.Ui.Classic
             MaxTracks = e.MaxTracks;
             if (NumValue <= MaxTracks)
                 return;
+
             NumValue = MaxTracks;
 
             BmpMaestro.Instance.SetTracknumberOnHost(MaxTracks);
@@ -214,34 +211,30 @@ namespace BardMusicPlayer.Ui.Classic
             if (_directLoaded)
                 return;
 
-            if (BmpPigeonhole.Instance.PlaylistAutoPlay)
-            {
-                playNextSong();
-                var rnd = new Random();
-                PlaybackFunctions.PlaySong(rnd.Next(15, 35) * 100);
-                Play_Button_State(true);
-            }
+            if (!BmpPigeonhole.Instance.PlaylistAutoPlay) return;
+
+            playNextSong();
+            var rnd = new Random();
+            PlaybackFunctions.PlaySong(rnd.Next(15, 35) * 100);
+            Play_Button_State(true);
         }
 
         public void TracknumberChanged(TrackNumberChangedEvent e)
         {
-            if (e.IsHost)
-            {
-                NumValue = e.TrackNumber;
-                UpdateNoteCountForTrack();
-            }
+            if (!e.IsHost) return;
+
+            NumValue = e.TrackNumber;
+            UpdateNoteCountForTrack();
         }
 
         public void OctaveShiftChanged(OctaveShiftChangedEvent e)
         {
-            if (e.IsHost)
-                OctaveNumValue = e.OctaveShift;
+            if (e.IsHost) OctaveNumValue = e.OctaveShift;
         }
 
         public void SpeedShiftChange(SpeedShiftEvent e)
         {
-            if (e.IsHost)
-                SpeedNumValue = e.SpeedShift;
+            if (e.IsHost) SpeedNumValue = e.SpeedShift;
         }
 
         public void AppendChatLog(ChatLog ev)
@@ -252,18 +245,18 @@ namespace BardMusicPlayer.Ui.Classic
                 ChatBox.ScrollToEnd();
             }
 
-            if (ev.ChatLogCode == "0039")
-                if (ev.ChatLogLine.Contains(@"Anzählen beginnt") ||
-                    ev.ChatLogLine.Contains("The count-in will now commence.") ||
-                    ev.ChatLogLine.Contains("orchestre est pr"))
-                {
-                    if (BmpPigeonhole.Instance.AutostartMethod != (int)Globals.Globals.Autostart_Types.VIA_CHAT)
-                        return;
-                    if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
-                        return;
-                    PlaybackFunctions.PlaySong(3000);
-                    Play_Button_State(true);
-                }
+            if (ev.ChatLogCode != "0039") return;
+
+            if (!ev.ChatLogLine.Contains(@"Anzählen beginnt") &&
+                !ev.ChatLogLine.Contains("The count-in will now commence.") &&
+                !ev.ChatLogLine.Contains("orchestre est pr")) return;
+            if (BmpPigeonhole.Instance.AutostartMethod != (int)Globals.Globals.Autostart_Types.VIA_CHAT)
+                return;
+            if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
+                return;
+
+            PlaybackFunctions.PlaySong(3000);
+            Play_Button_State(true);
         }
 
         #endregion
@@ -290,6 +283,7 @@ namespace BardMusicPlayer.Ui.Classic
         {
             if (NumValue == MaxTracks)
                 return;
+
             NumValue++;
             BmpMaestro.Instance.SetTracknumberOnHost(NumValue);
         }
@@ -298,6 +292,7 @@ namespace BardMusicPlayer.Ui.Classic
         {
             if (NumValue == 1)
                 return;
+
             NumValue--;
             BmpMaestro.Instance.SetTracknumberOnHost(NumValue);
         }
@@ -307,13 +302,12 @@ namespace BardMusicPlayer.Ui.Classic
             if (track_txtNum == null)
                 return;
 
-            if (int.TryParse(track_txtNum.Text.Replace("t", ""), out _numValue))
-            {
-                if (_numValue < 0 || _numValue > MaxTracks)
-                    return;
-                track_txtNum.Text = "t" + _numValue;
-                BmpMaestro.Instance.SetTracknumberOnHost(_numValue);
-            }
+            if (!int.TryParse(track_txtNum.Text.Replace("t", ""), out _numValue)) return;
+            if (_numValue < 0 || _numValue > MaxTracks)
+                return;
+
+            track_txtNum.Text = "t" + _numValue;
+            BmpMaestro.Instance.SetTracknumberOnHost(_numValue);
         }
 
         #endregion
@@ -350,11 +344,10 @@ namespace BardMusicPlayer.Ui.Classic
             if (octave_txtNum == null)
                 return;
 
-            if (int.TryParse(octave_txtNum.Text.Replace(@"ø", ""), out _octavenumValue))
-            {
-                octave_txtNum.Text = @"ø" + _octavenumValue;
-                BmpMaestro.Instance.SetOctaveshiftOnHost(_octavenumValue);
-            }
+            if (!int.TryParse(octave_txtNum.Text.Replace(@"ø", ""), out _octavenumValue)) return;
+
+            octave_txtNum.Text = @"ø" + _octavenumValue;
+            BmpMaestro.Instance.SetOctaveshiftOnHost(_octavenumValue);
         }
 
         #endregion
@@ -379,11 +372,10 @@ namespace BardMusicPlayer.Ui.Classic
                 return;
 
             var t = 0;
-            if (int.TryParse(speed_txtNum.Text.Replace(@"%", ""), out t))
-            {
-                var speedShift = (Convert.ToDouble(t) / 100).Clamp(0.1f, 2.0f);
-                BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);
-            }
+            if (!int.TryParse(speed_txtNum.Text.Replace(@"%", ""), out t)) return;
+
+            var speedShift = (Convert.ToDouble(t) / 100).Clamp(0.1f, 2.0f);
+            BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);
         }
 
         private void speed_cmdUp_Click(object sender, RoutedEventArgs e)

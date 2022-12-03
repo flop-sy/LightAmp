@@ -26,11 +26,14 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
             for (var i = 0; i < 5; i++)
                 if (sourceNotesDictionary.ContainsKey(i))
                     notesDictionary[i] = sourceNotesDictionary[i];
+
             for (var i = sourceOctaveRange.LowerNote; i <= sourceOctaveRange.UpperNote; i++)
             {
                 if (!sourceNotesDictionary.ContainsKey(i)) continue;
+
                 var noteNumber = OctaveRange.C3toC6.ShiftNoteToOctave(sourceOctaveRange, i);
                 foreach (var note in sourceNotesDictionary[i]) note.Value.NoteNumber = (SevenBitNumber)noteNumber;
+
                 notesDictionary[noteNumber] = sourceNotesDictionary[i];
             }
 
@@ -80,6 +83,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
                 if (noteNumber < 5)
                 {
                     if (readTones) currentChannel = noteNumber;
+
                     continue;
                 }
 
@@ -255,7 +259,8 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
         internal static Task<List<Note>> ConcatNoteDictionaryToList(
             this Dictionary<int, Dictionary<long, Note>> sourceNotesDictionary)
         {
-            return Task.FromResult(sourceNotesDictionary.SelectMany(note => note.Value).Select(note => note.Value)
+            return Task.FromResult(sourceNotesDictionary.SelectMany(static note => note.Value)
+                .Select(static note => note.Value)
                 .ToList());
         }
 

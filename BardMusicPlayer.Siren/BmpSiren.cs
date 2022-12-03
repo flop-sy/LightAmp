@@ -19,7 +19,7 @@ using NAudio.CoreAudioApi;
 
 namespace BardMusicPlayer.Siren
 {
-    public class BmpSiren
+    public sealed class BmpSiren
     {
         /// <summary>
         ///     Event fired when there is a lyric line.
@@ -37,7 +37,7 @@ namespace BardMusicPlayer.Siren
         /// <param name="activeVoices">Active voice count.</param>
         public delegate void SynthTimePosition(string songTitle, double currentTime, double endTime, int activeVoices);
 
-        private static readonly System.Lazy<BmpSiren> LazyInstance = new(() => new BmpSiren());
+        private static readonly System.Lazy<BmpSiren> LazyInstance = new(static () => new BmpSiren());
 
         private readonly TaskQueue _taskQueue = new();
         private double _lyricIndex;
@@ -62,7 +62,7 @@ namespace BardMusicPlayer.Siren
 
         /// <summary>
         /// </summary>
-        public bool IsReady => _player != null && _player.IsReady;
+        public bool IsReady => _player is { IsReady: true };
 
         /// <summary>
         /// </summary>
@@ -94,7 +94,6 @@ namespace BardMusicPlayer.Siren
         /// <summary>
         ///     Sets the volume
         /// </summary>
-        /// <param name="x"></param>
         public int GetVolume()
         {
             return (int)(_mdev.AudioSessionManager.AudioSessionControl.SimpleAudioVolume.Volume * 100);
@@ -130,6 +129,7 @@ namespace BardMusicPlayer.Siren
         public void ShutDown()
         {
             if (_player == null) return;
+
             _player.Stop();
             _player.PositionChanged -= NotifyTimePosition;
             _player.Destroy();
@@ -143,6 +143,7 @@ namespace BardMusicPlayer.Siren
         public async Task<BmpSiren> Load(BmpSong song)
         {
             if (!IsReady) throw new BmpException("Siren not initialized.");
+
             if (_player.State == PlayerState.Playing) _player.Stop();
             MidiFile midiFile;
             (midiFile, _lyrics) = await song.GetSynthMidi();
@@ -160,6 +161,7 @@ namespace BardMusicPlayer.Siren
         public BmpSiren Play()
         {
             if (!IsReadyForPlayback) throw new BmpException("Siren not loaded with a song.");
+
             _player.Play();
             return this;
         }
@@ -171,6 +173,7 @@ namespace BardMusicPlayer.Siren
         public BmpSiren Pause()
         {
             if (!IsReadyForPlayback) throw new BmpException("Siren not loaded with a song.");
+
             _player.Pause();
             return this;
         }
@@ -182,6 +185,7 @@ namespace BardMusicPlayer.Siren
         public BmpSiren Stop()
         {
             if (!IsReadyForPlayback) throw new BmpException("Siren not loaded with a song.");
+
             _player.Stop();
             _lyricIndex = 0;
             return this;
@@ -194,7 +198,9 @@ namespace BardMusicPlayer.Siren
         public BmpSiren SetPosition(int time)
         {
             if (!IsReadyForPlayback) return this; // throw new BmpException("Siren not loaded with a song.");
+
             if (time < 0) time = 0;
+
             //if (time > _player.PlaybackRange.EndTick) return Stop();
             _player.TickPosition = time;
             _lyricIndex = time;

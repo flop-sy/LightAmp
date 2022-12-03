@@ -12,7 +12,7 @@ using BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
 {
-    internal class HotbarDatFile : IDisposable
+    internal sealed class HotbarDatFile : IDisposable
     {
         private readonly string _filePath;
         private readonly HotbarData _hotbarData = new();
@@ -67,9 +67,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
                 while (reader.BaseStream.Position < dataSize)
                 {
                     var ac = ParseSection(reader);
-                    if (ac.Job == 0x17 || ac.Job == 0)
-                        if (ac.Type == 0x1D)
-                            _hotbarData[ac.Hotbar][ac.Slot][ac.Job] = ac;
+                    if (ac.Job != 0x17 && ac.Job != 0) continue;
+
+                    if (ac.Type == 0x1D) _hotbarData[ac.Hotbar][ac.Slot][ac.Job] = ac;
                 }
             }
             catch (Exception ex)
@@ -85,12 +85,12 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
             return true;
         }
 
-        public List<HotbarSlot> GetSlotsFromType(SlotType type)
+        public IEnumerable<HotbarSlot> GetSlotsFromType(SlotType type)
         {
             return GetSlotsFromType((int)type);
         }
 
-        public List<HotbarSlot> GetSlotsFromType(int type)
+        public IEnumerable<HotbarSlot> GetSlotsFromType(int type)
         {
             return (from row in _hotbarData.Rows.Values
                 from jobSlot in row.Slots.Values
@@ -121,6 +121,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
         {
             var slots = GetSlotsFromType(SlotType.InstrumentTone);
             foreach (var slot in slots.Where(slot => slot.Action == instrumentTone)) return slot.ToString();
+
             return string.Empty;
         }
 
@@ -129,6 +130,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
             var slots = GetSlotsFromType(SlotType.Instrument);
             foreach (var slot in slots.Where(slot => slot.Action == instrument && slot.Job == 0x17))
                 return slot.ToString();
+
             return string.Empty;
         }
 

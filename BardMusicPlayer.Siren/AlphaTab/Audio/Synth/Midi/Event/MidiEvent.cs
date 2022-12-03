@@ -217,6 +217,8 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event
         /// <param name="status">The status information of this event.</param>
         /// <param name="data1">The first data component of this midi event.</param>
         /// <param name="data2">The second data component of this midi event.</param>
+        /// <param name="customChannel"></param>
+        /// <param name="customChannelValue"></param>
         public MidiEvent(int tick, int status, byte data1, byte data2, bool customChannel = false,
             byte customChannelValue = 0)
         {

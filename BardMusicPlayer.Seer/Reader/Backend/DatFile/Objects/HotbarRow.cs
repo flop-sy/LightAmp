@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 {
-    internal class HotbarRow : IDisposable
+    internal sealed class HotbarRow : IDisposable
     {
         public Dictionary<int, HotbarJobSlot> Slots = new();
 
@@ -16,6 +16,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
             get
             {
                 if (!Slots.ContainsKey(i)) Slots[i] = new HotbarJobSlot();
+
                 return Slots[i];
             }
             set => Slots[i] = value;

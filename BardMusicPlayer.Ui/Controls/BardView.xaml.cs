@@ -27,7 +27,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für BardView.xaml
     /// </summary>
-    public partial class BardView : UserControl
+    public sealed partial class BardView : UserControl
     {
         public BardView()
         {
@@ -60,7 +60,7 @@ namespace BardMusicPlayer.Ui.Controls
         private void OnPerfomerChanged(object sender, bool e)
         {
             Bards = new ObservableCollection<Performer>(BmpMaestro.Instance.GetAllPerformers());
-            Dispatcher.BeginInvoke(new Action(() => BardsList.ItemsSource = Bards));
+            Dispatcher.BeginInvoke(new Action(() => { BardsList.ItemsSource = Bards; }));
         }
 
         private void OnTrackNumberChanged(object sender, TrackNumberChangedEvent e)
@@ -101,7 +101,7 @@ namespace BardMusicPlayer.Ui.Controls
         private void UpdateList()
         {
             Bards = new ObservableCollection<Performer>(BmpMaestro.Instance.GetAllPerformers());
-            Dispatcher.BeginInvoke(new Action(() => BardsList.ItemsSource = Bards));
+            Dispatcher.BeginInvoke(new Action(() => { BardsList.ItemsSource = Bards; }));
         }
 
         private void RdyCheck_Click(object sender, RoutedEventArgs e)
@@ -137,7 +137,7 @@ namespace BardMusicPlayer.Ui.Controls
             ctl.OnValueChanged += OnValueChanged;
         }
 
-        private void OnValueChanged(object sender, int s)
+        private static void OnValueChanged(object sender, int s)
         {
             var game = (sender as TrackNumericUpDown).DataContext as Performer;
             BmpMaestro.Instance.SetTracknumber(game, s);
@@ -153,7 +153,7 @@ namespace BardMusicPlayer.Ui.Controls
             ctl.OnValueChanged += OnOctaveValueChanged;
         }
 
-        private void OnOctaveValueChanged(object sender, int s)
+        private static void OnOctaveValueChanged(object sender, int s)
         {
             var performer = (sender as OctaveNumericUpDown).DataContext as Performer;
             BmpMaestro.Instance.SetOctaveshift(performer, s);
@@ -174,22 +174,21 @@ namespace BardMusicPlayer.Ui.Controls
 
         private void PerfomerEnabledChecker_Checked(object sender, RoutedEventArgs e)
         {
-            var ctl = sender as CheckBox;
-            var game = (sender as CheckBox).DataContext as Performer;
-            game.PerformerEnabled = ctl.IsChecked ?? false;
+            var game = ((CheckBox)sender).DataContext as Performer;
+            if (sender is not CheckBox ctl) return;
+
+            if (game != null) game.PerformerEnabled = ctl.IsChecked ?? false;
         }
 
         private void Bard_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2)
-            {
-                if (SelectedBard == null)
-                    return;
+            if (e.ClickCount != 2) return;
+            if (SelectedBard == null)
+                return;
 
-                var bardExtSettings = new BardExtSettingsWindow(SelectedBard);
-                bardExtSettings.Activate();
-                bardExtSettings.Visibility = Visibility.Visible;
-            }
+            var bardExtSettings = new BardExtSettingsWindow(SelectedBard);
+            bardExtSettings.Activate();
+            bardExtSettings.Visibility = Visibility.Visible;
         }
 
         private void Autoequip_CheckBox_Checked(object sender, RoutedEventArgs e)
@@ -207,40 +206,39 @@ namespace BardMusicPlayer.Ui.Controls
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Performerconfig | *.cfg",
+                Filter = "Performer Config | *.cfg",
                 Multiselect = true
             };
 
             if (openFileDialog.ShowDialog() != true)
                 return;
 
-            var pdatalist = new List<PerformerSettingData>();
             var memoryStream = new MemoryStream();
             var fileStream = File.Open(openFileDialog.FileName, FileMode.Open);
             fileStream.CopyTo(memoryStream);
             fileStream.Close();
 
             var data = memoryStream.ToArray();
-            pdatalist =
+            var pdatalist =
                 JsonConvert.DeserializeObject<List<PerformerSettingData>>(new UTF8Encoding(true).GetString(data));
 
             foreach (var pconfig in pdatalist)
             {
                 var p = Bards.Where(perf => perf.game.PlayerName.Equals(pconfig.Name));
-                if (p.Count() == 0)
+                var performers = p as Performer[] ?? p.ToArray();
+                if (!performers.Any())
                     continue;
 
-                p.First().TrackNumber = pconfig.Track;
+                performers.First().TrackNumber = pconfig.Track;
                 if (pconfig.AffinityMask != 0)
-                    p.First().game.SetAffinity(pconfig.AffinityMask);
+                    performers.First().game.SetAffinity(pconfig.AffinityMask);
             }
 
             //Set Thymms box, cuz if u use this function, you know what you are doing
-            if (!BmpPigeonhole.Instance.EnsembleKeepTrackSetting)
-            {
-                BmpPigeonhole.Instance.EnsembleKeepTrackSetting = true;
-                Globals.Globals.ReloadConfig();
-            }
+            if (BmpPigeonhole.Instance.EnsembleKeepTrackSetting) return;
+
+            BmpPigeonhole.Instance.EnsembleKeepTrackSetting = true;
+            Globals.Globals.ReloadConfig();
         }
 
         /// <summary>
@@ -252,21 +250,17 @@ namespace BardMusicPlayer.Ui.Controls
         {
             var openFileDialog = new SaveFileDialog
             {
-                Filter = "Performerconfig | *.cfg"
+                Filter = "Performer Config | *.cfg"
             };
 
             if (openFileDialog.ShowDialog() != true)
                 return;
 
-            var pdatalist = new List<PerformerSettingData>();
-            foreach (var performer in Bards)
+            var pdatalist = Bards.Select(static performer => new PerformerSettingData
             {
-                var pdata = new PerformerSettingData();
-                pdata.Name = performer.game.PlayerName;
-                pdata.Track = performer.TrackNumber;
-                pdata.AffinityMask = (long)performer.game.GetAffinity();
-                pdatalist.Add(pdata);
-            }
+                Name = performer.game.PlayerName, Track = performer.TrackNumber,
+                AffinityMask = (long)performer.game.GetAffinity()
+            }).ToList();
 
             var t = JsonConvert.SerializeObject(pdatalist);
             var content = new UTF8Encoding(true).GetBytes(t);
@@ -278,12 +272,11 @@ namespace BardMusicPlayer.Ui.Controls
 
         private void GfxLow_CheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            foreach (var p in Bards)
-                if (p.game.GfxSettingsLow != GfxLow_CheckBox.IsChecked)
-                {
-                    p.game.GfxSettingsLow = GfxLow_CheckBox.IsChecked ?? false;
-                    p.game.GfxSetLow(GfxLow_CheckBox.IsChecked ?? false);
-                }
+            foreach (var p in Bards.Where(p => p.game.GfxSettingsLow != GfxLow_CheckBox.IsChecked))
+            {
+                p.game.GfxSettingsLow = GfxLow_CheckBox.IsChecked ?? false;
+                p.game.GfxSetLow(GfxLow_CheckBox.IsChecked ?? false);
+            }
         }
 
         /// <summary>
@@ -302,7 +295,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Helperclass
     /// </summary>
-    public class PerformerSettingData
+    public sealed class PerformerSettingData
     {
         public string Name { get; set; } = "";
         public int Track { get; set; }

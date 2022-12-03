@@ -24,6 +24,7 @@ namespace BardMusicPlayer.Transmogrify.Song
         public async Task<List<TrackChunk>> RefreshTrackChunks(BmpSong song)
         {
             if (ProcessorConfig is null) throw new BmpTransmogrifyException("No configuration in this container.");
+
             return ProcessorConfig switch
             {
                 ClassicProcessorConfig classicProcessorConfig => await new ClassicProcessor(classicProcessorConfig,

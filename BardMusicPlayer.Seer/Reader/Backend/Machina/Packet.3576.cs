@@ -8,7 +8,7 @@ using BardMusicPlayer.Seer.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Machina
 {
-    internal partial class Packet
+    internal sealed partial class Packet
     {
         /// <summary>
         ///     Contains party information like hp. Does not contain PlayerName. A reference Id is cached for PlayerName lookup in

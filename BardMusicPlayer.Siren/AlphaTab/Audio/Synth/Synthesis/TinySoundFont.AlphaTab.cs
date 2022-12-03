@@ -1,5 +1,6 @@
 #region
 
+using System.Linq;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util;
@@ -10,7 +11,7 @@ using BardMusicPlayer.Siren.AlphaTab.Util;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal partial class TinySoundFont
+    internal sealed partial class TinySoundFont
     {
         public const int MicroBufferCount = 32; // 4069 samples in total
         public const int MicroBufferSize = 64; // 64 stereo samples
@@ -41,9 +42,8 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
         public void ChannelSetMixVolume(int channel, float volume)
         {
             var c = ChannelInit(channel);
-            foreach (var v in _voices)
-                if (v.PlayingChannel == channel && v.PlayingPreset != -1)
-                    v.MixVolume = volume;
+            foreach (var v in _voices.Where(v => v.PlayingChannel == channel && v.PlayingPreset != -1))
+                v.MixVolume = volume;
 
             c.MixVolume = volume;
         }
@@ -97,6 +97,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
                         var m = _midiEventQueue.RemoveLast();
                         if (m == null)
                             continue;
+
                         ProcessMidiMessage(m.Event);
                     }
 
@@ -160,24 +161,25 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
         public void ResetSoft()
         {
             _noteCounter = 0;
-            foreach (var v in _voices)
-                if (v.PlayingPreset != -1 &&
-                    (v.AmpEnv.Segment < VoiceEnvelopeSegment.Release || v.AmpEnv.Parameters.Release != 0))
-                    v.EndQuick(OutSampleRate);
+            foreach (var v in _voices.Where(static v => v.PlayingPreset != -1 &&
+                                                        (v.AmpEnv.Segment < VoiceEnvelopeSegment.Release ||
+                                                         v.AmpEnv.Parameters.Release != 0)))
+                v.EndQuick(OutSampleRate);
 
-            if (_channels != null)
-                foreach (var c in _channels.ChannelList)
-                {
-                    c.PresetIndex = c.Bank = 0;
-                    c.PitchWheel = c.MidiPan = 8192;
-                    c.MidiVolume = c.MidiExpression = 16383;
-                    c.MidiRpn = 0xFFFF;
-                    c.MidiData = 0;
-                    c.PanOffset = 0.0f;
-                    c.GainDb = 0.0f;
-                    c.PitchRange = 2.0f;
-                    c.Tuning = 0.0f;
-                }
+            if (_channels == null) return;
+
+            foreach (var c in _channels.ChannelList)
+            {
+                c.PresetIndex = c.Bank = 0;
+                c.PitchWheel = c.MidiPan = 8192;
+                c.MidiVolume = c.MidiExpression = 16383;
+                c.MidiRpn = 0xFFFF;
+                c.MidiData = 0;
+                c.PanOffset = 0.0f;
+                c.GainDb = 0.0f;
+                c.PitchRange = 2.0f;
+                c.Tuning = 0.0f;
+            }
         }
     }
 }

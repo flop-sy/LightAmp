@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class Envelope
+    internal sealed class Envelope
     {
         public Envelope()
         {

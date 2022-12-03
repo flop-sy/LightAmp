@@ -1,39 +1,28 @@
-﻿using System;
+﻿#region
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
+
+#endregion
 
 namespace Sanford.Multimedia.Midi
 {
     /// <summary>
-    /// Takes a number of MidiEvents and merges them into a new single MidiEvent source
+    ///     Takes a number of MidiEvents and merges them into a new single MidiEvent source
     /// </summary>
     public class MergeMidiEvents : MidiEvents
     {
-        public int DeviceID
-        {
-            get
-            {
-                return -3;
-            }
-        }
-
-        readonly List<MidiEvents> FMidiEventsList = new List<MidiEvents>();
+        private readonly List<MidiEvents> FMidiEventsList = new List<MidiEvents>();
 
         public MergeMidiEvents(IEnumerable<MidiEvents> midiEvents)
         {
-            foreach (var elem in midiEvents)
-            {
-                if (elem != null)
-                    FMidiEventsList.Add(elem);
-            }
+            foreach (var elem in midiEvents.Where(elem => elem != null))
+                FMidiEventsList.Add(elem);
         }
 
-        public IEnumerable<MidiEvents> EventSources
-        {
-            get
-            {
-                return FMidiEventsList;
-            }
-        }
+        public IEnumerable<MidiEvents> EventSources => FMidiEventsList;
+        public int DeviceID => -3;
 
         public void Dispose()
         {
@@ -43,17 +32,11 @@ namespace Sanford.Multimedia.Midi
         {
             add
             {
-                foreach (var elem in FMidiEventsList)
-                {
-                    elem.MessageReceived += value;
-                }
+                foreach (var elem in FMidiEventsList) elem.MessageReceived += value;
             }
             remove
             {
-                foreach (var elem in FMidiEventsList)
-                {
-                    elem.MessageReceived -= value;
-                }
+                foreach (var elem in FMidiEventsList) elem.MessageReceived -= value;
             }
         }
 
@@ -61,17 +44,11 @@ namespace Sanford.Multimedia.Midi
         {
             add
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.ShortMessageReceived += value;
-                }
+                foreach (var elem in FMidiEventsList) elem.ShortMessageReceived += value;
             }
             remove
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.ShortMessageReceived -= value;
-                }
+                foreach (var elem in FMidiEventsList) elem.ShortMessageReceived -= value;
             }
         }
 
@@ -79,17 +56,11 @@ namespace Sanford.Multimedia.Midi
         {
             add
             {
-                foreach (var elem in FMidiEventsList)
-                {
-                    elem.ChannelMessageReceived += value;
-                }
+                foreach (var elem in FMidiEventsList) elem.ChannelMessageReceived += value;
             }
             remove
             {
-                foreach (var elem in FMidiEventsList)
-                {
-                    elem.ChannelMessageReceived -= value;
-                }
+                foreach (var elem in FMidiEventsList) elem.ChannelMessageReceived -= value;
             }
         }
 
@@ -97,17 +68,11 @@ namespace Sanford.Multimedia.Midi
         {
             add
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.SysExMessageReceived += value;
-                }
+                foreach (var elem in FMidiEventsList) elem.SysExMessageReceived += value;
             }
             remove
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.SysExMessageReceived -= value;
-                }
+                foreach (var elem in FMidiEventsList) elem.SysExMessageReceived -= value;
             }
         }
 
@@ -115,17 +80,11 @@ namespace Sanford.Multimedia.Midi
         {
             add
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.SysCommonMessageReceived += value;
-                }
+                foreach (var elem in FMidiEventsList) elem.SysCommonMessageReceived += value;
             }
             remove
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.SysCommonMessageReceived -= value;
-                }
+                foreach (var elem in FMidiEventsList) elem.SysCommonMessageReceived -= value;
             }
         }
 
@@ -133,19 +92,12 @@ namespace Sanford.Multimedia.Midi
         {
             add
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.SysRealtimeMessageReceived += value;
-                }
+                foreach (var elem in FMidiEventsList) elem.SysRealtimeMessageReceived += value;
             }
             remove
             {
-                foreach (var elem in FMidiEventsList) 
-                {
-                    elem.SysRealtimeMessageReceived -= value;
-                }
+                foreach (var elem in FMidiEventsList) elem.SysRealtimeMessageReceived -= value;
             }
         }
-        
     }
 }

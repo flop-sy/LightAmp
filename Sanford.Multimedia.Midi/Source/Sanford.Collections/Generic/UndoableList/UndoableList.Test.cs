@@ -1,40 +1,10 @@
-#region License
-
-/* Copyright (c) 2006 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
+#endregion
 
 namespace Sanford.Collections.Generic
 {
@@ -43,9 +13,9 @@ namespace Sanford.Collections.Generic
         [Conditional("MIDIDEBUG")]
         public static void Test()
         {
-            int count = 10;
-            List<int> comparisonList = new List<int>(count);
-            UndoableList<int> undoList = new UndoableList<int>(count);
+            const int count = 10;
+            var comparisonList = new List<int>(count);
+            var undoList = new UndoableList<int>(count);
 
             PopulateLists(comparisonList, undoList, count);
             TestAdd(comparisonList, undoList);
@@ -59,13 +29,13 @@ namespace Sanford.Collections.Generic
         }
 
         [Conditional("MIDIDEBUG")]
-        private static void TestAdd(List<int> comparisonList, UndoableList<int> undoList)
+        private static void TestAdd(IList<int> comparisonList, UndoableList<int> undoList)
         {
             TestEquals(comparisonList, undoList);
 
-            Stack<int> redoStack = new Stack<int>();
+            var redoStack = new Stack<int>();
 
-            while(comparisonList.Count > 0)
+            while (comparisonList.Count > 0)
             {
                 redoStack.Push(comparisonList[comparisonList.Count - 1]);
                 comparisonList.RemoveAt(comparisonList.Count - 1);
@@ -73,7 +43,7 @@ namespace Sanford.Collections.Generic
                 TestEquals(comparisonList, undoList);
             }
 
-            while(redoStack.Count > 0)
+            while (redoStack.Count > 0)
             {
                 comparisonList.Add(redoStack.Pop());
                 Debug.Assert(undoList.Redo());
@@ -82,7 +52,7 @@ namespace Sanford.Collections.Generic
         }
 
         [Conditional("MIDIDEBUG")]
-        private static void TestClear(List<int> comparisonList, UndoableList<int> undoList)
+        private static void TestClear(ICollection<int> comparisonList, UndoableList<int> undoList)
         {
             TestEquals(comparisonList, undoList);
 
@@ -94,11 +64,11 @@ namespace Sanford.Collections.Generic
         }
 
         [Conditional("MIDIDEBUG")]
-        private static void TestInsert(List<int> comparisonList, UndoableList<int> undoList)
+        private static void TestInsert(IList<int> comparisonList, UndoableList<int> undoList)
         {
             TestEquals(comparisonList, undoList);
 
-            int index = comparisonList.Count / 2;
+            var index = comparisonList.Count / 2;
 
             comparisonList.Insert(index, 999);
             undoList.Insert(index, 999);
@@ -120,7 +90,7 @@ namespace Sanford.Collections.Generic
             TestEquals(comparisonList, undoList);
 
             int[] range = { 1, 2, 3, 4, 5 };
-            int index = comparisonList.Count / 2;
+            var index = comparisonList.Count / 2;
 
             comparisonList.InsertRange(index, range);
             undoList.InsertRange(index, range);
@@ -129,7 +99,7 @@ namespace Sanford.Collections.Generic
 
             comparisonList.RemoveRange(index, range.Length);
             Debug.Assert(undoList.Undo());
-            
+
             TestEquals(comparisonList, undoList);
 
             comparisonList.InsertRange(index, range);
@@ -139,13 +109,13 @@ namespace Sanford.Collections.Generic
         }
 
         [Conditional("MIDIDEBUG")]
-        private static void TestRemove(List<int> comparisonList, UndoableList<int> undoList)
+        private static void TestRemove(IList<int> comparisonList, UndoableList<int> undoList)
         {
             TestEquals(comparisonList, undoList);
 
-            int index = comparisonList.Count / 2;
+            var index = comparisonList.Count / 2;
 
-            int item = comparisonList[index];
+            var item = comparisonList[index];
 
             comparisonList.Remove(item);
             undoList.Remove(item);
@@ -159,13 +129,13 @@ namespace Sanford.Collections.Generic
         }
 
         [Conditional("MIDIDEBUG")]
-        private static void TestRemoveAt(List<int> comparisonList, UndoableList<int> undoList)
+        private static void TestRemoveAt(IList<int> comparisonList, UndoableList<int> undoList)
         {
             TestEquals(comparisonList, undoList);
 
-            int index = comparisonList.Count / 2;
+            var index = comparisonList.Count / 2;
 
-            int item = comparisonList[index];
+            var item = comparisonList[index];
 
             comparisonList.RemoveAt(index);
             undoList.RemoveAt(index);
@@ -183,10 +153,10 @@ namespace Sanford.Collections.Generic
         {
             TestEquals(comparisonList, undoList);
 
-            int index = comparisonList.Count / 2;
-            int count = comparisonList.Count - index;
+            var index = comparisonList.Count / 2;
+            var count = comparisonList.Count - index;
 
-            List<int> range = comparisonList.GetRange(index, count);
+            var range = comparisonList.GetRange(index, count);
 
             comparisonList.RemoveRange(index, count);
             undoList.RemoveRange(index, count);
@@ -219,7 +189,7 @@ namespace Sanford.Collections.Generic
 
             TestEquals(comparisonList, undoList);
 
-            int count = comparisonList.Count / 2;
+            var count = comparisonList.Count / 2;
 
             comparisonList.Reverse(0, count);
             undoList.Reverse(0, count);
@@ -238,14 +208,13 @@ namespace Sanford.Collections.Generic
         }
 
         [Conditional("MIDIDEBUG")]
-        private static void PopulateLists(IList<int> a, IList<int> b, int count)
+        private static void PopulateLists(ICollection<int> a, ICollection<int> b, int count)
         {
-            Random r = new Random();
-            int item;
+            var r = new Random();
 
-            for(int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
-                item = r.Next();
+                var item = r.Next();
                 a.Add(item);
                 b.Add(item);
             }
@@ -254,19 +223,13 @@ namespace Sanford.Collections.Generic
         [Conditional("MIDIDEBUG")]
         private static void TestEquals(ICollection<int> a, ICollection<int> b)
         {
-            bool equals = true;
+            var equals = a.Count == b.Count;
 
-            if(a.Count != b.Count)
-            {
-                equals = false;
-            }
-            IEnumerator<int> aEnumerator = a.GetEnumerator();
-            IEnumerator<int> bEnumerator = b.GetEnumerator();
+            var aEnumerator = a.GetEnumerator();
+            var bEnumerator = b.GetEnumerator();
 
-            while(equals && aEnumerator.MoveNext() && bEnumerator.MoveNext())
-            {
+            while (equals && aEnumerator.MoveNext() && bEnumerator.MoveNext())
                 equals = aEnumerator.Current.Equals(bEnumerator.Current);
-            }
 
             Debug.Assert(equals);
         }

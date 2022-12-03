@@ -12,9 +12,9 @@ using Machina.Infrastructure;
 
 namespace BardMusicPlayer.Seer.Utilities
 {
-    internal class MachinaManager : IDisposable
+    internal sealed class MachinaManager : IDisposable
     {
-        private static readonly Lazy<MachinaManager> LazyInstance = new(() => new MachinaManager());
+        private static readonly Lazy<MachinaManager> LazyInstance = new(static () => new MachinaManager());
 
         private static readonly List<int> Lengths = new() { 48, 56, 88, 656, 664, 928, 3576 };
         private readonly object _lock;

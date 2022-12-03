@@ -1,5 +1,6 @@
 #region
 
+using System.Linq;
 using BardMusicPlayer.Siren.AlphaTab.Audio;
 using BardMusicPlayer.Siren.AlphaTab.Collections;
 
@@ -161,20 +162,10 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         /// <returns></returns>
         public int CalculateDuration()
         {
-            if (IsAnacrusis)
-            {
-                var duration = 0;
-                foreach (var track in Score.Tracks)
-                foreach (var staff in track.Staves)
-                {
-                    var barDuration = staff.Bars[0].CalculateDuration();
-                    if (barDuration > duration) duration = barDuration;
-                }
+            if (!IsAnacrusis) return TimeSignatureNumerator * MidiUtils.ValueToTicks(TimeSignatureDenominator);
 
-                return duration;
-            }
-
-            return TimeSignatureNumerator * MidiUtils.ValueToTicks(TimeSignatureDenominator);
+            return (from track in Score.Tracks from staff in track.Staves select staff.Bars[0].CalculateDuration())
+                .Prepend(0).Max();
         }
 
         /// <summary>
@@ -194,9 +185,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
         /// <returns></returns>
         internal Fermata GetFermata(Beat beat)
         {
-            if (Fermata.ContainsKey(beat.PlaybackStart)) return Fermata[beat.PlaybackStart];
-
-            return null;
+            return Fermata.ContainsKey(beat.PlaybackStart) ? Fermata[beat.PlaybackStart] : null;
         }
     }
 }

@@ -9,7 +9,7 @@ using BardMusicPlayer.Seer.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Machina
 {
-    internal partial class Packet
+    internal sealed partial class Packet
     {
         /// <summary>
         ///     Handles Ensemble Request, Ensemble Reject, and Instrument Equip/De-Equip.
@@ -67,8 +67,6 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Machina
                                     _machinaReader.ReaderHandler.Game.PublishEvent(
                                         new EnsembleRejected(EventSource.Machina));
                                     break;
-                                default:
-                                    return;
                             }
                         }
                     }

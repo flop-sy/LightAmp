@@ -1,5 +1,9 @@
+#region
+
 using System;
 using System.Collections.Generic;
+
+#endregion
 
 namespace Sanford.Collections.Generic
 {
@@ -7,106 +11,27 @@ namespace Sanford.Collections.Generic
     {
         #region Enumerator Class
 
-        [Serializable()]
+        [Serializable]
         private class Enumerator : IEnumerator<T>
         {
-            private Deque<T> owner;
+            private T current;
 
             private Node currentNode;
 
-            private T current = default(T);
+            // A value indicating whether the enumerator has been disposed.
+            private bool disposed;
 
-            private bool moveResult = false;
+            private bool moveResult;
+            private Deque<T> owner;
 
             private long version;
-
-            // A value indicating whether the enumerator has been disposed.
-            private bool disposed = false;
 
             public Enumerator(Deque<T> owner)
             {
                 this.owner = owner;
                 currentNode = owner.front;
-                this.version = owner.version;
+                version = owner.version;
             }
-
-            #region IEnumerator Members
-
-            public void Reset()
-            {
-                #region Require
-
-                if(disposed)
-                {
-                    throw new ObjectDisposedException(this.GetType().Name);
-                }
-                else if(version != owner.version)
-                {
-                    throw new InvalidOperationException(
-                        "The Deque was modified after the enumerator was created.");
-                }
-
-                #endregion
-
-                currentNode = owner.front;
-                moveResult = false;
-            }
-
-            public object Current
-            {
-                get
-                {
-                    #region Require
-
-                    if(disposed)
-                    {
-                        throw new ObjectDisposedException(this.GetType().Name);
-                    }
-                    else if(!moveResult)
-                    {
-                        throw new InvalidOperationException(
-                            "The enumerator is positioned before the first " +
-                            "element of the Deque or after the last element.");
-                    }
-
-                    #endregion
-
-                    return current;
-                }
-            }
-
-            public bool MoveNext()
-            {
-                #region Require
-
-                if(disposed)
-                {
-                    throw new ObjectDisposedException(this.GetType().Name);
-                }
-                else if(version != owner.version)
-                {
-                    throw new InvalidOperationException(
-                        "The Deque was modified after the enumerator was created.");
-                }
-
-                #endregion
-
-                if(currentNode != null)
-                {
-                    current = currentNode.Value;
-                    currentNode = currentNode.Next;
-
-                    moveResult = true;
-                }
-                else
-                {
-                    moveResult = false;
-                }
-
-                return moveResult;
-            }
-
-            #endregion
 
             #region IEnumerator<T> Members
 
@@ -116,16 +41,12 @@ namespace Sanford.Collections.Generic
                 {
                     #region Require
 
-                    if(disposed)
-                    {
-                        throw new ObjectDisposedException(this.GetType().Name);
-                    }
-                    else if(!moveResult)
-                    {
+                    if (disposed) throw new ObjectDisposedException(GetType().Name);
+
+                    if (!moveResult)
                         throw new InvalidOperationException(
                             "The enumerator is positioned before the first " +
                             "element of the Deque or after the last element.");
-                    }
 
                     #endregion
 
@@ -140,6 +61,72 @@ namespace Sanford.Collections.Generic
             public void Dispose()
             {
                 disposed = true;
+            }
+
+            #endregion
+
+            #region IEnumerator Members
+
+            public void Reset()
+            {
+                #region Require
+
+                if (disposed) throw new ObjectDisposedException(GetType().Name);
+
+                if (version != owner.version)
+                    throw new InvalidOperationException(
+                        "The Deque was modified after the enumerator was created.");
+
+                #endregion
+
+                currentNode = owner.front;
+                moveResult = false;
+            }
+
+            public object Current
+            {
+                get
+                {
+                    #region Require
+
+                    if (disposed) throw new ObjectDisposedException(GetType().Name);
+
+                    if (!moveResult)
+                        throw new InvalidOperationException(
+                            "The enumerator is positioned before the first " +
+                            "element of the Deque or after the last element.");
+
+                    #endregion
+
+                    return current;
+                }
+            }
+
+            public bool MoveNext()
+            {
+                #region Require
+
+                if (disposed) throw new ObjectDisposedException(GetType().Name);
+
+                if (version != owner.version)
+                    throw new InvalidOperationException(
+                        "The Deque was modified after the enumerator was created.");
+
+                #endregion
+
+                if (currentNode != null)
+                {
+                    current = currentNode.Value;
+                    currentNode = currentNode.Next;
+
+                    moveResult = true;
+                }
+                else
+                {
+                    moveResult = false;
+                }
+
+                return moveResult;
             }
 
             #endregion

@@ -10,6 +10,6 @@ namespace BardMusicPlayer.Coffer
     {
         [BsonId] public int Id { get; set; } = Constants.SCHEMA_DOCUMENT_ID;
 
-        public byte Version { get; set; } = Constants.SCHEMA_VERSION;
+        public static byte Version => Constants.SCHEMA_VERSION;
     }
 }

@@ -8,7 +8,7 @@ using BardMusicPlayer.Transmogrify.Song.Config.Interfaces;
 
 namespace BardMusicPlayer.Transmogrify.Song.Config
 {
-    public class ClassicProcessorConfig : IProcessorConfig
+    public sealed class ClassicProcessorConfig : IProcessorConfig
     {
         /// <summary>
         ///     The instrument for this track
@@ -21,7 +21,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Config
         public OctaveRange OctaveRange { get; set; } = OctaveRange.C3toC6;
 
         /// <inheritdoc />
-        public int Track { get; set; } = 0;
+        public int Track { get; set; }
 
         /// <inheritdoc />
         public List<long> IncludedTracks { get; set; } = new();

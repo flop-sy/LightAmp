@@ -108,6 +108,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             }
             catch
             {
+                // ignored
             }
 
             return key.Default;
@@ -132,17 +133,20 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         {
             var datasource = this.AsEnumerable();
             if (format.Flag(LyricsFormat.MetadataSortByContent))
-                datasource = datasource.OrderBy(d => d.Key.Stringify(d.Value));
+                datasource = datasource.OrderBy(static d => d.Key.Stringify(d.Value));
+
             if (format.Flag(LyricsFormat.LinesSortByTimestamp))
                 datasource = datasource is IOrderedEnumerable<KeyValuePair<MetaDataType, string>> od
-                    ? od.ThenBy(l => l.Key.Tag)
-                    : datasource.OrderBy(l => l.Key.Tag);
+                    ? od.ThenBy(static l => l.Key.Tag)
+                    : datasource.OrderBy(static l => l.Key.Tag);
+
             var skip = format.Flag(LyricsFormat.SkipEmptyMetadata);
             foreach (var item in datasource)
             {
                 var v = item.Value;
                 if (skip && string.IsNullOrEmpty(v))
                     continue;
+
                 sb.Append('[')
                     .Append(item.Key.Tag)
                     .Append(':')

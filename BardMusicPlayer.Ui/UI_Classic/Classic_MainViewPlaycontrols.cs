@@ -17,7 +17,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
-    public partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView : UserControl
     {
         private bool _alltracks;
         private bool _Playbar_dragStarted;
@@ -26,10 +26,7 @@ namespace BardMusicPlayer.Ui.Classic
         /* Playbuttonstate */
         private void Play_Button_State(bool playing = false)
         {
-            if (!playing)
-                Play_Button.Content = @"▶";
-            else
-                Play_Button.Content = @"⏸";
+            Play_Button.Content = !playing ? @"▶" : @"⏸";
         }
 
         /* Playback */
@@ -53,7 +50,7 @@ namespace BardMusicPlayer.Ui.Classic
             if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
                 return;
 
-            var task = Task.Run(() =>
+            var task = Task.Run(static () =>
             {
                 BmpMaestro.Instance.EquipInstruments();
                 Task.Delay(2000).Wait();

@@ -9,7 +9,7 @@ using BardMusicPlayer.Seer.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
 {
-    internal partial class Reader
+    internal sealed partial class Reader
     {
         public bool CanGetPlayerInfo()
         {

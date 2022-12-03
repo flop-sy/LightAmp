@@ -15,7 +15,7 @@ using SocketException = ZeroTier.Sockets.SocketException;
 
 namespace BardMusicPlayer.Jamboree.PartyNetworking
 {
-    public class NetworkSocket
+    public sealed class NetworkSocket
     {
         private bool _await_pong;
         private bool _close;
@@ -99,28 +99,26 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
             if (ListenSocket.Available == -1)
                 return false;
 
-            if (ListenSocket.Poll(100, SelectMode.SelectRead))
-            {
-                int bytesRec;
-                try
-                {
-                    bytesRec = ListenSocket.Receive(bytes);
-                    if (bytesRec == -1)
-                    {
-                        CloseConnection();
-                        return false;
-                    }
+            if (!ListenSocket.Poll(100, SelectMode.SelectRead)) return true;
 
-                    OpcodeHandling(bytes, bytesRec);
-                }
-                catch (SocketException err)
+            try
+            {
+                var bytesRec = ListenSocket.Receive(bytes);
+                if (bytesRec == -1)
                 {
-                    Console.WriteLine(
-                        "ServiceErrorCode={0} SocketErrorCode={1}",
-                        err.ServiceErrorCode,
-                        err.SocketErrorCode);
+                    CloseConnection();
                     return false;
                 }
+
+                OpcodeHandling(bytes, bytesRec);
+            }
+            catch (SocketException err)
+            {
+                Console.WriteLine(
+                    "ServiceErrorCode={0} SocketErrorCode={1}",
+                    err.ServiceErrorCode,
+                    err.SocketErrorCode);
+                return false;
             }
 
             return true;
@@ -128,16 +126,13 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
 
         public void SendPacket(byte[] pck)
         {
-            if (ConnectorSocket.Available == -1)
-                _close = true;
+            if (ConnectorSocket.Available == -1) _close = true;
 
-            if (!ConnectorSocket.Connected)
-                _close = true;
+            if (!ConnectorSocket.Connected) _close = true;
 
             try
             {
-                if (ConnectorSocket.Send(pck) == -1)
-                    _close = true;
+                if (ConnectorSocket.Send(pck) == -1) _close = true;
             }
             catch
             {
@@ -177,8 +172,6 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
                     Debug.WriteLine("");
                     break;
             }
-
-            ;
         }
 
         public void CloseConnection()

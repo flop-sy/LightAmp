@@ -23,7 +23,7 @@ using Image = System.Drawing.Image;
 
 namespace BardMusicPlayer.Ui.Skinned
 {
-    public partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView : UserControl
     {
         /// <summary>
         ///     Load the selected skin
@@ -391,9 +391,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadBackgroundMain(string filename)
         {
-            var image = ExtractBitmapFromZip(filename, "main.bmp");
-            if (image == null)
-                image = loadDefaultSkinBitmap("main.bmp");
+            var image = ExtractBitmapFromZip(filename, "main.bmp") ?? loadDefaultSkinBitmap("main.bmp");
 
             Background = new ImageBrush(image);
 
@@ -416,9 +414,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadTitlebarAndButtons(string filename)
         {
-            var img = ExtractImageFromZip(filename, "titlebar.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("titlebar.bmp");
+            var img = ExtractImageFromZip(filename, "titlebar.bmp") ?? loadDefaultSkinData("titlebar.bmp");
             foreach (var data in titlebardata)
             {
                 var bitmap = new Bitmap(data.Value.ElementAt(2), data.Value.ElementAt(3));
@@ -440,9 +436,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadVolumebar(string filename)
         {
-            var img = ExtractImageFromZip(filename, "volume.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("volume.bmp");
+            var img = ExtractImageFromZip(filename, "volume.bmp") ?? loadDefaultSkinData("volume.bmp");
             foreach (var data in volumedata)
             {
                 var bitmap = new Bitmap(data.Value.ElementAt(2), data.Value.ElementAt(3));
@@ -464,9 +458,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadBalancebar(string filename)
         {
-            var img = ExtractImageFromZip(filename, "balance.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("balance.bmp");
+            var img = ExtractImageFromZip(filename, "balance.bmp") ?? loadDefaultSkinData("balance.bmp");
             foreach (var data in balancedata)
             {
                 var bitmap = new Bitmap(data.Value.ElementAt(2), data.Value.ElementAt(3));
@@ -488,9 +480,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadControlButtons(string filename)
         {
-            var img = ExtractImageFromZip(filename, "CBUTTONS.BMP");
-            if (img == null)
-                img = loadDefaultSkinData("cbuttons.bmp");
+            var img = ExtractImageFromZip(filename, "CBUTTONS.BMP") ?? loadDefaultSkinData("cbuttons.bmp");
             foreach (var data in cbuttonsdata)
             {
                 var bitmap = new Bitmap(data.Value.ElementAt(2), data.Value.ElementAt(3));
@@ -513,9 +503,7 @@ namespace BardMusicPlayer.Ui.Skinned
         private void loadTransportbarAndClutter(string filename)
         {
             //Transportbar
-            var img = ExtractImageFromZip(filename, "posbar.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("posbar.bmp");
+            var img = ExtractImageFromZip(filename, "posbar.bmp") ?? loadDefaultSkinData("posbar.bmp");
             PlayBar_Background.Fill = ExtractImage(img, 248, 9, 0, 0);
             Application.Current.Resources["MAIN_POSITION_SLIDER_THUMB"] = ExtractImage(img, 27, 9, 249, 0);
             Application.Current.Resources["MAIN_POSITION_SLIDER_THUMB_SELECTED"] = ExtractImage(img, 28, 9, 278, 0);
@@ -527,9 +515,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadPlaylistDesign(string filename)
         {
-            var img = ExtractImageFromZip(filename, "pledit.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("pledit.bmp");
+            var img = ExtractImageFromZip(filename, "pledit.bmp") ?? loadDefaultSkinData("pledit.bmp");
             foreach (var data in playlistdata)
             {
                 var bitmap = new Bitmap(data.Value.ElementAt(2), data.Value.ElementAt(3));
@@ -554,9 +540,7 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void loadEqBackGround(string filename)
         {
-            var img = ExtractImageFromZip(filename, "eqmain.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("eqmain.bmp");
+            var img = ExtractImageFromZip(filename, "eqmain.bmp") ?? loadDefaultSkinData("eqmain.bmp");
             //foreach (KeyValuePair<SkinContainer.EQ_TYPES, List<int>> data in eqdata)
             {
                 var data = eqdata.First();
@@ -580,9 +564,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadShufRepDesign(string filename)
         {
-            var img = ExtractImageFromZip(filename, "shufrep.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("shufrep.bmp");
+            var img = ExtractImageFromZip(filename, "shufrep.bmp") ?? loadDefaultSkinData("shufrep.bmp");
             foreach (var data in shufrepdata)
             {
                 var bitmap = new Bitmap(data.Value.ElementAt(2), data.Value.ElementAt(3));
@@ -606,9 +588,7 @@ namespace BardMusicPlayer.Ui.Skinned
         private void loadMediaBrowserWindow(string filename)
         {
             //avs window (small window decoration)
-            var img = ExtractImageFromZip(filename, "mb.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("mb.bmp");
+            var img = ExtractImageFromZip(filename, "mb.bmp") ?? loadDefaultSkinData("mb.bmp");
 
             foreach (var data in mediabrowserdata)
             {
@@ -632,9 +612,7 @@ namespace BardMusicPlayer.Ui.Skinned
         private void loadAVSWindow(string filename)
         {
             //avs window (small window decoration)
-            var img = ExtractImageFromZip(filename, "avs.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("avs.bmp");
+            var img = ExtractImageFromZip(filename, "avs.bmp") ?? loadDefaultSkinData("avs.bmp");
 
             foreach (var data in swindowdata)
             {
@@ -657,11 +635,8 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="filename">wsz fullpath and filename</param>
         private void loadNumbersAndFont(string filename)
         {
-            var img = ExtractImageFromZip(filename, "numbers.bmp");
-            if (img == null)
-                img = ExtractImageFromZip(filename, "nums_ex.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("nums_ex.bmp");
+            var img = (ExtractImageFromZip(filename, "numbers.bmp") ?? ExtractImageFromZip(filename, "nums_ex.bmp")) ??
+                      loadDefaultSkinData("nums_ex.bmp");
             foreach (var data in numbersdata)
             {
                 var bitmap = new Bitmap(data.Value.ElementAt(2), data.Value.ElementAt(3));
@@ -677,9 +652,7 @@ namespace BardMusicPlayer.Ui.Skinned
             }
 
             //The "Font"
-            img = ExtractImageFromZip(filename, "text.bmp");
-            if (img == null)
-                img = loadDefaultSkinData("text.bmp");
+            img = ExtractImageFromZip(filename, "text.bmp") ?? loadDefaultSkinData("text.bmp");
             {
                 var bitmap = new Bitmap(5, 6);
                 var graphics = Graphics.FromImage(bitmap);
@@ -690,48 +663,81 @@ namespace BardMusicPlayer.Ui.Skinned
                 {
                     graphics.DrawImage(img, new Rectangle(0, 0, 5, 6), new Rectangle(col * 5, row * 6, 5, 6),
                         GraphicsUnit.Pixel);
-                    if (row == 0)
+                    switch (row)
                     {
-                        if (65 + col <= 90) //A-Z
-                        {
+                        //A-Z
+                        case 0 when 65 + col <= 90:
                             SkinContainer.FONT.Add(65 + col, new Bitmap(bitmap));
                             SkinContainer.FONT.Add(97 + col, new Bitmap(bitmap));
-                        }
-                        else if (col == 26 || col == 27) //@ or "
-                        {
+                            break;
+                        //@ or "
+                        case 0 when col is 26 or 27:
                             SkinContainer.FONT.Add(col == 26 ? 34 : 64, new Bitmap(bitmap));
-                        }
-                        else if (col == 29) //Space
+                            break;
+                        case 0:
                         {
-                            SkinContainer.FONT.Add(32, new Bitmap(bitmap));
+                            if (col == 29) //Space
+                                SkinContainer.FONT.Add(32, new Bitmap(bitmap));
+
+                            break;
                         }
-                    }
-                    else if (row == 1)
-                    {
-                        if (col < 10) //0-9
-                            SkinContainer.FONT.Add(48 + col, new Bitmap(bitmap));
-                        if (col == 12) //-
-                            SkinContainer.FONT.Add(58, new Bitmap(bitmap));
-                        if (col == 13 || col == 14) // ()
-                            SkinContainer.FONT.Add(27 + col, new Bitmap(bitmap)); //40-13+col
-                        if (col == 15) //-
-                            SkinContainer.FONT.Add(45, new Bitmap(bitmap));
-                        if (col == 16) //'
-                            SkinContainer.FONT.Add(39, new Bitmap(bitmap));
-                        if (col == 17) //!
-                            SkinContainer.FONT.Add(33, new Bitmap(bitmap));
-                        if (col == 18) //_
-                            SkinContainer.FONT.Add(95, new Bitmap(bitmap));
-                        if (col == 19) //+
-                            SkinContainer.FONT.Add(43, new Bitmap(bitmap));
-                        if (col == 20) // \
-                            SkinContainer.FONT.Add(92, new Bitmap(bitmap));
-                        if (col == 21) // /
-                            SkinContainer.FONT.Add(47, new Bitmap(bitmap));
-                        if (col == 22) // [
-                            SkinContainer.FONT.Add(91, new Bitmap(bitmap));
-                        if (col == 23) // ]
-                            SkinContainer.FONT.Add(93, new Bitmap(bitmap));
+                        case 1:
+                        {
+                            switch (col)
+                            {
+                                //0-9
+                                case < 10:
+                                    SkinContainer.FONT.Add(48 + col, new Bitmap(bitmap));
+                                    break;
+                                //-
+                                case 12:
+                                    SkinContainer.FONT.Add(58, new Bitmap(bitmap));
+                                    break;
+                                case 13:
+                                // ()
+                                case 14:
+                                    SkinContainer.FONT.Add(27 + col, new Bitmap(bitmap)); //40-13+col
+                                    break;
+                                //-
+                                case 15:
+                                    SkinContainer.FONT.Add(45, new Bitmap(bitmap));
+                                    break;
+                                //'
+                                case 16:
+                                    SkinContainer.FONT.Add(39, new Bitmap(bitmap));
+                                    break;
+                                //!
+                                case 17:
+                                    SkinContainer.FONT.Add(33, new Bitmap(bitmap));
+                                    break;
+                                //_
+                                case 18:
+                                    SkinContainer.FONT.Add(95, new Bitmap(bitmap));
+                                    break;
+                                //+
+                                case 19:
+                                    SkinContainer.FONT.Add(43, new Bitmap(bitmap));
+                                    break;
+                                // \
+                                case 20:
+                                    SkinContainer.FONT.Add(92, new Bitmap(bitmap));
+                                    break;
+                                // /
+                                case 21:
+                                    SkinContainer.FONT.Add(47, new Bitmap(bitmap));
+                                    break;
+                                // [
+                                case 22:
+                                    SkinContainer.FONT.Add(91, new Bitmap(bitmap));
+                                    break;
+                                // ]
+                                case 23:
+                                    SkinContainer.FONT.Add(93, new Bitmap(bitmap));
+                                    break;
+                            }
+
+                            break;
+                        }
                     }
                 }
 
@@ -842,7 +848,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="archivename">wsz fullpath and filename</param>
         /// <param name="imagename">image name</param>
         /// <returns>Image</returns>
-        private Image ExtractImageFromZip(string archivename, string imagename)
+        private static Image ExtractImageFromZip(string archivename, string imagename)
         {
             ZipArchive zip;
             try
@@ -856,19 +862,17 @@ namespace BardMusicPlayer.Ui.Skinned
 
             var ent = zip.Entries;
             var regex = @"\b(" + imagename + @")\b";
-            foreach (var entry in ent)
-                if (Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase))
-                    if (entry != null)
-                        using (var zipStream = entry.Open())
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            zipStream.CopyTo(memoryStream);
-                            memoryStream.Position = 0;
-                            var image = Image.FromStream(memoryStream);
-                            memoryStream.Close();
-                            zipStream.Close();
-                            return image;
-                        }
+            foreach (var entry in ent.Where(entry => Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase)))
+                using (var zipStream = entry.Open())
+                using (var memoryStream = new MemoryStream())
+                {
+                    zipStream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+                    var image = Image.FromStream(memoryStream);
+                    memoryStream.Close();
+                    zipStream.Close();
+                    return image;
+                }
 
             return null;
         }
@@ -879,7 +883,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="archivename">wsz fullpath and filename</param>
         /// <param name="imagename">name of the image</param>
         /// <returns>BitmapImage</returns>
-        public BitmapImage ExtractBitmapFromZip(string archivename, string imagename)
+        public static BitmapImage ExtractBitmapFromZip(string archivename, string imagename)
         {
             ZipArchive zip;
             try
@@ -893,23 +897,21 @@ namespace BardMusicPlayer.Ui.Skinned
 
             var ent = zip.Entries;
             var regex = @"\b(" + imagename + @")\b";
-            foreach (var entry in ent)
-                if (Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase))
-                    if (entry != null)
-                        using (var zipStream = entry.Open())
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            zipStream.CopyTo(memoryStream);
-                            memoryStream.Position = 0;
-                            var bitmap = new BitmapImage();
-                            bitmap.BeginInit();
-                            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                            bitmap.StreamSource = memoryStream;
-                            bitmap.EndInit();
-                            memoryStream.Close();
-                            zipStream.Close();
-                            return bitmap;
-                        }
+            foreach (var entry in ent.Where(entry => Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase)))
+                using (var zipStream = entry.Open())
+                using (var memoryStream = new MemoryStream())
+                {
+                    zipStream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = memoryStream;
+                    bitmap.EndInit();
+                    memoryStream.Close();
+                    zipStream.Close();
+                    return bitmap;
+                }
 
             return null;
         }
@@ -943,50 +945,47 @@ namespace BardMusicPlayer.Ui.Skinned
             }
 
             var ent = zip.Entries;
-            var regex = @"\b(" + "pledit.txt" + @")\b";
-            foreach (var entry in ent)
-                if (Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase))
-                    if (entry != null)
-                        using (var zipStream = entry.Open())
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            zipStream.CopyTo(memoryStream);
-                            memoryStream.Position = 0;
-                            var data = new List<string>();
-                            using (var reader = new StreamReader(memoryStream, Encoding.ASCII))
-                            {
-                                string line;
-                                while ((line = reader.ReadLine()) != null)
-                                    if (line.IndexOf("NormalBG", StringComparison.OrdinalIgnoreCase) >= 0)
-                                        SkinContainer.PLAYLISTCOLOR[
-                                                SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_NORMALBG] =
-                                            GetColorFromHex(line);
-                                    else if (line.IndexOf("Normal", StringComparison.OrdinalIgnoreCase) >= 0)
-                                        SkinContainer.PLAYLISTCOLOR[
-                                                SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_NORMAL] =
-                                            GetColorFromHex(line);
-                                    else if (line.IndexOf("Current", StringComparison.OrdinalIgnoreCase) >= 0)
-                                        SkinContainer.PLAYLISTCOLOR[
-                                                SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_CURRENT] =
-                                            GetColorFromHex(line);
-                                    else if (line.IndexOf("SelectedBG", StringComparison.OrdinalIgnoreCase) >= 0)
-                                        SkinContainer.PLAYLISTCOLOR[
-                                                SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_SELECTBG] =
-                                            GetColorFromHex(line);
-                                    else if (line.IndexOf("mbBG", StringComparison.OrdinalIgnoreCase) >= 0)
-                                        SkinContainer.PLAYLISTCOLOR[
-                                                SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_MBBG] =
-                                            GetColorFromHex(line);
-                                    else if (line.IndexOf("mbFG", StringComparison.OrdinalIgnoreCase) >= 0)
-                                        SkinContainer.PLAYLISTCOLOR[
-                                                SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_MBFG] =
-                                            GetColorFromHex(line);
-                            }
+            const string regex = @"\b(" + "pledit.txt" + @")\b";
+            foreach (var entry in ent.Where(static entry => Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase)))
+                using (var zipStream = entry.Open())
+                using (var memoryStream = new MemoryStream())
+                {
+                    zipStream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+                    var data = new List<string>();
+                    using (var reader = new StreamReader(memoryStream, Encoding.ASCII))
+                    {
+                        while (reader.ReadLine() is { } line)
+                            if (line.IndexOf("NormalBG", StringComparison.OrdinalIgnoreCase) >= 0)
+                                SkinContainer.PLAYLISTCOLOR[
+                                        SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_NORMALBG] =
+                                    GetColorFromHex(line);
+                            else if (line.IndexOf("Normal", StringComparison.OrdinalIgnoreCase) >= 0)
+                                SkinContainer.PLAYLISTCOLOR[
+                                        SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_NORMAL] =
+                                    GetColorFromHex(line);
+                            else if (line.IndexOf("Current", StringComparison.OrdinalIgnoreCase) >= 0)
+                                SkinContainer.PLAYLISTCOLOR[
+                                        SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_CURRENT] =
+                                    GetColorFromHex(line);
+                            else if (line.IndexOf("SelectedBG", StringComparison.OrdinalIgnoreCase) >= 0)
+                                SkinContainer.PLAYLISTCOLOR[
+                                        SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_SELECTBG] =
+                                    GetColorFromHex(line);
+                            else if (line.IndexOf("mbBG", StringComparison.OrdinalIgnoreCase) >= 0)
+                                SkinContainer.PLAYLISTCOLOR[
+                                        SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_MBBG] =
+                                    GetColorFromHex(line);
+                            else if (line.IndexOf("mbFG", StringComparison.OrdinalIgnoreCase) >= 0)
+                                SkinContainer.PLAYLISTCOLOR[
+                                        SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_MBFG] =
+                                    GetColorFromHex(line);
+                    }
 
-                            memoryStream.Close();
-                            zipStream.Close();
-                            return;
-                        }
+                    memoryStream.Close();
+                    zipStream.Close();
+                    return;
+                }
         }
 
         /// <summary>
@@ -1004,55 +1003,54 @@ namespace BardMusicPlayer.Ui.Skinned
             }
             catch
             {
-                var data = new List<string>();
-                data.Add("0,0,0");
-                data.Add("0,0,0");
-                data.Add("239,49,16");
-                data.Add("206,41,16");
-                data.Add("214,90,0");
-                data.Add("214,102,0");
-                data.Add("214,115,0"); // 6
-                data.Add("198,123,8"); // 7
-                data.Add("222,165,24"); // 8
-                data.Add("214,181,33"); // 9
-                data.Add("189,222,41"); // 10 = mid of spec
-                data.Add("148,222,33"); // 11
-                data.Add("41,206,16"); // 12
-                data.Add("50,190,16"); // 13
-                data.Add("57,181,16"); // 14
-                data.Add("49,156,8"); // 15
-                data.Add("41,148,0"); // 16
-                data.Add("24,132,8"); // 17 = bottom of spec
-                data.Add("255,255,255"); // 18 = osc 1 (brightest)
-                data.Add("214,214,222"); // 19 = osc 2 (slightly dimmer)
-                data.Add("181,189,189"); // 20 = osc 3
-                data.Add("160,170,175"); // 21 = osc 4
-                data.Add("148,156,165"); // 22 = osc 5 (dimmest)
-                data.Add("150,150,150");
+                var data = new List<string>
+                {
+                    "0,0,0",
+                    "0,0,0",
+                    "239,49,16",
+                    "206,41,16",
+                    "214,90,0",
+                    "214,102,0",
+                    "214,115,0", // 6
+                    "198,123,8", // 7
+                    "222,165,24", // 8
+                    "214,181,33", // 9
+                    "189,222,41", // 10 = mid of spec
+                    "148,222,33", // 11
+                    "41,206,16", // 12
+                    "50,190,16", // 13
+                    "57,181,16", // 14
+                    "49,156,8", // 15
+                    "41,148,0", // 16
+                    "24,132,8", // 17 = bottom of spec
+                    "255,255,255", // 18 = osc 1 (brightest)
+                    "214,214,222", // 19 = osc 2 (slightly dimmer)
+                    "181,189,189", // 20 = osc 3
+                    "160,170,175", // 21 = osc 4
+                    "148,156,165", // 22 = osc 5 (dimmest)
+                    "150,150,150"
+                };
                 return data;
             }
 
             var ent = zip.Entries;
             var regex = @"\b(" + imagename + @")\b";
-            foreach (var entry in ent)
-                if (Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase))
-                    if (entry != null)
-                        using (var zipStream = entry.Open())
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            zipStream.CopyTo(memoryStream);
-                            memoryStream.Position = 0;
-                            var data = new List<string>();
-                            using (var reader = new StreamReader(memoryStream, Encoding.ASCII))
-                            {
-                                string line;
-                                while ((line = reader.ReadLine()) != null) data.Add(line);
-                            }
+            foreach (var entry in ent.Where(entry => Regex.IsMatch(entry.Name, regex, RegexOptions.IgnoreCase)))
+                using (var zipStream = entry.Open())
+                using (var memoryStream = new MemoryStream())
+                {
+                    zipStream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+                    var data = new List<string>();
+                    using (var reader = new StreamReader(memoryStream, Encoding.ASCII))
+                    {
+                        while (reader.ReadLine() is { } line) data.Add(line);
+                    }
 
-                            memoryStream.Close();
-                            zipStream.Close();
-                            return data;
-                        }
+                    memoryStream.Close();
+                    zipStream.Close();
+                    return data;
+                }
 
             return null;
         }
@@ -1066,7 +1064,7 @@ namespace BardMusicPlayer.Ui.Skinned
         /// <param name="offset_x"></param>
         /// <param name="offset_y"></param>
         /// <returns>ImageBrush</returns>
-        private ImageBrush ExtractImage(Image img, int x, int y, int offset_x, int offset_y)
+        private static ImageBrush ExtractImage(Image img, int x, int y, int offset_x, int offset_y)
         {
             var p = new Bitmap(x, y);
             var graphics = Graphics.FromImage(p);
@@ -1083,25 +1081,24 @@ namespace BardMusicPlayer.Ui.Skinned
         /// </summary>
         /// <param name="data"></param>
         /// <returns>System.Drawing.Color</returns>
-        private Color GetColor(string data)
+        private static Color GetColor(string data)
         {
             var colval = new byte[3];
             var numbers = Regex.Split(data, @"\D+");
             var idx = 0;
-            foreach (var value in numbers)
-                if (!string.IsNullOrEmpty(value))
-                {
-                    if (idx >= 3)
-                        break;
-                    var i = int.Parse(value);
-                    colval[idx] = (byte)int.Parse(value);
-                    idx++;
-                }
+            foreach (var value in numbers.Where(static value => !string.IsNullOrEmpty(value))
+                         .TakeWhile(value => idx < 3)
+                         .Select(static value => new { value, i = int.Parse(value) })
+                         .Select(static t => t.value))
+            {
+                colval[idx] = (byte)int.Parse(value);
+                idx++;
+            }
 
             return Color.FromArgb(colval[0], colval[1], colval[2]);
         }
 
-        private Color GetColorFromHex(string data)
+        private static Color GetColorFromHex(string data)
         {
             var x = data.Split('#')[1];
             return ColorTranslator.FromHtml("#" + x);

@@ -1,22 +1,18 @@
+#region
+
 using System;
+
+#endregion
 
 namespace Sanford.Multimedia.Midi
 {
-    public class SysCommonMessageEventArgs : EventArgs
+    public sealed class SysCommonMessageEventArgs : EventArgs
     {
-        private SysCommonMessage message;
-
         public SysCommonMessageEventArgs(SysCommonMessage message)
         {
-            this.message = message;
+            Message = message;
         }
 
-        public SysCommonMessage Message
-        {
-            get
-            {
-                return message;
-            }
-        }
+        public SysCommonMessage Message { get; }
     }
 }

@@ -1,6 +1,12 @@
-﻿namespace BardMusicPlayer.Siren.AlphaTab.Model
+﻿#region
+
+using System.Linq;
+
+#endregion
+
+namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
-    internal class TuningParseResult
+    internal sealed class TuningParseResult
     {
         public string Note { get; set; }
         public int NoteValue { get; set; }
@@ -27,9 +33,7 @@
             var note = "";
             var octave = "";
 
-            for (var i = 0; i < name.Length; i++)
-            {
-                var c = (int)name[i];
+            foreach (var c in name.Select(static t => (int)t))
                 if (Platform.IsCharNumber(c, false))
                 {
                     // number without note?
@@ -37,7 +41,7 @@
 
                     octave += Platform.StringFromCharCode(c);
                 }
-                else if ((c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A) || c == 0x23)
+                else if (c is >= 0x41 and <= 0x5A or >= 0x61 and <= 0x7A or 0x23)
                 {
                     note += Platform.StringFromCharCode(c);
                 }
@@ -45,13 +49,14 @@
                 {
                     return null;
                 }
-            }
 
             if (string.IsNullOrEmpty(octave) || string.IsNullOrEmpty(note)) return null;
 
-            var result = new TuningParseResult();
-            result.Octave = Platform.ParseInt(octave) + 1;
-            result.Note = note.ToLower();
+            var result = new TuningParseResult
+            {
+                Octave = Platform.ParseInt(octave) + 1,
+                Note = note.ToLower()
+            };
             result.NoteValue = GetToneForText(result.Note);
             return result;
         }

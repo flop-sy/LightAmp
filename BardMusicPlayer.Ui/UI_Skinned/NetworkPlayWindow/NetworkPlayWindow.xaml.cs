@@ -12,7 +12,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für BardsWindow.xaml
     /// </summary>
-    public partial class NetworkPlayWindow : Window
+    public sealed partial class NetworkPlayWindow : Window
     {
         public NetworkPlayWindow()
         {

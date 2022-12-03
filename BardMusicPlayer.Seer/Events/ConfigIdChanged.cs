@@ -1,4 +1,10 @@
-﻿namespace BardMusicPlayer.Seer.Events
+﻿#region
+
+using System;
+
+#endregion
+
+namespace BardMusicPlayer.Seer.Events
 {
     public sealed class ConfigIdChanged : SeerEvent
     {
@@ -12,7 +18,7 @@
 
         public override bool IsValid()
         {
-            return !string.IsNullOrEmpty(ConfigId) && ConfigId.StartsWith("FFXIV_CHR") &&
+            return !string.IsNullOrEmpty(ConfigId) && ConfigId.StartsWith("FFXIV_CHR", StringComparison.Ordinal) &&
                    ConfigId.Length == 25;
         }
     }

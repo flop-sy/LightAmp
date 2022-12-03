@@ -28,6 +28,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 throw new ArgumentOutOfRangeException(nameof(second));
             if (unchecked((uint)millisecond >= 1000U))
                 throw new ArgumentOutOfRangeException(nameof(millisecond));
+
             return new DateTime(minute * TICKS_PER_MINUTE
                                 + second * TICKS_PER_SECOND
                                 + millisecond * TICKS_PER_MILLISECOND);
@@ -46,6 +47,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
                 throw new ArgumentOutOfRangeException(nameof(second));
             if (unchecked((uint)millisecond >= 1000U))
                 throw new ArgumentOutOfRangeException(nameof(millisecond));
+
             return new DateTime(second * TICKS_PER_SECOND
                                 + millisecond * TICKS_PER_MILLISECOND);
         }
@@ -60,6 +62,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         {
             if (millisecond < 0)
                 throw new ArgumentOutOfRangeException(nameof(millisecond));
+
             return new DateTime(millisecond * TICKS_PER_MILLISECOND);
         }
     }

@@ -15,7 +15,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für MediaBrowser.xaml
     /// </summary>
-    public partial class MediaBrowser : Window
+    public sealed partial class MediaBrowser : Window
     {
         private IPlaylist _currentPlaylist; //The current selected playlist at the browser
         private int _currentPlaylistIndex;
@@ -42,6 +42,7 @@ namespace BardMusicPlayer.Ui.Skinned
                 var lvitem = PlaylistsContainer.ItemContainerGenerator.ContainerFromIndex(i) as ListViewItem;
                 if (lvitem == null)
                     continue;
+
                 lvitem.Foreground = fcol;
                 lvitem.Background = bcol;
             }
@@ -51,11 +52,10 @@ namespace BardMusicPlayer.Ui.Skinned
             col = SkinContainer.PLAYLISTCOLOR[SkinContainer.PLAYLISTCOLOR_TYPES.PLAYLISTCOLOR_SELECTBG];
             bcol = new SolidColorBrush(Color.FromArgb(col.A, col.R, col.G, col.B));
 
-            var lvtem =
-                PlaylistsContainer.ItemContainerGenerator.ContainerFromItem(PlaylistsContainer.SelectedItem) as
-                    ListViewItem;
-            if (lvtem == null)
+            if (PlaylistsContainer.ItemContainerGenerator.ContainerFromItem(PlaylistsContainer.SelectedItem) is not
+                ListViewItem lvtem)
                 return;
+
             lvtem.Foreground = fcol;
             lvtem.Background = bcol;
 
@@ -209,7 +209,8 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             if (BmpCoffer.Instance.GetPlaylistNames().Contains(PlaylistName_Box.Text))
                 return;
-            _currentPlaylist = BmpCoffer.Instance.CreatePlaylist(PlaylistName_Box.Text);
+
+            _currentPlaylist = BmpCoffer.CreatePlaylist(PlaylistName_Box.Text);
             BmpCoffer.Instance.SavePlaylist(_currentPlaylist);
             PlaylistsContainer.ItemsSource = BmpCoffer.Instance.GetPlaylistNames();
         }
@@ -228,6 +229,7 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             if (_currentPlaylist == null)
                 return;
+
             _currentPlaylist.SetName(PlaylistName_Box.Text);
             BmpCoffer.Instance.SavePlaylist(_currentPlaylist);
             PlaylistsContainer.ItemsSource = BmpCoffer.Instance.GetPlaylistNames();
@@ -247,6 +249,7 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             if (_currentPlaylist == null)
                 return;
+
             BmpCoffer.Instance.DeletePlaylist(_currentPlaylist);
             PlaylistsContainer.ItemsSource = BmpCoffer.Instance.GetPlaylistNames();
         }

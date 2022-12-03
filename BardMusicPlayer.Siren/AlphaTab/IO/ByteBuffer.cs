@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Siren.AlphaTab.IO
 {
-    internal class ByteBuffer : IWriteable, IReadable
+    internal sealed class ByteBuffer : IWriteable, IReadable
     {
         private byte[] _buffer;
         private int _capacity;
@@ -42,16 +42,20 @@ namespace BardMusicPlayer.Siren.AlphaTab.IO
             var n = Length - Position;
             if (n > count) n = count;
 
-            if (n <= 0) return 0;
+            switch (n)
+            {
+                case <= 0:
+                    return 0;
+                case <= 8:
+                {
+                    var byteCount = n;
+                    while (--byteCount >= 0) buffer[offset + byteCount] = _buffer[Position + byteCount];
 
-            if (n <= 8)
-            {
-                var byteCount = n;
-                while (--byteCount >= 0) buffer[offset + byteCount] = _buffer[Position + byteCount];
-            }
-            else
-            {
-                Platform.BlockCopy(_buffer, Position, buffer, offset, n);
+                    break;
+                }
+                default:
+                    Platform.BlockCopy(_buffer, Position, buffer, offset, n);
+                    break;
             }
 
             Position += n;
@@ -95,7 +99,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.IO
             Position = i;
         }
 
-        public virtual byte[] GetBuffer()
+        public byte[] GetBuffer()
         {
             return _buffer;
         }
@@ -108,54 +112,56 @@ namespace BardMusicPlayer.Siren.AlphaTab.IO
 
         public static ByteBuffer WithCapactiy(int capacity)
         {
-            var buffer = new ByteBuffer();
-            buffer._buffer = new byte[capacity];
-            buffer._capacity = capacity;
+            var buffer = new ByteBuffer
+            {
+                _buffer = new byte[capacity],
+                _capacity = capacity
+            };
             return buffer;
         }
 
         public static ByteBuffer FromBuffer(byte[] data)
         {
-            var buffer = new ByteBuffer();
-            buffer._buffer = data;
+            var buffer = new ByteBuffer
+            {
+                _buffer = data
+            };
             buffer._capacity = buffer.Length = data.Length;
             return buffer;
         }
 
         private void SetCapacity(int value)
         {
-            if (value != _capacity)
+            if (value == _capacity) return;
+
+            if (value > 0)
             {
-                if (value > 0)
-                {
-                    var newBuffer = new byte[value];
-                    if (Length > 0) Platform.BlockCopy(_buffer, 0, newBuffer, 0, Length);
+                var newBuffer = new byte[value];
+                if (Length > 0) Platform.BlockCopy(_buffer, 0, newBuffer, 0, Length);
 
-                    _buffer = newBuffer;
-                }
-                else
-                {
-                    _buffer = null;
-                }
-
-                _capacity = value;
+                _buffer = newBuffer;
             }
+            else
+            {
+                _buffer = null;
+            }
+
+            _capacity = value;
         }
 
         private void EnsureCapacity(int value)
         {
-            if (value > _capacity)
-            {
-                var newCapacity = value;
-                if (newCapacity < 256) newCapacity = 256;
+            if (value <= _capacity) return;
 
-                if (newCapacity < _capacity * 2) newCapacity = _capacity * 2;
+            var newCapacity = value;
+            if (newCapacity < 256) newCapacity = 256;
 
-                SetCapacity(newCapacity);
-            }
+            if (newCapacity < _capacity * 2) newCapacity = _capacity * 2;
+
+            SetCapacity(newCapacity);
         }
 
-        public virtual byte[] ToArray()
+        public byte[] ToArray()
         {
             var copy = new byte[Length];
             Platform.BlockCopy(_buffer, 0, copy, 0, Length);

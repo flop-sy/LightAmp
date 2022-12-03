@@ -2,12 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 #endregion
 
 namespace BardMusicPlayer.Jamboree.PartyClient.PartyManagement
 {
-    internal class PartyManager
+    internal sealed class PartyManager
     {
         private readonly List<PartyClientInfo> _partyClients = new();
 
@@ -18,9 +19,8 @@ namespace BardMusicPlayer.Jamboree.PartyClient.PartyManagement
 
         public void Add(PartyClientInfo client)
         {
-            foreach (var info in _partyClients)
-                if (info.Performer_Name == client.Performer_Name)
-                    return;
+            if (_partyClients.Any(info => info.Performer_Name == client.Performer_Name)) return;
+
             _partyClients.Add(client);
         }
 
@@ -31,7 +31,7 @@ namespace BardMusicPlayer.Jamboree.PartyClient.PartyManagement
 
         #region Instance Constructor/Destructor
 
-        private static readonly Lazy<PartyManager> LazyInstance = new(() => new PartyManager());
+        private static readonly Lazy<PartyManager> LazyInstance = new(static () => new PartyManager());
 
         private PartyManager()
         {

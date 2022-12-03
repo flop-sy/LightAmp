@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class Voice
+    internal sealed class Voice
     {
         /// <summary>
         ///     The lower this block size is the more accurate the effects are.
@@ -24,7 +24,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
             VibLfo = new VoiceLfo();
         }
 
-        public bool Stopped { get; set; } = false;
+        public bool Stopped { get; set; }
 
         public int PlayingPreset { get; set; }
         public int PlayingKey { get; set; }
@@ -60,6 +60,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
             var note = PlayingKey + Region.Transpose + Region.Tune / 100.0;
             var adjustedPitch = Region.PitchKeyCenter + (note - Region.PitchKeyCenter) * (Region.PitchKeyTrack / 100.0);
             if (pitchShift != 0) adjustedPitch += pitchShift;
+
             PitchInputTimecents = adjustedPitch * 100.0;
             PitchOutputFactor = Region.SampleRate /
                                 (SynthHelper.Timecents2Secs(Region.PitchKeyCenter * 100.0) * outSampleRate);
@@ -155,7 +156,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 
             while (numSamples > 0)
             {
-                float gainMono, gainLeft, gainRight;
+                float gainLeft, gainRight;
                 var blockSamples = numSamples > RenderEffectSampleBLock ? RenderEffectSampleBLock : numSamples;
                 numSamples -= blockSamples;
 
@@ -171,10 +172,9 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
                     pitchRatio = SynthHelper.Timecents2Secs(PitchInputTimecents + (ModLfo.Level * tmpModLfoToPitch +
                         VibLfo.Level * tmpVibLfoToPitch + ModEnv.Level * tmpModEnvToPitch)) * PitchOutputFactor;
 
-                if (dynamicGain)
-                    noteGain = SynthHelper.DecibelsToGain(NoteGainDb + ModLfo.Level * tmpModLfoToVolume);
+                if (dynamicGain) noteGain = SynthHelper.DecibelsToGain(NoteGainDb + ModLfo.Level * tmpModLfoToVolume);
 
-                gainMono = noteGain * AmpEnv.Level;
+                var gainMono = noteGain * AmpEnv.Level;
 
                 if (isMuted)
                     gainMono = 0;
@@ -271,11 +271,11 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
                         break;
                 }
 
-                if (tmpSourceSamplePosition >= tmpSampleEndDbl || AmpEnv.Segment == VoiceEnvelopeSegment.Done)
-                {
-                    Kill();
-                    return;
-                }
+                if (!(tmpSourceSamplePosition >= tmpSampleEndDbl) &&
+                    AmpEnv.Segment != VoiceEnvelopeSegment.Done) continue;
+
+                Kill();
+                return;
             }
 
             SourceSamplePosition = tmpSourceSamplePosition;

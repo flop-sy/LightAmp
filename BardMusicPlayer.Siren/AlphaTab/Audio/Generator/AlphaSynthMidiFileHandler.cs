@@ -1,5 +1,6 @@
 ﻿#region
 
+using System;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event;
 using BardMusicPlayer.Siren.AlphaTab.Model;
@@ -12,7 +13,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Generator
     ///     This implementation of the <see cref="IMidiFileHandler" /> generates a <see cref="MidiFile" />
     ///     object which can be used in AlphaSynth for playback.
     /// </summary>
-    internal class AlphaSynthMidiFileHandler : IMidiFileHandler
+    internal sealed class AlphaSynthMidiFileHandler : IMidiFileHandler
     {
         private readonly MidiFile _midiFile;
 
@@ -29,7 +30,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Generator
         public void AddTimeSignature(int tick, int timeSignatureNumerator, int timeSignatureDenominator)
         {
             var denominatorIndex = 0;
-            while ((timeSignatureDenominator = timeSignatureDenominator >> 1) > 0) denominatorIndex++;
+            while ((timeSignatureDenominator >>= 1) > 0) denominatorIndex++;
 
             var message = new MetaDataEvent(tick,
                 0xFF,
@@ -124,23 +125,24 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Generator
             var message = new MetaDataEvent(tick,
                 0xFF,
                 (byte)MetaEventTypeEnum.EndOfTrack,
-                new byte[0]);
+                Array.Empty<byte>());
             _midiFile.AddEvent(message);
             _midiFile.Sort();
         }
 
-        private byte MakeCommand(byte command, byte channel)
+        private static byte MakeCommand(byte command, byte channel)
         {
             return (byte)((command & 0xF0) | (channel & 0x0F));
         }
 
         private static byte FixValue(int value)
         {
-            if (value > 127) return 127;
-
-            if (value < 0) return 0;
-
-            return (byte)value;
+            return value switch
+            {
+                > 127 => 127,
+                < 0 => 0,
+                _ => (byte)value
+            };
         }
     }
 }

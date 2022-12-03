@@ -1,58 +1,28 @@
-#region License
-
-/* Copyright (c) 2005 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 
+#endregion
+
 namespace Sanford.Multimedia.Midi
 {
-	/// <summary>
-	/// Provides basic functionality for generating tick events with pulses per 
-    /// quarter note resolution.
-	/// </summary>
-	public abstract class PpqnClock : IClock
+    /// <summary>
+    ///     Provides basic functionality for generating tick events with pulses per
+    ///     quarter note resolution.
+    /// </summary>
+    public abstract class PpqnClock : IClock
     {
         #region PpqnClock Members
 
         #region Fields
 
         /// <summary>
-        /// The default tempo in microseconds: 120bpm.
+        ///     The default tempo in microseconds: 120bpm.
         /// </summary>
         public const int DefaultTempo = 500000;
 
         /// <summary>
-        /// The minimum pulses per quarter note value.
+        ///     The minimum pulses per quarter note value.
         /// </summary>
         public const int PpqnMinValue = 24;
 
@@ -65,21 +35,20 @@ namespace Sanford.Multimedia.Midi
         // The tempo in microseconds.
         private int tempo = DefaultTempo;
 
-		private float tempoSpeed = 1.0f;
+        private float tempoSpeed = 1.0f;
 
         // The product of the timer period, the pulses per quarter note, and
         // the number of microseconds per millisecond.
         private int periodResolution;
 
         // The number of ticks per MIDI clock.
-        private int ticksPerClock;
 
         // The running fractional tick count.
-        private int fractionalTicks = 0;
+        private int fractionalTicks;
 
         // The timer period.
         private readonly int timerPeriod;
-        
+
         // Indicates whether the clock is running.
         protected bool running = false;
 
@@ -91,11 +60,9 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(timerPeriod < 1)
-            {
-                throw new ArgumentOutOfRangeException("timerPeriod", timerPeriod,
+            if (timerPeriod < 1)
+                throw new ArgumentOutOfRangeException(nameof(timerPeriod), timerPeriod,
                     "Timer period cannot be less than one.");
-            }
 
             #endregion
 
@@ -112,38 +79,37 @@ namespace Sanford.Multimedia.Midi
         protected int GetTempo()
         {
             return tempo;
-        }        
+        }
 
         protected void SetTempo(int tempo)
         {
             #region Require
 
-            if(tempo < 1)
-            {
+            if (tempo < 1)
                 throw new ArgumentOutOfRangeException(
                     "Tempo out of range.");
-            }
 
             #endregion
 
-            this.tempo = (int)(tempo);
+            this.tempo = tempo;
         }
 
-		protected float GetTempoSpeed() {
-			return tempoSpeed;
-		}
+        protected float GetTempoSpeed()
+        {
+            return tempoSpeed;
+        }
 
-		protected void SetTempoSpeed(float speed) {
-			#region Require
+        protected void SetTempoSpeed(float speed)
+        {
+            #region Require
 
-			if(speed < 0.1f || speed > 5.0f) {
-				throw new ArgumentOutOfRangeException(
-					"Tempo speed out of range.");
-			}
+            if (speed < 0.1f || speed > 5.0f)
+                throw new ArgumentOutOfRangeException(
+                    "Tempo speed out of range.");
 
-			#endregion
+            #endregion
 
-			tempoSpeed = speed;
+            tempoSpeed = speed;
         }
 
         protected void Reset()
@@ -153,8 +119,8 @@ namespace Sanford.Multimedia.Midi
 
         protected int GenerateTicks()
         {
-			int t = (int)(tempo / tempoSpeed);
-            int ticks = (fractionalTicks + periodResolution) / t;
+            var t = (int)(tempo / tempoSpeed);
+            var ticks = (fractionalTicks + periodResolution) / t;
             fractionalTicks += periodResolution - ticks * t;
 
             return ticks;
@@ -167,47 +133,35 @@ namespace Sanford.Multimedia.Midi
 
         private void CalculateTicksPerClock()
         {
-            ticksPerClock = ppqn / PpqnMinValue;
+            TicksPerClock = ppqn / PpqnMinValue;
         }
 
         protected virtual void OnTick(EventArgs e)
         {
-            EventHandler handler = Tick;
+            var handler = Tick;
 
-            if(handler != null)
-            {
-                handler(this, EventArgs.Empty);
-            }
+            handler?.Invoke(this, EventArgs.Empty);
         }
 
         protected virtual void OnStarted(EventArgs e)
         {
-            EventHandler handler = Started;
+            var handler = Started;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         protected virtual void OnStopped(EventArgs e)
         {
-            EventHandler handler = Stopped;
+            var handler = Stopped;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         protected virtual void OnContinued(EventArgs e)
         {
-            EventHandler handler = Continued;
+            var handler = Continued;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         #endregion
@@ -216,19 +170,14 @@ namespace Sanford.Multimedia.Midi
 
         public int Ppqn
         {
-            get
-            {
-                return ppqn;
-            }
+            get { return ppqn; }
             set
             {
                 #region Require
 
-                if(value < PpqnMinValue)
-                {
+                if (value < PpqnMinValue)
                     throw new ArgumentOutOfRangeException("Ppqn", value,
                         "Pulses per quarter note is smaller than 24.");
-                }
 
                 #endregion
 
@@ -239,18 +188,9 @@ namespace Sanford.Multimedia.Midi
             }
         }
 
-        public abstract int Ticks
-        {
-            get;
-        }
+        public abstract int Ticks { get; }
 
-        public int TicksPerClock
-        {
-            get
-            {
-                return ticksPerClock;
-            }
-        }
+        public int TicksPerClock { get; private set; }
 
         #endregion
 
@@ -266,13 +206,7 @@ namespace Sanford.Multimedia.Midi
 
         public event EventHandler Stopped;
 
-        public bool IsRunning
-        {
-            get
-            {
-                return running;
-            }
-        }
+        public bool IsRunning => running;
 
         #endregion
     }

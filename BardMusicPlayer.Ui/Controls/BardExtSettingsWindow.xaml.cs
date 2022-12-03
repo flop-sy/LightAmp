@@ -17,7 +17,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für BardExtSettingsWindow.xaml
     /// </summary>
-    public partial class BardExtSettingsWindow : Window
+    public sealed partial class BardExtSettingsWindow : Window
     {
         private readonly List<CheckBox> _cpuBoxes = new();
         private readonly Performer _performer;
@@ -46,10 +46,8 @@ namespace BardMusicPlayer.Ui.Controls
                     else if (tpBard.Key.channelType.ChannelCode == ChatMessageChannelType.Shout.ChannelCode)
                         Songtitle_Chat_Type.SelectedIndex = 2;
 
-                    if (tpBard.Key.channelType.Equals(ChatMessageChannelType.None))
-                        Songtitle_Post_Type.SelectedIndex = 0;
-                    else
-                        Songtitle_Post_Type.SelectedIndex = 1;
+                    Songtitle_Post_Type.SelectedIndex =
+                        tpBard.Key.channelType.Equals(ChatMessageChannelType.None) ? 0 : 1;
                 }
 
             Lyrics_TrackNr.Value = performer.SingerTrackNr.ToString();
@@ -59,19 +57,13 @@ namespace BardMusicPlayer.Ui.Controls
 
         private void Songtitle_Post_Type_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var chanType = ChatMessageChannelType.None;
-            switch (Songtitle_Chat_Type.SelectedIndex)
+            var chanType = Songtitle_Chat_Type.SelectedIndex switch
             {
-                case 0:
-                    chanType = ChatMessageChannelType.Say;
-                    break;
-                case 1:
-                    chanType = ChatMessageChannelType.Yell;
-                    break;
-                case 2:
-                    chanType = ChatMessageChannelType.Shout;
-                    break;
-            }
+                0 => ChatMessageChannelType.Say,
+                1 => ChatMessageChannelType.Yell,
+                2 => ChatMessageChannelType.Shout,
+                _ => ChatMessageChannelType.None
+            };
 
             switch (Songtitle_Post_Type.SelectedIndex)
             {
@@ -89,16 +81,12 @@ namespace BardMusicPlayer.Ui.Controls
             if (_performer.SongName == "")
                 return;
 
-            var chanType = ChatMessageChannelType.None;
-            switch (Songtitle_Chat_Type.SelectedIndex)
+            var chanType = Songtitle_Chat_Type.SelectedIndex switch
             {
-                case 0:
-                    chanType = ChatMessageChannelType.Say;
-                    break;
-                case 1:
-                    chanType = ChatMessageChannelType.Yell;
-                    break;
-            }
+                0 => ChatMessageChannelType.Say,
+                1 => ChatMessageChannelType.Yell,
+                _ => ChatMessageChannelType.None
+            };
 
             var songName = $"{Songtitle_Chat_Prefix.Text} {_performer.SongName} {Songtitle_Chat_Prefix.Text}";
             _performer.game.SendText(chanType, songName);
@@ -106,32 +94,21 @@ namespace BardMusicPlayer.Ui.Controls
 
         private void ChatInputText_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Return)
-            {
-                var chanType = ChatMessageChannelType.None;
-                switch (Chat_Type.SelectedIndex)
-                {
-                    case 0:
-                        chanType = ChatMessageChannelType.Say;
-                        break;
-                    case 1:
-                        chanType = ChatMessageChannelType.Yell;
-                        break;
-                    case 2:
-                        chanType = ChatMessageChannelType.Group;
-                        break;
-                    case 3:
-                        chanType = ChatMessageChannelType.FC;
-                        break;
-                    case 4:
-                        chanType = ChatMessageChannelType.None;
-                        break;
-                }
+            if (e.Key != Key.Return) return;
 
-                var text = new string(ChatInputText.Text.ToCharArray());
-                _performer.game.SendText(chanType, text);
-                ChatInputText.Text = "";
-            }
+            var chanType = Chat_Type.SelectedIndex switch
+            {
+                0 => ChatMessageChannelType.Say,
+                1 => ChatMessageChannelType.Yell,
+                2 => ChatMessageChannelType.Group,
+                3 => ChatMessageChannelType.FC,
+                4 => ChatMessageChannelType.None,
+                _ => ChatMessageChannelType.None
+            };
+
+            var text = new string(ChatInputText.Text.ToCharArray());
+            _performer.game.SendText(chanType, text);
+            ChatInputText.Text = "";
         }
 
         private void Lyrics_TrackNr_PreviewMouseUp(object sender, MouseButtonEventArgs e)
@@ -153,6 +130,7 @@ namespace BardMusicPlayer.Ui.Controls
             {
                 if (_performer.game.GfxSettingsLow)
                     return;
+
                 _performer.game.GfxSetLow(true);
                 _performer.game.GfxSettingsLow = true;
             }
@@ -160,6 +138,7 @@ namespace BardMusicPlayer.Ui.Controls
             {
                 if (!_performer.game.GfxSettingsLow)
                     return;
+
                 _performer.game.GfxSetLow(false);
                 _performer.game.GfxSettingsLow = false;
             }
@@ -186,13 +165,17 @@ namespace BardMusicPlayer.Ui.Controls
                 {
                     if (idx == cpuCount + 1)
                         break;
+
                     if (CPUDisplay.RowDefinitions.Count < res + 1)
                         CPUDisplay.RowDefinitions.Add(new RowDefinition());
-                    var uc = new CheckBox();
-                    uc.Name = "CPU" + idx;
-                    uc.Content = "CPU" + idx;
+                    var uc = new CheckBox
+                    {
+                        Name = "CPU" + idx,
+                        Content = "CPU" + idx
+                    };
                     if ((AffinityMask & (1 << (idx - 1))) > 0) //-1 since we count at 1
                         uc.IsChecked = true;
+
                     _cpuBoxes.Add(uc);
                     CPUDisplay.Children.Add(uc);
                     Grid.SetRow(uc, i);
@@ -212,6 +195,7 @@ namespace BardMusicPlayer.Ui.Controls
                     mask += 0b1 << idx;
                 else
                     mask += 0b0 << idx;
+
                 idx++;
             }
 

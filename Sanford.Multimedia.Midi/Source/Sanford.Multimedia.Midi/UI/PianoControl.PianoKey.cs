@@ -40,11 +40,11 @@ namespace Sanford.Multimedia.Midi.UI
 {
     public partial class PianoControl
     {
-        private class PianoKey : Control
+        private sealed class PianoKey : Control
         {
             private PianoControl owner;
 
-            private bool on = false;
+            private bool on;
 
             private SolidBrush onBrush = new SolidBrush(Color.SkyBlue);
 
@@ -55,17 +55,14 @@ namespace Sanford.Multimedia.Midi.UI
             public PianoKey(PianoControl owner)
             {
                 this.owner = owner;
-                this.TabStop = false;
+                TabStop = false;
             }
 
             public void PressPianoKey()
             {
                 #region Guard
 
-                if(on)
-                {
-                    return;
-                }
+                if (on) return;
 
                 #endregion
 
@@ -80,10 +77,7 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 #region Guard
 
-                if(!on)
-                {
-                    return;
-                }
+                if (!on) return;
 
                 #endregion
 
@@ -96,7 +90,7 @@ namespace Sanford.Multimedia.Midi.UI
 
             protected override void Dispose(bool disposing)
             {
-                if(disposing)
+                if (disposing)
                 {
                     onBrush.Dispose();
                     offBrush.Dispose();
@@ -107,20 +101,14 @@ namespace Sanford.Multimedia.Midi.UI
 
             protected override void OnMouseEnter(EventArgs e)
             {
-                if(MouseButtons == MouseButtons.Left)
-                {
-                    PressPianoKey();
-                }
+                if (MouseButtons == MouseButtons.Left) PressPianoKey();
 
                 base.OnMouseEnter(e);
             }
 
             protected override void OnMouseLeave(EventArgs e)
             {
-                if(on)
-                {
-                    ReleasePianoKey();
-                }
+                if (on) ReleasePianoKey();
 
                 base.OnMouseLeave(e);
             }
@@ -129,10 +117,7 @@ namespace Sanford.Multimedia.Midi.UI
             {
                 PressPianoKey();
 
-                if(!owner.Focused)
-                {
-                    owner.Focus();
-                }
+                if (!owner.Focused) owner.Focus();
 
                 base.OnMouseDown(e);
             }
@@ -146,24 +131,14 @@ namespace Sanford.Multimedia.Midi.UI
 
             protected override void OnMouseMove(MouseEventArgs e)
             {
-                if(e.X < 0 || e.X > Width || e.Y < 0 || e.Y > Height)
-                {
-                    Capture = false;
-                }
+                if (e.X < 0 || e.X > Width || e.Y < 0 || e.Y > Height) Capture = false;
 
                 base.OnMouseMove(e);
             }
 
             protected override void OnPaint(PaintEventArgs e)
             {
-                if(on)
-                {
-                    e.Graphics.FillRectangle(onBrush, 0, 0, Size.Width, Size.Height);
-                }
-                else
-                {
-                    e.Graphics.FillRectangle(offBrush, 0, 0, Size.Width, Size.Height);
-                }
+                e.Graphics.FillRectangle(on ? onBrush : offBrush, 0, 0, Size.Width, Size.Height);
 
                 e.Graphics.DrawRectangle(Pens.Black, 0, 0, Size.Width - 1, Size.Height - 1);
 
@@ -178,35 +153,23 @@ namespace Sanford.Multimedia.Midi.UI
 
             public Color NoteOnColor
             {
-                get
-                {
-                    return onBrush.Color;
-                }
+                get => onBrush.Color;
                 set
                 {
                     onBrush.Color = value;
 
-                    if(on)
-                    {
-                        Invalidate();
-                    }
+                    if (on) Invalidate();
                 }
             }
 
             public Color NoteOffColor
             {
-                get
-                {
-                    return offBrush.Color;
-                }
+                get => offBrush.Color;
                 set
                 {
                     offBrush.Color = value;
 
-                    if(!on)
-                    {
-                        Invalidate();
-                    }
+                    if (!on) Invalidate();
                 }
             }
 
@@ -220,25 +183,17 @@ namespace Sanford.Multimedia.Midi.UI
                 {
                     #region Require
 
-                    if(value < 0 || value > ShortMessage.DataMaxValue)
-                    {
+                    if (value >= 0 && value <= ShortMessage.DataMaxValue)
+                        noteID = value;
+                    else
                         throw new ArgumentOutOfRangeException("NoteID", noteID,
                             "Note ID out of range.");
-                    }
 
                     #endregion
-
-                    noteID = value;
                 }
             }
 
-            public bool IsPianoKeyPressed
-            {
-                get
-                {
-                    return on;
-                }
-            }
+            public bool IsPianoKeyPressed => on;
         }
     }
 }

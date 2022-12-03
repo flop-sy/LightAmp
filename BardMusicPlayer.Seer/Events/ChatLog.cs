@@ -1,7 +1,7 @@
 ﻿#region
 
 using System;
-using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core;
+using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core.Interfaces;
 
 #endregion
 
@@ -9,7 +9,7 @@ namespace BardMusicPlayer.Seer.Events
 {
     public sealed class ChatLog : SeerEvent
     {
-        internal ChatLog(EventSource readerBackendType, Game game, ChatLogItem item) : base(readerBackendType)
+        internal ChatLog(EventSource readerBackendType, Game game, IChatLogItem item) : base(readerBackendType)
         {
             EventType = GetType();
             ChatLogGame = game;

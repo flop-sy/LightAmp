@@ -6,7 +6,7 @@ using BardMusicPlayer.Quotidian;
 
 namespace BardMusicPlayer.Grunt
 {
-    public class BmpGruntException : BmpException
+    public sealed class BmpGruntException : BmpException
     {
         internal BmpGruntException()
         {

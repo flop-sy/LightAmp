@@ -16,7 +16,7 @@ using Newtonsoft.Json;
 
 namespace BardMusicPlayer.Ui.Classic
 {
-    public class Macro
+    public sealed class Macro
     {
         public string DisplayedText { get; set; } = "";
         public string File { get; set; } = "";
@@ -40,10 +40,9 @@ namespace BardMusicPlayer.Ui.Classic
 
         private void Instance_OnRunningStateChanged(object sender, bool e)
         {
-            if (e)
-                Dispatcher.BeginInvoke(new Action(() => StopIndicator.Content = "Stop"));
-            else
-                Dispatcher.BeginInvoke(new Action(() => StopIndicator.Content = "Idle"));
+            Dispatcher.BeginInvoke(e
+                ? new Action(() => { StopIndicator.Content = "Stop"; })
+                : () => StopIndicator.Content = "Idle");
         }
 
         private void Macros_CollectionChanged()
@@ -63,10 +62,10 @@ namespace BardMusicPlayer.Ui.Classic
                 return;
 
             SelectedMacro = MacroList.SelectedItem as Macro;
-            if (!File.Exists(SelectedMacro.File))
+            if (SelectedMacro != null && !File.Exists(SelectedMacro.File))
                 return;
 
-            BmpScript.Instance.LoadAndRun(SelectedMacro.File);
+            if (SelectedMacro != null) BmpScript.Instance.LoadAndRun(SelectedMacro.File);
         }
 
         private void TextBlock_MouseDown(object sender, MouseButtonEventArgs e)
@@ -74,8 +73,10 @@ namespace BardMusicPlayer.Ui.Classic
             if (SelectedMacro == null)
                 return;
 
-            var macroEdit = new MacroEditWindow(SelectedMacro);
-            macroEdit.Visibility = Visibility.Visible;
+            var macroEdit = new MacroEditWindow(SelectedMacro)
+            {
+                Visibility = Visibility.Visible
+            };
             macroEdit.Closed += MacroEdit_Closed;
         }
 
@@ -83,8 +84,10 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var newMacro = new Macro();
 
-            var macroEdit = new MacroEditWindow(newMacro);
-            macroEdit.Visibility = Visibility.Visible;
+            var macroEdit = new MacroEditWindow(newMacro)
+            {
+                Visibility = Visibility.Visible
+            };
             macroEdit.Closed += MacroEdit_Closed;
             _Macros.Add(newMacro);
             Macros_CollectionChanged();
@@ -94,6 +97,7 @@ namespace BardMusicPlayer.Ui.Classic
         {
             if (SelectedMacro == null)
                 return;
+
             _Macros.Remove(SelectedMacro);
             SelectedMacro = null;
             Macros_CollectionChanged();
@@ -103,7 +107,7 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filter = "Macrolist | *.cfg",
+                Filter = "Macro List | *.cfg",
                 Multiselect = true
             };
 
@@ -131,7 +135,7 @@ namespace BardMusicPlayer.Ui.Classic
 
             var openFileDialog = new SaveFileDialog
             {
-                Filter = "Macrolist | *.cfg"
+                Filter = "Macro List | *.cfg"
             };
 
             if (openFileDialog.ShowDialog() != true)

@@ -1,7 +1,6 @@
 ﻿#region
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -24,7 +23,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     Interaktionslogik für Classic_MainView.xaml
     /// </summary>
-    public partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView : UserControl
     {
         private IPlaylist _currentPlaylist; //the current selected playlist
         private bool _playlistRepeat;
@@ -47,15 +46,15 @@ namespace BardMusicPlayer.Ui.Classic
                 var rnd = new Random();
                 var random = rnd.Next(1, PlaylistContainer.Items.Count);
 
-                if (random == PlaylistContainer.SelectedIndex)
-                    random = (random + 1) % PlaylistContainer.Items.Count;
-                if (random == 0)
-                    random = 1;
+                if (random == PlaylistContainer.SelectedIndex) random = (random + 1) % PlaylistContainer.Items.Count;
+
+                if (random == 0) random = 1;
+
                 PlaylistContainer.SelectedIndex = random;
             }
             else
             {
-                if (PlaylistContainer.SelectedIndex == -1 || PlaylistContainer.SelectedIndex == 0)
+                if (PlaylistContainer.SelectedIndex is -1 or 0)
                 {
                     PlaylistContainer.SelectedIndex = 1;
                 }
@@ -64,7 +63,7 @@ namespace BardMusicPlayer.Ui.Classic
                     if (PlaylistContainer.SelectedIndex == PlaylistContainer.Items.Count - 1)
                         PlaylistContainer.SelectedIndex = 1;
                     else
-                        PlaylistContainer.SelectedIndex = PlaylistContainer.SelectedIndex + 1;
+                        PlaylistContainer.SelectedIndex += 1;
                 }
             }
 
@@ -100,19 +99,17 @@ namespace BardMusicPlayer.Ui.Classic
         /// <param name="e"></param>
         private void Playlist_New_Button_Click(object sender, RoutedEventArgs e)
         {
-            var inputbox = new TextInputWindow("Playlistname");
-            if (inputbox.ShowDialog() == true)
-            {
-                if (inputbox.ResponseText.Length < 1)
-                    return;
+            var inputbox = new TextInputWindow("Playlist Name");
+            if (inputbox.ShowDialog() != true) return;
+            if (inputbox.ResponseText.Length < 1)
+                return;
 
-                _currentPlaylist = PlaylistFunctions.CreatePlaylist(inputbox.ResponseText);
-                PlaylistContainer.ItemsSource = PlaylistFunctions.GetCurrentPlaylistItems(_currentPlaylist, true);
-                _showingPlaylists = false;
-                Playlist_Header.Header =
-                    _currentPlaylist.GetName().PadRight(75 - _currentPlaylist.GetName().Length, ' ') +
-                    new DateTime(PlaylistFunctions.GetTotalTime(_currentPlaylist).Ticks).ToString("HH:mm:ss");
-            }
+            _currentPlaylist = PlaylistFunctions.CreatePlaylist(inputbox.ResponseText);
+            PlaylistContainer.ItemsSource = PlaylistFunctions.GetCurrentPlaylistItems(_currentPlaylist, true);
+            _showingPlaylists = false;
+            Playlist_Header.Header =
+                _currentPlaylist.GetName().PadRight(75 - _currentPlaylist.GetName().Length, ' ') +
+                new DateTime(PlaylistFunctions.GetTotalTime(_currentPlaylist).Ticks).ToString("HH:mm:ss");
         }
 
         /// <summary>
@@ -166,11 +163,12 @@ namespace BardMusicPlayer.Ui.Classic
             if (_showingPlaylists)
                 return;
 
-            foreach (string s in PlaylistContainer.SelectedItems)
+            foreach (var song in from string s in PlaylistContainer.SelectedItems
+                     select PlaylistFunctions.GetSongFromPlaylist(_currentPlaylist, s)
+                     into song
+                     where song != null
+                     select song)
             {
-                var song = PlaylistFunctions.GetSongFromPlaylist(_currentPlaylist, s);
-                if (song == null)
-                    continue;
                 _currentPlaylist.Remove(song);
                 BmpCoffer.Instance.DeleteSong(song);
             }
@@ -226,14 +224,12 @@ namespace BardMusicPlayer.Ui.Classic
         /// <param name="e"></param>
         private void PlaylistContainer_HeaderClick(object sender, RoutedEventArgs e)
         {
-            var columnHeader = sender as DataGridColumnHeader;
-            if (columnHeader != null)
-            {
-                _showingPlaylists = true;
-                PlaylistContainer.ItemsSource = BmpCoffer.Instance.GetPlaylistNames();
-                Playlist_Header.Header = "Playlists";
-                _currentPlaylist = null;
-            }
+            if (sender is not DataGridColumnHeader columnHeader) return;
+
+            _showingPlaylists = true;
+            PlaylistContainer.ItemsSource = BmpCoffer.Instance.GetPlaylistNames();
+            Playlist_Header.Header = "Playlists";
+            _currentPlaylist = null;
         }
 
         /// <summary>
@@ -284,7 +280,7 @@ namespace BardMusicPlayer.Ui.Classic
         private void PlaylistContainer_RightButton(object sender, MouseButtonEventArgs e)
         {
             var celltext = sender as TextBlock;
-            if (celltext.Text.Equals(""))
+            if (celltext is { Text: "" } or null)
                 return;
 
             var song = PlaylistFunctions.GetSongFromPlaylist(_currentPlaylist, celltext.Text);
@@ -296,8 +292,7 @@ namespace BardMusicPlayer.Ui.Classic
         /// </summary>
         private void PlaylistContainer_MouseMove(object sender, MouseEventArgs e)
         {
-            var celltext = sender as TextBlock;
-            if (celltext != null && e.LeftButton == MouseButtonState.Pressed && !_showingPlaylists)
+            if (sender is TextBlock celltext && e.LeftButton == MouseButtonState.Pressed && !_showingPlaylists)
                 DragDrop.DoDragDrop(PlaylistContainer, celltext, DragDropEffects.Move);
         }
 
@@ -306,15 +301,20 @@ namespace BardMusicPlayer.Ui.Classic
         /// </summary>
         private void Playlist_Drop(object sender, DragEventArgs e)
         {
-            var droppedDataTB = e.Data.GetData(typeof(TextBlock)) as TextBlock;
+            if (e.Data.GetData(typeof(TextBlock)) is not TextBlock droppedDataTB) return;
+
             var droppedDataStr = droppedDataTB.DataContext as string;
             var target = ((TextBlock)sender).DataContext as string;
 
-            if (droppedDataStr.Equals("..") || target.Equals(".."))
+            if (target != null && droppedDataStr != null && (droppedDataStr.Equals("..") || target.Equals("..")))
                 return;
 
 
+            if (droppedDataStr == null) return;
+
             var removedIdx = PlaylistContainer.Items.IndexOf(droppedDataStr);
+            if (target == null) return;
+
             var targetIdx = PlaylistContainer.Items.IndexOf(target);
 
             if (removedIdx < targetIdx)
@@ -330,12 +330,11 @@ namespace BardMusicPlayer.Ui.Classic
             else
             {
                 var remIdx = removedIdx + 1;
-                if (PlaylistContainer.Items.Count + 1 > remIdx)
-                {
-                    _currentPlaylist.Move(removedIdx - 1, targetIdx - 1);
-                    BmpCoffer.Instance.SavePlaylist(_currentPlaylist);
-                    PlaylistContainer.ItemsSource = PlaylistFunctions.GetCurrentPlaylistItems(_currentPlaylist, true);
-                }
+                if (PlaylistContainer.Items.Count + 1 <= remIdx) return;
+
+                _currentPlaylist.Move(removedIdx - 1, targetIdx - 1);
+                BmpCoffer.Instance.SavePlaylist(_currentPlaylist);
+                PlaylistContainer.ItemsSource = PlaylistFunctions.GetCurrentPlaylistItems(_currentPlaylist, true);
             }
         }
 
@@ -405,19 +404,20 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var inputbox = new TextInputWindow("Search for...", 80);
             inputbox.Focus();
-            if (inputbox.ShowDialog() == true)
-                try
-                {
-                    var song = _currentPlaylist.Where(x => x.Title.ToLower().Contains(inputbox.ResponseText.ToLower()))
-                        .First();
-                    PlaylistContainer.SelectedIndex = PlaylistContainer.Items.IndexOf(song.Title);
-                    PlaylistContainer.ScrollIntoView(PlaylistContainer.Items[PlaylistContainer.SelectedIndex]);
-                    PlaylistContainer.UpdateLayout();
-                }
-                catch
-                {
-                    MessageBox.Show("Nothing found", "Nope", MessageBoxButton.OK);
-                }
+            if (inputbox.ShowDialog() != true) return;
+
+            try
+            {
+                var song = _currentPlaylist
+                    .First(x => x.Title.ToLower().Contains(inputbox.ResponseText.ToLower()));
+                PlaylistContainer.SelectedIndex = PlaylistContainer.Items.IndexOf(song.Title);
+                PlaylistContainer.ScrollIntoView(PlaylistContainer.Items[PlaylistContainer.SelectedIndex]);
+                PlaylistContainer.UpdateLayout();
+            }
+            catch
+            {
+                MessageBox.Show("Nothing found", "Nope", MessageBoxButton.OK);
+            }
         }
 
         /// <summary>
@@ -429,10 +429,10 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var openFileDialog = new SaveFileDialog
             {
-                Filter = Globals.Globals.MusicCatalogFilters
+                Filter = Globals.Globals.MusicCatalogFilters,
+                InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\" +
+                                   Globals.Globals.DataPath
             };
-            openFileDialog.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\" +
-                                              Globals.Globals.DataPath;
 
             if (openFileDialog.ShowDialog() != true)
                 return;
@@ -453,10 +453,10 @@ namespace BardMusicPlayer.Ui.Classic
             var openFileDialog = new OpenFileDialog
             {
                 Filter = Globals.Globals.MusicCatalogFilters,
-                Multiselect = false
+                Multiselect = false,
+                InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\" +
+                                   Globals.Globals.DataPath
             };
-            openFileDialog.InitialDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\" +
-                                              Globals.Globals.DataPath;
 
             if (openFileDialog.ShowDialog() != true)
                 return;
@@ -510,7 +510,7 @@ namespace BardMusicPlayer.Ui.Classic
             if (openFileDialog.ShowDialog() != true)
                 return;
 
-            if (!openFileDialog.FileName.ToLower().EndsWith(".plz"))
+            if (!openFileDialog.FileName.ToLower().EndsWith(".plz", StringComparison.Ordinal))
                 return;
 
             if (_currentPlaylist == null)
@@ -548,14 +548,8 @@ namespace BardMusicPlayer.Ui.Classic
             if (openFileDialog.ShowDialog() != true)
                 return;
 
-            var songs = new List<SongContainer>();
-            foreach (var song in _currentPlaylist)
-            {
-                var sc = new SongContainer();
-                sc.Name = song.Title;
-                sc.Data = song.GetExportMidi().ToArray();
-                songs.Add(sc);
-            }
+            var songs = _currentPlaylist.Select(static song => new SongContainer
+                { Name = song.Title, Data = song.GetExportMidi().ToArray() }).ToList();
 
             JsonPlaylist.Save(openFileDialog.FileName, songs);
         }
@@ -566,7 +560,10 @@ namespace BardMusicPlayer.Ui.Classic
         private void MenuButton_PreviewMouseLeftButtonDown(object sender, RoutedEventArgs e)
         {
             var rectangle = sender as Button;
-            var contextMenu = rectangle.ContextMenu;
+
+            var contextMenu = rectangle?.ContextMenu;
+            if (contextMenu == null) return;
+
             contextMenu.PlacementTarget = rectangle;
             contextMenu.Placement = PlacementMode.Bottom;
             contextMenu.IsOpen = true;

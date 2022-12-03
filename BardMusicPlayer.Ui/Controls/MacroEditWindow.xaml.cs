@@ -1,5 +1,6 @@
 ﻿#region
 
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using BardMusicPlayer.Ui.Classic;
@@ -12,7 +13,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     Interaktionslogik für MacroEditWindow.xaml
     /// </summary>
-    public partial class MacroEditWindow : Window
+    public sealed partial class MacroEditWindow : Window
     {
         public MacroEditWindow(Macro macro)
         {
@@ -35,7 +36,7 @@ namespace BardMusicPlayer.Ui.Controls
             if (openFileDialog.ShowDialog() != true)
                 return;
 
-            if (!openFileDialog.FileName.ToLower().EndsWith(".bas"))
+            if (!openFileDialog.FileName.ToLower().EndsWith(".bas", StringComparison.Ordinal))
                 return;
 
             _macro.File = openFileDialog.FileName;

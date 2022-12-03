@@ -42,7 +42,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             Chunks = chunks.ToArray();
         }
 
-        private void Parse(string str, int p, FastList<string> chunks)
+        private static void Parse(string str, int p, FastList<string> chunks)
         {
             if (string.IsNullOrEmpty(str)) return;
 
@@ -92,12 +92,11 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
                         break;
                     case LyricsState.Comment:
-                        switch (c)
+                        state = c switch
                         {
-                            case CharCodeBrackedClose:
-                                state = LyricsState.Begin;
-                                break;
-                        }
+                            CharCodeBrackedClose => LyricsState.Begin,
+                            _ => state
+                        };
 
                         break;
 
@@ -141,12 +140,13 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
                 p++;
             }
 
-            if (state == LyricsState.Text)
-                if (p != start)
-                    chunks.Add(str.Substring(start, p - start));
+            if (state != LyricsState.Text) return;
+
+            if (p != start)
+                chunks.Add(str.Substring(start, p - start));
         }
 
-        private string PrepareChunk(string txt)
+        private static string PrepareChunk(string txt)
         {
             return txt.Replace("+", " ");
         }

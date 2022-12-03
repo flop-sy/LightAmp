@@ -22,7 +22,7 @@ namespace BardMusicPlayer.Ui.Skinned
     /// <summary>
     ///     Interaktionslogik für Skinned_MainView.xaml
     /// </summary>
-    public partial class Skinned_MainView : UserControl
+    public sealed partial class Skinned_MainView : UserControl
     {
         public BardsWindow _BardListView;
         public Skinned_MainView_Ex _MainView_Ex;
@@ -42,8 +42,7 @@ namespace BardMusicPlayer.Ui.Skinned
             LoadSkin(BmpPigeonhole.Instance.LastSkin);
 
             _MainView_Ex = new Skinned_MainView_Ex();
-            if (BmpPigeonhole.Instance.SkinnedUi_UseExtendedView)
-                _MainView_Ex.Visibility = Visibility.Visible;
+            if (BmpPigeonhole.Instance.SkinnedUi_UseExtendedView) _MainView_Ex.Visibility = Visibility.Visible;
 
             //init the songbrowser
             _SongbrowserView = new SongbrowserWindow();
@@ -109,34 +108,35 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left)
+            if (e.ChangedButton != MouseButton.Left) return;
+
+            if (Application.Current.MainWindow == null) return;
+
+            var oLeft = Application.Current.MainWindow.Left;
+            var oTop = Application.Current.MainWindow.Top;
+
+            ((MainWindow)Application.Current.MainWindow).DragMove();
+            oLeft = Application.Current.MainWindow.Left - oLeft;
+            oTop = Application.Current.MainWindow.Top - oTop;
+
+
+            if (_MainView_Ex.Visibility == Visibility.Visible)
             {
-                var oLeft = Application.Current.MainWindow.Left;
-                var oTop = Application.Current.MainWindow.Top;
+                var mainWindow = Application.Current.MainWindow;
+                _MainView_Ex.Width = mainWindow.Width;
+                _MainView_Ex.Top = mainWindow.Top + mainWindow.Height;
+                _MainView_Ex.Left = mainWindow.Left;
 
-                ((MainWindow)Application.Current.MainWindow).DragMove();
-                oLeft = Application.Current.MainWindow.Left - oLeft;
-                oTop = Application.Current.MainWindow.Top - oTop;
-
-
-                if (_MainView_Ex.Visibility == Visibility.Visible)
-                {
-                    var mainWindow = Application.Current.MainWindow;
-                    _MainView_Ex.Width = mainWindow.Width;
-                    _MainView_Ex.Top = mainWindow.Top + mainWindow.Height;
-                    _MainView_Ex.Left = mainWindow.Left;
-
-                    _PlaylistView.Width = mainWindow.Width;
-                    _PlaylistView.Left = _PlaylistView.Left + oLeft;
-                    _PlaylistView.Top = _PlaylistView.Top + oTop;
-                    mainWindow = null;
-                }
-                else
-                {
-                    var mainWindow = Application.Current.MainWindow;
-                    _PlaylistView.Left = _PlaylistView.Left + oLeft;
-                    _PlaylistView.Top = _PlaylistView.Top + oTop;
-                }
+                _PlaylistView.Width = mainWindow.Width;
+                _PlaylistView.Left += oLeft;
+                _PlaylistView.Top += oTop;
+                mainWindow = null;
+            }
+            else
+            {
+                var mainWindow = Application.Current.MainWindow;
+                _PlaylistView.Left += oLeft;
+                _PlaylistView.Top += oTop;
             }
         }
 
@@ -164,36 +164,43 @@ namespace BardMusicPlayer.Ui.Skinned
         private void DisplayPlayTime(TimeSpan t)
         {
             //Display the lap time or the remaining time
-            if (!_showLapTime)
-                t = _maxTime - t;
+            if (!_showLapTime) t = _maxTime - t;
 
             var Seconds = t.ToString().Split(':')[2];
             Second_Last.Dispatcher.BeginInvoke(new Action(() =>
+            {
                 Second_Last.Fill =
                     SkinContainer.NUMBERS[
                         (SkinContainer.NUMBER_TYPES)(Seconds.Length == 1
                             ? Convert.ToInt32(Seconds)
-                            : Convert.ToInt32(Seconds.Substring(1, 1)))]));
+                            : Convert.ToInt32(Seconds.Substring(1, 1)))];
+            }));
             Second_First.Dispatcher.BeginInvoke(new Action(() =>
+            {
                 Second_First.Fill =
                     SkinContainer.NUMBERS[
                         (SkinContainer.NUMBER_TYPES)(Seconds.Length == 1
                             ? 0
-                            : Convert.ToInt32(Seconds.Substring(0, 1)))]));
+                            : Convert.ToInt32(Seconds.Substring(0, 1)))];
+            }));
 
             var Minutes = t.ToString().Split(':')[1];
             Minutes_Last.Dispatcher.BeginInvoke(new Action(() =>
+            {
                 Minutes_Last.Fill =
                     SkinContainer.NUMBERS[
                         (SkinContainer.NUMBER_TYPES)(Minutes.Length == 1
                             ? Convert.ToInt32(Minutes)
-                            : Convert.ToInt32(Minutes.Substring(1, 1)))]));
+                            : Convert.ToInt32(Minutes.Substring(1, 1)))];
+            }));
             Minutes_First.Dispatcher.BeginInvoke(new Action(() =>
+            {
                 Minutes_First.Fill =
                     SkinContainer.NUMBERS[
                         (SkinContainer.NUMBER_TYPES)(Minutes.Length == 1
                             ? 0
-                            : Convert.ToInt32(Minutes.Substring(0, 1)))]));
+                            : Convert.ToInt32(Minutes.Substring(0, 1)))];
+            }));
         }
 
         private void ShowSongBrowserWindow_Click(object sender, RoutedEventArgs e)
@@ -232,7 +239,7 @@ namespace BardMusicPlayer.Ui.Skinned
             }
 
             BmpPigeonhole.Instance.SkinnedUi_UseExtendedView =
-                _MainView_Ex.Visibility == Visibility.Visible ? true : false;
+                _MainView_Ex.Visibility == Visibility.Visible;
         }
 
         /// <summary>
@@ -303,13 +310,12 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                if (PlaybackFunctions.LoadSong(filename))
-                {
-                    Scroller.Cancel();
-                    Scroller = new CancellationTokenSource();
-                    UpdateScroller(Scroller.Token, PlaybackFunctions.GetSongName()).ConfigureAwait(false);
-                    WriteInstrumentDigitField(PlaybackFunctions.GetInstrumentNameForHostPlayer());
-                }
+                if (!PlaybackFunctions.LoadSong(filename)) return;
+
+                Scroller.Cancel();
+                Scroller = new CancellationTokenSource();
+                UpdateScroller(Scroller.Token, PlaybackFunctions.GetSongName()).ConfigureAwait(false);
+                WriteInstrumentDigitField(PlaybackFunctions.GetInstrumentNameForHostPlayer());
             }));
         }
 
@@ -359,12 +365,12 @@ namespace BardMusicPlayer.Ui.Skinned
 
         private void Instance_PlaybackStarted(object sender, bool e)
         {
-            Dispatcher.BeginInvoke(new Action(() => OnSongStarted()));
+            Dispatcher.BeginInvoke(new Action(OnSongStarted));
         }
 
         private void Instance_PlaybackStopped(object sender, bool e)
         {
-            Dispatcher.BeginInvoke(new Action(() => OnSongStopped()));
+            Dispatcher.BeginInvoke(new Action(OnSongStopped));
         }
 
         private void Instance_ChatLog(ChatLog seerEvent)
@@ -378,11 +384,11 @@ namespace BardMusicPlayer.Ui.Skinned
         private void OnSongLoaded(SongLoadedEvent e)
         {
             MaxTracks = e.MaxTracks;
-            if (Trackbar_Slider.Value > MaxTracks)
-                Trackbar_Slider.Value = MaxTracks;
+            if (Trackbar_Slider.Value > MaxTracks) Trackbar_Slider.Value = MaxTracks;
 
             if (BmpMaestro.Instance.GetHostBardTrack() <= MaxTracks)
                 return;
+
             BmpMaestro.Instance.SetTracknumberOnHost(MaxTracks);
         }
 
@@ -392,7 +398,7 @@ namespace BardMusicPlayer.Ui.Skinned
         private void PlaybackMaxTime(MaxPlayTimeEvent e)
         {
             DisplayPlayTime(e.timeSpan);
-            Playbar_Slider.Dispatcher.BeginInvoke(new Action(() => Playbar_Slider.Maximum = e.tick));
+            Playbar_Slider.Dispatcher.BeginInvoke(new Action(() => { Playbar_Slider.Maximum = e.tick; }));
             _maxTime = e.timeSpan;
         }
 
@@ -404,7 +410,7 @@ namespace BardMusicPlayer.Ui.Skinned
             if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
                 DisplayPlayTime(e.timeSpan);
             if (!_Playbar_dragStarted)
-                Playbar_Slider.Dispatcher.BeginInvoke(new Action(() => Playbar_Slider.Value = e.tick));
+                Playbar_Slider.Dispatcher.BeginInvoke(new Action(() => { Playbar_Slider.Value = e.tick; }));
         }
 
         /// <summary>
@@ -414,6 +420,7 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             if (!e.IsHost)
                 return;
+
             var track = BmpMaestro.Instance.GetHostBardTrack();
             Trackbar_Slider.Value = track;
             WriteSmallDigitField(e.TrackNumber.ToString());
@@ -427,13 +434,14 @@ namespace BardMusicPlayer.Ui.Skinned
         {
             if (!e.IsHost)
                 return;
+
             Octavebar_Slider.Value = e.OctaveShift + 4;
         }
 
         /// <summary>
         ///     triggered if playback was started
         /// </summary>
-        private void OnSongStarted()
+        private static void OnSongStarted()
         {
             PlaybackFunctions.PlaybackState = PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING;
         }
@@ -454,21 +462,21 @@ namespace BardMusicPlayer.Ui.Skinned
         /// </summary>
         /// <param name="code"></param>
         /// <param name="line"></param>
-        public void AppendChatLog(string code, string line)
+        public static void AppendChatLog(string code, string line)
         {
             //The old autostart method with the chat
-            if (code == "0039")
-                if (line.Contains(@"Anzählen beginnt") ||
-                    line.Contains("The count-in will now commence.") ||
-                    line.Contains("orchestre est pr"))
-                {
-                    if (BmpPigeonhole.Instance.AutostartMethod != (int)Globals.Globals.Autostart_Types.VIA_CHAT)
-                        return;
+            if (code != "0039") return;
 
-                    if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
-                        return;
-                    PlaybackFunctions.PlaySong(3000);
-                }
+            if (!line.Contains(@"Anzählen beginnt") &&
+                !line.Contains("The count-in will now commence.") &&
+                !line.Contains("orchestre est pr")) return;
+            if (BmpPigeonhole.Instance.AutostartMethod != (int)Globals.Globals.Autostart_Types.VIA_CHAT)
+                return;
+
+            if (PlaybackFunctions.PlaybackState == PlaybackFunctions.PlaybackState_Enum.PLAYBACK_STATE_PLAYING)
+                return;
+
+            PlaybackFunctions.PlaySong(3000);
         }
 
         #endregion

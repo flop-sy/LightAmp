@@ -1,22 +1,18 @@
+#region
+
 using System;
+
+#endregion
 
 namespace Sanford.Multimedia.Midi
 {
-    public class InvalidShortMessageEventArgs : EventArgs
+    public sealed class InvalidShortMessageEventArgs : EventArgs
     {
-        private int message;
-
         public InvalidShortMessageEventArgs(int message)
         {
-            this.message = message;
+            Message = message;
         }
 
-        public int Message
-        {
-            get
-            {
-                return message;
-            }
-        }
+        public int Message { get; }
     }
 }

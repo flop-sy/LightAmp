@@ -1,6 +1,6 @@
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
 {
-    internal partial class Reader
+    internal sealed partial class Reader
     {
         public Reader(MemoryHandler memoryHandler)
         {

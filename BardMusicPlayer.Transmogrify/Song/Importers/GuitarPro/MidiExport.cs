@@ -8,7 +8,7 @@ using System.Text;
 
 namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 {
-    public class MidiExport
+    public sealed class MidiExport
     {
         public static Encoding ascii = Encoding.ASCII;
 
@@ -32,7 +32,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             return data;
         }
 
-        public List<byte> createHeader()
+        public IEnumerable<byte> createHeader()
         {
             var data = new List<byte>();
 
@@ -46,7 +46,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             return data;
         }
 
-        public static List<byte> writeChunk(string name, List<byte> data)
+        public static IEnumerable<byte> writeChunk(string name, List<byte> data)
         {
             var _data = new List<byte>();
 
@@ -56,7 +56,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             return _data;
         }
 
-        public static List<byte> toBEULong(int val)
+        public static IEnumerable<byte> toBEULong(int val)
         {
             var data = new List<byte>();
             var LEdata = BitConverter.GetBytes((uint)val);
@@ -66,7 +66,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             return data;
         }
 
-        public static List<byte> toBEShort(int val)
+        public static IEnumerable<byte> toBEShort(int val)
         {
             var data = new List<byte>();
             var LEdata = BitConverter.GetBytes((short)val);
@@ -76,7 +76,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             return data;
         }
 
-        public static List<byte> encodeVariableInt(int val)
+        public static IEnumerable<byte> encodeVariableInt(int val)
         {
             if (val < 0) throw new FormatException("Variable int must be positive.");
 
@@ -101,11 +101,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class MidiTrack
+    public sealed class MidiTrack
     {
         public List<MidiMessage> messages = new();
 
-        public List<byte> createBytes()
+        public IEnumerable<byte> createBytes()
         {
             var data = new List<byte>();
             byte runningStatusByte = 0x00;
@@ -113,6 +113,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             foreach (var message in messages)
             {
                 if (message.time < 0) message.time = 0;
+
                 data.AddRange(MidiExport.encodeVariableInt(message.time));
                 if (message.type.Equals("sysex"))
                 {
@@ -147,7 +148,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class MidiMessage
+    public sealed class MidiMessage
     {
         private readonly byte code;
 
@@ -220,155 +221,150 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public int velocity;
 
         //Others not needed..
-        public MidiMessage(string type, string[] args, int time, byte[] data = null)
+        public MidiMessage(string type, IReadOnlyList<string> args, int time, byte[] data = null)
         {
             is_meta = false;
             this.type = type;
             this.time = time;
 
-            //Meta Messages
-            if (type.Equals("sequence_number"))
+            switch (type)
             {
-                is_meta = true;
-                code = 0x00;
-                number = int.Parse(args[0]);
+                //Meta Messages
+                case "sequence_number":
+                    is_meta = true;
+                    code = 0x00;
+                    number = int.Parse(args[0]);
+                    break;
+                case "text":
+                case "copyright":
+                case "lyrics":
+                case "marker":
+                case "cue_marker":
+                    is_meta = true;
+                    text = args[0];
+                    break;
             }
 
-            if (type.Equals("text") || type.Equals("copyright") || type.Equals("lyrics") || type.Equals("marker") ||
-                type.Equals("cue_marker"))
+            switch (type)
             {
-                is_meta = true;
-                text = args[0];
+                case "text":
+                    code = 0x01;
+                    break;
+                case "copyright":
+                    code = 0x02;
+                    break;
+                case "lyrics":
+                    code = 0x05;
+                    break;
+                case "marker":
+                    code = 0x06;
+                    break;
+                case "cue_marker":
+                    code = 0x07;
+                    break;
+                case "track_name":
+                case "instrument_name":
+                case "device_name":
+                    is_meta = true;
+                    code = 0x03;
+                    name = args[0];
+                    break;
             }
 
-            if (type.Equals("text")) code = 0x01;
-            if (type.Equals("copyright")) code = 0x02;
-            if (type.Equals("lyrics")) code = 0x05;
-            if (type.Equals("marker")) code = 0x06;
-            if (type.Equals("cue_marker")) code = 0x07;
-
-            if (type.Equals("track_name") || type.Equals("instrument_name") || type.Equals("device_name"))
+            switch (type)
             {
-                is_meta = true;
-                code = 0x03;
-                name = args[0];
+                case "instrument_name":
+                    code = 0x04;
+                    break;
+                case "device_name":
+                    code = 0x08;
+                    break;
+                case "channel_prefix":
+                    code = 0x20;
+                    channel = int.Parse(args[0]);
+                    is_meta = true;
+                    break;
+                case "midi_port":
+                    code = 0x21;
+                    port = int.Parse(args[0]);
+                    is_meta = true;
+                    break;
+                case "end_of_track":
+                    code = 0x2f;
+                    is_meta = true;
+                    break;
+                case "set_tempo":
+                    code = 0x51;
+                    tempo = int.Parse(args[0]);
+                    is_meta = true;
+                    break;
+                case "time_signature":
+                    is_meta = true;
+                    code = 0x58;
+                    numerator = int.Parse(args[0]); //4
+                    denominator = int.Parse(args[1]); //4
+                    clocks_per_click = int.Parse(args[2]); //24
+                    notated_32nd_notes_per_beat = int.Parse(args[3]); //8
+                    break;
+                case "key_signature":
+                    is_meta = true;
+                    code = 0x59;
+                    key = int.Parse(args[0]);
+                    is_major = args[1].Equals("0"); //"0" or "1"
+                    break;
+                //Normal Messages
+                case "note_off":
+                    code = 0x80;
+                    channel = int.Parse(args[0]);
+                    note = int.Parse(args[1]);
+                    velocity = int.Parse(args[2]);
+                    break;
+                case "note_on":
+                    code = 0x90;
+                    channel = int.Parse(args[0]);
+                    note = int.Parse(args[1]);
+                    velocity = int.Parse(args[2]);
+                    break;
+                case "polytouch":
+                    code = 0xa0;
+                    channel = int.Parse(args[0]);
+                    note = int.Parse(args[1]);
+                    value = int.Parse(args[2]);
+                    break;
+                case "control_change":
+                    code = 0xb0;
+                    channel = int.Parse(args[0]);
+                    control = int.Parse(args[1]);
+                    value = int.Parse(args[2]);
+                    break;
+                case "program_change":
+                    code = 0xc0;
+                    channel = int.Parse(args[0]);
+                    program = int.Parse(args[1]);
+                    break;
+                case "aftertouch":
+                    code = 0xd0;
+                    channel = int.Parse(args[0]);
+                    value = int.Parse(args[1]);
+                    break;
+                case "pitchwheel":
+                    code = 0xe0;
+                    channel = int.Parse(args[0]);
+                    pitch = int.Parse(args[1]);
+                    break;
             }
 
-            if (type.Equals("instrument_name")) code = 0x04;
-            if (type.Equals("device_name")) code = 0x08;
 
-            if (type.Equals("channel_prefix"))
-            {
-                code = 0x20;
-                channel = int.Parse(args[0]);
-                is_meta = true;
-            }
+            if (!type.Equals("sysex")) return;
 
-            if (type.Equals("midi_port"))
-            {
-                code = 0x21;
-                port = int.Parse(args[0]);
-                is_meta = true;
-            }
-
-            if (type.Equals("end_of_track"))
-            {
-                code = 0x2f;
-                is_meta = true;
-            }
-
-            if (type.Equals("set_tempo"))
-            {
-                code = 0x51;
-                tempo = int.Parse(args[0]);
-                is_meta = true;
-            }
-
-            if (type.Equals("time_signature"))
-            {
-                is_meta = true;
-                code = 0x58;
-                numerator = int.Parse(args[0]); //4
-                denominator = int.Parse(args[1]); //4 
-                clocks_per_click = int.Parse(args[2]); //24
-                notated_32nd_notes_per_beat = int.Parse(args[3]); //8
-            }
-
-            if (type.Equals("key_signature"))
-            {
-                is_meta = true;
-                code = 0x59;
-                key = int.Parse(args[0]);
-                is_major = args[1].Equals("0"); //"0" or "1"
-            }
-
-
-            //Normal Messages
-            if (type.Equals("note_off"))
-            {
-                code = 0x80;
-                channel = int.Parse(args[0]);
-                note = int.Parse(args[1]);
-                velocity = int.Parse(args[2]);
-            }
-
-            if (type.Equals("note_on"))
-            {
-                code = 0x90;
-                channel = int.Parse(args[0]);
-                note = int.Parse(args[1]);
-                velocity = int.Parse(args[2]);
-            }
-
-            if (type.Equals("polytouch"))
-            {
-                code = 0xa0;
-                channel = int.Parse(args[0]);
-                note = int.Parse(args[1]);
-                value = int.Parse(args[2]);
-            }
-
-            if (type.Equals("control_change"))
-            {
-                code = 0xb0;
-                channel = int.Parse(args[0]);
-                control = int.Parse(args[1]);
-                value = int.Parse(args[2]);
-            }
-
-            if (type.Equals("program_change"))
-            {
-                code = 0xc0;
-                channel = int.Parse(args[0]);
-                program = int.Parse(args[1]);
-            }
-
-            if (type.Equals("aftertouch"))
-            {
-                code = 0xd0;
-                channel = int.Parse(args[0]);
-                value = int.Parse(args[1]);
-            }
-
-            if (type.Equals("pitchwheel"))
-            {
-                code = 0xe0;
-                channel = int.Parse(args[0]);
-                pitch = int.Parse(args[1]);
-            }
-
-            if (type.Equals("sysex"))
-            {
-                code = 0xf0;
-                this.data = data;
-            }
+            code = 0xf0;
+            this.data = data;
         }
 
         public List<byte> createBytes()
         {
             List<byte> data;
-            if (is_meta) data = createMetaBytes();
-            else data = createMessageBytes();
+            data = is_meta ? createMetaBytes() : createMessageBytes();
 
             return data;
         }
@@ -377,43 +373,49 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         {
             var data = new List<byte>();
 
-            if (type.Equals("sequence_number"))
+            switch (type)
             {
-                data.Add((byte)(number >> 8));
-                data.Add((byte)(number & 0xff));
-            }
-
-            if (type.Equals("text") || type.Equals("copyright") || type.Equals("lyrics") || type.Equals("marker") ||
-                type.Equals("cue_marker"))
-            {
-                if (text == null) text = "";
-                data.AddRange(MidiExport.ascii.GetBytes(text));
-            }
-
-            if (type.Equals("track_name") || type.Equals("instrument_name") || type.Equals("device_name"))
-                data.AddRange(MidiExport.ascii.GetBytes(name));
-            if (type.Equals("channel_prefix")) data.Add((byte)channel);
-            if (type.Equals("midi_port")) data.Add((byte)port);
-            if (type.Equals("set_tempo"))
-            {
-                //return [tempo >> 16, tempo >> 8 & 0xff, tempo & 0xff]
-                data.Add((byte)(tempo >> 16));
-                data.Add((byte)((tempo >> 8) & 0xff));
-                data.Add((byte)(tempo & 0xff));
-            }
-
-            if (type.Equals("time_signature"))
-            {
-                data.Add((byte)numerator);
-                data.Add((byte)Math.Log(denominator, 2));
-                data.Add((byte)clocks_per_click);
-                data.Add((byte)notated_32nd_notes_per_beat);
-            }
-
-            if (type.Equals("key_signature"))
-            {
-                data.Add((byte)(key & 0xff));
-                data.Add(is_major ? (byte)0x00 : (byte)0x01);
+                case "sequence_number":
+                    data.Add((byte)(number >> 8));
+                    data.Add((byte)(number & 0xff));
+                    break;
+                case "text":
+                case "copyright":
+                case "lyrics":
+                case "marker":
+                case "cue_marker":
+                {
+                    text ??= "";
+                    data.AddRange(MidiExport.ascii.GetBytes(text));
+                    break;
+                }
+                case "track_name":
+                case "instrument_name":
+                case "device_name":
+                    data.AddRange(MidiExport.ascii.GetBytes(name));
+                    break;
+                case "channel_prefix":
+                    data.Add((byte)channel);
+                    break;
+                case "midi_port":
+                    data.Add((byte)port);
+                    break;
+                case "set_tempo":
+                    //return [tempo >> 16, tempo >> 8 & 0xff, tempo & 0xff]
+                    data.Add((byte)(tempo >> 16));
+                    data.Add((byte)((tempo >> 8) & 0xff));
+                    data.Add((byte)(tempo & 0xff));
+                    break;
+                case "time_signature":
+                    data.Add((byte)numerator);
+                    data.Add((byte)Math.Log(denominator, 2));
+                    data.Add((byte)clocks_per_click);
+                    data.Add((byte)notated_32nd_notes_per_beat);
+                    break;
+                case "key_signature":
+                    data.Add((byte)(key & 0xff));
+                    data.Add(is_major ? (byte)0x00 : (byte)0x01);
+                    break;
             }
 
             var dataLength = data.Count;
@@ -428,7 +430,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public List<byte> createMessageBytes()
         {
             var data = new List<byte>();
-            /* if (type.Equals("note_off")) { code = 0x80; channel = int.Parse(args[0]); note = int.Parse(args[1]); velocity = int.Parse(args[2]); }
+            switch (type)
+            {
+                /* if (type.Equals("note_off")) { code = 0x80; channel = int.Parse(args[0]); note = int.Parse(args[1]); velocity = int.Parse(args[2]); }
             if (type.Equals("note_on")) { code = 0x90; channel = int.Parse(args[0]); note = int.Parse(args[1]); velocity = int.Parse(args[2]); }
             if (type.Equals("polytouch")) { code = 0xa0; channel = int.Parse(args[0]); note = int.Parse(args[1]); value = int.Parse(args[2]); }
             if (type.Equals("control_change")) { code = 0xb0; channel = int.Parse(args[0]); control = int.Parse(args[1]); value = int.Parse(args[2]); }
@@ -438,49 +442,42 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             if (type.Equals("sysex")) { code = 0xf0; this.data = data; }
               
              */
-            if (type.Equals("note_off") || type.Equals("note_on"))
-            {
-                data.Add((byte)(code | (byte)channel));
-                data.Add((byte)note);
-                data.Add((byte)velocity);
+                case "note_off":
+                case "note_on":
+                    data.Add((byte)(code | (byte)channel));
+                    data.Add((byte)note);
+                    data.Add((byte)velocity);
+                    break;
+                case "polytouch":
+                    data.Add((byte)(code | (byte)channel));
+                    data.Add((byte)note);
+                    data.Add((byte)value);
+                    break;
+                case "control_change":
+                    data.Add((byte)(code | (byte)channel));
+                    data.Add((byte)control);
+                    data.Add((byte)value);
+                    break;
+                case "program_change":
+                    data.Add((byte)(code | (byte)channel));
+                    data.Add((byte)program);
+                    break;
+                case "aftertouch":
+                    data.Add((byte)(code | (byte)channel));
+                    data.Add((byte)value);
+                    break;
+                //14 bit signed integer
+                case "pitchwheel":
+                    data.Add((byte)(code | (byte)channel));
+                    //data.Add((byte)pitch);
+                    pitch -= -8192;
+                    data.Add((byte)(pitch & 0x7f));
+                    data.Add((byte)(pitch >> 7));
+                    break;
+                case "sysex":
+                    data.AddRange(this.data);
+                    break;
             }
-
-            if (type.Equals("polytouch"))
-            {
-                data.Add((byte)(code | (byte)channel));
-                data.Add((byte)note);
-                data.Add((byte)value);
-            }
-
-            if (type.Equals("control_change"))
-            {
-                data.Add((byte)(code | (byte)channel));
-                data.Add((byte)control);
-                data.Add((byte)value);
-            }
-
-            if (type.Equals("program_change"))
-            {
-                data.Add((byte)(code | (byte)channel));
-                data.Add((byte)program);
-            }
-
-            if (type.Equals("aftertouch"))
-            {
-                data.Add((byte)(code | (byte)channel));
-                data.Add((byte)value);
-            }
-
-            if (type.Equals("pitchwheel")) //14 bit signed integer
-            {
-                data.Add((byte)(code | (byte)channel));
-                //data.Add((byte)pitch);
-                pitch -= -8192;
-                data.Add((byte)(pitch & 0x7f));
-                data.Add((byte)(pitch >> 7));
-            }
-
-            if (type.Equals("sysex")) data.AddRange(this.data);
 
 
             return data;

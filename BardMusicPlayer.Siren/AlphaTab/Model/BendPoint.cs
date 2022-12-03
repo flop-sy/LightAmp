@@ -4,7 +4,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     ///     A single point of a bending graph. Used to
     ///     describe WhammyBar and String Bending effects.
     /// </summary>
-    internal class BendPoint
+    internal sealed class BendPoint
     {
         /// <summary>
         ///     The maximum offset for points

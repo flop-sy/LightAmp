@@ -45,7 +45,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
                 IsScanning = false;
                 return true;
             };
-            func.BeginInvoke(delegate { }, func);
+            func.BeginInvoke(static delegate { }, func);
         }
 
         private void FindExtendedSignatures(IEnumerable<Signature> signatures)
@@ -53,8 +53,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
             var notFound = new List<Signature>(signatures);
             var baseAddress = MemoryHandler.ProcessModel.Process.MainModule.BaseAddress;
             var searchEnd = IntPtr.Add(baseAddress, MemoryHandler.ProcessModel.Process.MainModule.ModuleMemorySize);
-            var searchStart = baseAddress;
-            ResolveLocations(baseAddress, searchStart, searchEnd, ref notFound);
+            ResolveLocations(baseAddress, baseAddress, searchEnd, ref notFound);
         }
 
         private void ResolveLocations(IntPtr baseAddress, IntPtr searchStart, IntPtr searchEnd,
@@ -69,8 +68,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
                     var regionSize = new IntPtr(4608);
                     if (IntPtr.Add(searchStart, 4608).ToInt64() > searchEnd.ToInt64())
                         regionSize = (IntPtr)(searchEnd.ToInt64() - searchStart.ToInt64());
+
                     if (UnsafeNativeMethods.ReadProcessMemory(MemoryHandler.ProcessHandle, searchStart, array,
-                            regionSize, out var _))
+                            regionSize, out _))
                     {
                         foreach (var item in notFound)
                         {
@@ -138,10 +138,11 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 
             var diff = last - idx;
             if (diff == 0) diff = 1;
-            for (idx = 0; idx <= 255; ++idx)
-                badShift[idx] = diff;
-            for (idx = last - diff; idx < last; ++idx)
-                badShift[pattern[idx]] = last - idx;
+
+            for (idx = 0; idx <= 255; ++idx) badShift[idx] = diff;
+
+            for (idx = last - diff; idx < last; ++idx) badShift[pattern[idx]] = last - idx;
+
             return badShift;
         }
 

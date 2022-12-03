@@ -1,96 +1,89 @@
-#region License
-
-/* Copyright (c) 2006 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 using System.ComponentModel;
 using System.Threading;
 using Sanford.Multimedia.Timers;
 
+#endregion
+
 namespace Sanford.Multimedia.Midi
 {
-	/// <summary>
-	/// Generates clock events internally.
-	/// </summary>
-	public class MidiInternalClock : PpqnClock, IComponent
+    /// <summary>
+    ///     Generates clock events internally.
+    /// </summary>
+    public sealed class MidiInternalClock : PpqnClock, IComponent
     {
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            #region Guard
+
+            if (disposed) return;
+
+            #endregion
+
+            if (running)
+                // Stop the multimedia timer.
+                timer.Stop();
+
+            disposed = true;
+
+            timer.Dispose();
+
+            GC.SuppressFinalize(this);
+
+            OnDisposed(EventArgs.Empty);
+        }
+
+        #endregion
+
         #region MidiInternalClock Members
 
         #region Fields
 
         // Used for generating tick events.
-        private ITimer timer;
+        private readonly ITimer timer;
 
         // Parses meta message tempo change messages.
         private TempoChangeBuilder builder = new TempoChangeBuilder();
 
         // Tick accumulator.
-        private int ticks = 0;
+        private int ticks;
 
         // Indicates whether the clock has been disposed.
-        private bool disposed = false;
+        private bool disposed;
 
-		private int sleep = 0;
-
-        private ISite site = null;
+        private int sleep;
 
         #endregion
 
         #region Construction
 
         /// <summary>
-        /// Initializes a new instance of the MidiInternalClock class.
+        ///     Initializes a new instance of the MidiInternalClock class.
         /// </summary>
-		public MidiInternalClock()
+        public MidiInternalClock()
             : this(TimerCaps.Default.periodMin)
-        { 
+        {
         }
 
         public MidiInternalClock(int timerPeriod) : base(timerPeriod)
         {
             timer = TimerFactory.Create();
             timer.Period = timerPeriod;
-            timer.Tick += new EventHandler(HandleTick); 
+            timer.Tick += HandleTick;
         }
 
         /// <summary>
-        /// Initializes a new instance of the MidiInternalClock class with the 
-        /// specified IContainer.
+        ///     Initializes a new instance of the MidiInternalClock class with the
+        ///     specified IContainer.
         /// </summary>
         /// <param name="container">
-        /// The IContainer to which the MidiInternalClock will add itself.
+        ///     The IContainer to which the MidiInternalClock will add itself.
         /// </param>
-        public MidiInternalClock(IContainer container) : 
+        public MidiInternalClock(IContainer container) :
             this()
         {
             ///
@@ -104,32 +97,27 @@ namespace Sanford.Multimedia.Midi
         #region Methods
 
         /// <summary>
-		/// Sleeps for a certain time
-		/// </summary>
-		public void Sleep(int ms) {
-			sleep += ms;
-		}
+        ///     Sleeps for a certain time
+        /// </summary>
+        public void Sleep(int ms)
+        {
+            sleep += ms;
+        }
 
-		/// <summary>
-        /// Starts the MidiInternalClock.
+        /// <summary>
+        ///     Starts the MidiInternalClock.
         /// </summary>
         public void Start()
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("MidiInternalClock");
-            }
+            if (disposed) throw new ObjectDisposedException("MidiInternalClock");
 
             #endregion
 
             #region Guard
 
-            if(running)
-            {
-                return;
-            }
+            if (running) return;
 
             #endregion
 
@@ -143,30 +131,23 @@ namespace Sanford.Multimedia.Midi
             timer.Start();
 
             // Indicate that the clock is now running.
-            running = true;           
-            
+            running = true;
         }
 
         /// <summary>
-        /// Resumes tick generation from the current position.
+        ///     Resumes tick generation from the current position.
         /// </summary>
         public void Continue()
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("MidiInternalClock");
-            }
+            if (disposed) throw new ObjectDisposedException("MidiInternalClock");
 
             #endregion
 
             #region Guard
 
-            if(running)
-            {
-                return;
-            }
+            if (running) return;
 
             #endregion
 
@@ -177,29 +158,23 @@ namespace Sanford.Multimedia.Midi
             timer.Start();
 
             // Indicate that the clock is now running.
-            running = true;            
+            running = true;
         }
 
         /// <summary>
-        /// Stops the MidiInternalClock.
+        ///     Stops the MidiInternalClock.
         /// </summary>
         public void Stop()
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("MidiInternalClock");
-            }
+            if (disposed) throw new ObjectDisposedException("MidiInternalClock");
 
             #endregion
 
             #region Guard
 
-            if(!running)
-            {
-                return;
-            }
+            if (!running) return;
 
             #endregion
 
@@ -216,17 +191,11 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(ticks < 0)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
+            if (ticks < 0) throw new ArgumentOutOfRangeException();
 
             #endregion
 
-            if(IsRunning)
-            {
-                Stop();
-            }
+            if (IsRunning) Stop();
 
             this.ticks = ticks;
 
@@ -237,23 +206,17 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(message == null)
-            {
-                throw new ArgumentNullException("message");
-            }
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
             #endregion
 
             #region Guard
 
-            if(message.MetaType != MetaType.Tempo)
-            {
-                return;
-            }
+            if (message.MetaType != MetaType.Tempo) return;
 
             #endregion
 
-            TempoChangeBuilder builder = new TempoChangeBuilder(message);
+            var builder = new TempoChangeBuilder(message);
 
             // Set the new tempo.
             Tempo = builder.Tempo;
@@ -261,14 +224,11 @@ namespace Sanford.Multimedia.Midi
 
         #region Event Raiser Methods
 
-        protected virtual void OnDisposed(EventArgs e)
+        private void OnDisposed(EventArgs e)
         {
-            EventHandler handler = Disposed;
+            var handler = Disposed;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         #endregion
@@ -278,21 +238,21 @@ namespace Sanford.Multimedia.Midi
         // Handles Tick events generated by the multimedia timer.
         private void HandleTick(object sender, EventArgs e)
         {
+            if (sleep != 0)
+            {
+                Thread.Sleep(sleep);
+                sleep = 0;
+            }
 
-			if(sleep != 0) {
-				Thread.Sleep(sleep);
-				sleep = 0;
-			}
+            var t = GenerateTicks();
 
-            int t = GenerateTicks();
-
-            for(int i = 0; i < t; i++)
+            for (var i = 0; i < t; i++)
             {
                 OnTick(EventArgs.Empty);
 
                 ticks++;
-            }            
-        }        
+            }
+        }
 
         #endregion
 
@@ -301,19 +261,16 @@ namespace Sanford.Multimedia.Midi
         #region Properties
 
         /// <summary>
-		/// Gets or sets the tempo speed multiplier.
-		/// </summary>
-		public float TempoSpeed {
-			get {
-				return GetTempoSpeed();
-			}
-			set {
-				SetTempoSpeed(value);
-			}
-		}
+        ///     Gets or sets the tempo speed multiplier.
+        /// </summary>
+        public float TempoSpeed
+        {
+            get => GetTempoSpeed();
+            set => SetTempoSpeed(value);
+        }
 
         /// <summary>
-        /// Gets or sets the tempo in microseconds per beat.
+        ///     Gets or sets the tempo in microseconds per beat.
         /// </summary>
         public int Tempo
         {
@@ -321,10 +278,7 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("MidiInternalClock");
-                }
+                if (disposed) throw new ObjectDisposedException("MidiInternalClock");
 
                 #endregion
 
@@ -334,10 +288,7 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("MidiInternalClock");
-                }
+                if (disposed) throw new ObjectDisposedException("MidiInternalClock");
 
                 #endregion
 
@@ -345,13 +296,7 @@ namespace Sanford.Multimedia.Midi
             }
         }
 
-        public override int Ticks
-        {
-            get 
-            {
-                return ticks;
-            }
-        }
+        public override int Ticks => ticks;
 
         #endregion
 
@@ -361,47 +306,7 @@ namespace Sanford.Multimedia.Midi
 
         public event EventHandler Disposed;
 
-        public ISite Site
-        {
-            get
-            {
-                return site;
-            }
-            set
-            {
-                site = value;
-            }
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            #region Guard
-
-            if(disposed)
-            {
-                return;
-            }
-
-            #endregion            
-
-            if(running)
-            {
-                // Stop the multimedia timer.
-                timer.Stop();
-            }            
-
-            disposed = true;             
-
-            timer.Dispose();
-
-            GC.SuppressFinalize(this);
-
-            OnDisposed(EventArgs.Empty);
-        }
+        public ISite Site { get; set; }
 
         #endregion
     }

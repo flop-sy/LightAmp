@@ -1,36 +1,4 @@
-#region License
-
-/* Copyright (c) 2006 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 using System.Collections;
@@ -38,14 +6,69 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+
+#endregion
 
 namespace Sanford.Multimedia.Midi
 {
     /// <summary>
-    /// Represents a collection of Tracks.
+    ///     Represents a collection of Tracks.
     /// </summary>
     public sealed class Sequence : IComponent, ICollection<Track>
     {
+        #region IEnumerable<Track> Members
+
+        public IEnumerator<Track> GetEnumerator()
+        {
+            #region Require
+
+            if (disposed) throw new ObjectDisposedException("Sequence");
+
+            #endregion
+
+            return tracks.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            #region Require
+
+            if (disposed) throw new ObjectDisposedException("Sequence");
+
+            #endregion
+
+            return tracks.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            #region Guard
+
+            if (disposed) return;
+
+            #endregion
+
+            loadWorker.Dispose();
+            saveWorker.Dispose();
+
+            disposed = true;
+
+            var handler = Disposed;
+
+            handler?.Invoke(this, EventArgs.Empty);
+        }
+
+        #endregion
+
         #region Sequence Members
 
         #region Fields
@@ -56,13 +79,11 @@ namespace Sanford.Multimedia.Midi
         // The Sequence's MIDI file properties.
         private MidiFileProperties properties = new MidiFileProperties();
 
-        private BackgroundWorker loadWorker = new BackgroundWorker();
+        private readonly BackgroundWorker loadWorker = new BackgroundWorker();
 
-        private BackgroundWorker saveWorker = new BackgroundWorker();
+        private readonly BackgroundWorker saveWorker = new BackgroundWorker();
 
-        private ISite site = null;
-
-        private bool disposed = false;
+        private bool disposed;
 
         #endregion
 
@@ -81,18 +102,18 @@ namespace Sanford.Multimedia.Midi
         #region Construction
 
         /// <summary>
-        /// Initializes a new instance of the Sequence class.
+        ///     Initializes a new instance of the Sequence class.
         /// </summary>
         public Sequence()
         {
             InitializeBackgroundWorkers();
-        }        
+        }
 
         /// <summary>
-        /// Initializes a new instance of the Sequence class with the specified division.
+        ///     Initializes a new instance of the Sequence class with the specified division.
         /// </summary>
         /// <param name="division">
-        /// The Sequence's division value.
+        ///     The Sequence's division value.
         /// </param>
         public Sequence(int division)
         {
@@ -103,11 +124,11 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Initializes a new instance of the Sequence class with the specified
-        /// file name of the MIDI file to load.
+        ///     Initializes a new instance of the Sequence class with the specified
+        ///     file name of the MIDI file to load.
         /// </summary>
         /// <param name="fileName">
-        /// The name of the MIDI file to load.
+        ///     The name of the MIDI file to load.
         /// </param>
         public Sequence(string fileName)
         {
@@ -115,13 +136,13 @@ namespace Sanford.Multimedia.Midi
 
             Load(fileName);
         }
-        
+
         /// <summary>
-        /// Initializes a new instance of the Sequence class with the specified
-        /// file stream of the MIDI file to load.
+        ///     Initializes a new instance of the Sequence class with the specified
+        ///     file stream of the MIDI file to load.
         /// </summary>
         /// <param name="fileStream">
-        /// The stream of the MIDI file to load.
+        ///     The stream of the MIDI file to load.
         /// </param>
         public Sequence(Stream fileStream)
         {
@@ -129,61 +150,54 @@ namespace Sanford.Multimedia.Midi
 
             Load(fileStream);
         }
-        
+
         private void InitializeBackgroundWorkers()
         {
-            loadWorker.DoWork += new DoWorkEventHandler(LoadDoWork);
-            loadWorker.ProgressChanged += new ProgressChangedEventHandler(OnLoadProgressChanged);
-            loadWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(OnLoadCompleted);
+            loadWorker.DoWork += LoadDoWork;
+            loadWorker.ProgressChanged += OnLoadProgressChanged;
+            loadWorker.RunWorkerCompleted += OnLoadCompleted;
             loadWorker.WorkerReportsProgress = true;
 
-            saveWorker.DoWork += new DoWorkEventHandler(SaveDoWork);
-            saveWorker.ProgressChanged += new ProgressChangedEventHandler(OnSaveProgressChanged);
-            saveWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(OnSaveCompleted);
+            saveWorker.DoWork += SaveDoWork;
+            saveWorker.ProgressChanged += OnSaveProgressChanged;
+            saveWorker.RunWorkerCompleted += OnSaveCompleted;
             saveWorker.WorkerReportsProgress = true;
-        }        
+        }
 
         #endregion
 
         #region Methods
 
         /// <summary>
-        /// Loads a MIDI file into the Sequence.
+        ///     Loads a MIDI file into the Sequence.
         /// </summary>
         /// <param name="fileName">
-        /// The MIDI file's name.
+        ///     The MIDI file's name.
         /// </param>
         public void Load(string fileName)
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
-            else if(IsBusy)
-            {
-                throw new InvalidOperationException();
-            }
-            else if(fileName == null)
-            {
-                throw new ArgumentNullException("fileName");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
-            #endregion                        
+            if (IsBusy) throw new InvalidOperationException();
 
-            FileStream stream = new FileStream(fileName, FileMode.Open,
+            if (fileName == null) throw new ArgumentNullException(nameof(fileName));
+
+            #endregion
+
+            var stream = new FileStream(fileName, FileMode.Open,
                 FileAccess.Read, FileShare.Read);
 
-            using(stream)
+            using (stream)
             {
-                MidiFileProperties newProperties = new MidiFileProperties();
-                TrackReader reader = new TrackReader();
-                List<Track> newTracks = new List<Track>();
+                var newProperties = new MidiFileProperties();
+                var reader = new TrackReader();
+                var newTracks = new List<Track>();
 
                 newProperties.Read(stream);
 
-                for(int i = 0; i < newProperties.TrackCount; i++)
+                for (var i = 0; i < newProperties.TrackCount; i++)
                 {
                     reader.Read(stream);
                     newTracks.Add(reader.Track);
@@ -201,39 +215,32 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Loads a MIDI stream into the Sequence.
+        ///     Loads a MIDI stream into the Sequence.
         /// </summary>
         /// <param name="fileStream">
-        /// The MIDI file's stream.
+        ///     The MIDI file's stream.
         /// </param>
         public void Load(Stream fileStream)
         {
             #region Require
 
-            if (disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
-            else if (IsBusy)
-            {
-                throw new InvalidOperationException();
-            }
-            else if (fileStream == null)
-            {
-                throw new ArgumentNullException("fileStream");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
-            #endregion                        
+            if (IsBusy) throw new InvalidOperationException();
+
+            if (fileStream == null) throw new ArgumentNullException(nameof(fileStream));
+
+            #endregion
 
             using (fileStream)
             {
-                MidiFileProperties newProperties = new MidiFileProperties();
-                TrackReader reader = new TrackReader();
-                List<Track> newTracks = new List<Track>();
+                var newProperties = new MidiFileProperties();
+                var reader = new TrackReader();
+                var newTracks = new List<Track>();
 
                 newProperties.Read(fileStream);
 
-                for (int i = 0; i < newProperties.TrackCount; i++)
+                for (var i = 0; i < newProperties.TrackCount; i++)
                 {
                     reader.Read(fileStream);
                     newTracks.Add(reader.Track);
@@ -254,18 +261,11 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
-            else if(IsBusy)
-            {
-                throw new InvalidOperationException();
-            }
-            else if(fileName == null)
-            {
-                throw new ArgumentNullException("fileName");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
+
+            if (IsBusy) throw new InvalidOperationException();
+
+            if (fileName == null) throw new ArgumentNullException(nameof(fileName));
 
             #endregion
 
@@ -276,10 +276,7 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
             #endregion
 
@@ -287,27 +284,22 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Saves the Sequence as a MIDI file.
+        ///     Saves the Sequence as a MIDI file.
         /// </summary>
         /// <param name="fileName">
-        /// The name to use for saving the MIDI file.
+        ///     The name to use for saving the MIDI file.
         /// </param>
         public void Save(string fileName)
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
-            else if(fileName == null)
-            {
-                throw new ArgumentNullException("fileName");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
+
+            if (fileName == null) throw new ArgumentNullException(nameof(fileName));
 
             #endregion
 
-            FileStream stream = new FileStream(fileName, FileMode.Create,
+            var stream = new FileStream(fileName, FileMode.Create,
                 FileAccess.Write, FileShare.None);
             using (stream)
             {
@@ -316,18 +308,18 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Saves the Sequence as a Stream.
+        ///     Saves the Sequence as a Stream.
         /// </summary>
         /// <param name="stream">
-        /// The stream to use for saving the sequence.
+        ///     The stream to use for saving the sequence.
         /// </param>
         public void Save(Stream stream)
         {
             properties.Write(stream);
 
-            TrackWriter writer = new TrackWriter();
+            var writer = new TrackWriter();
 
-            foreach(Track trk in tracks)
+            foreach (var trk in tracks)
             {
                 writer.Track = trk;
                 writer.Write(stream);
@@ -338,18 +330,11 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
-            else if(IsBusy)
-            {
-                throw new InvalidOperationException();
-            }
-            else if(fileName == null)
-            {
-                throw new ArgumentNullException("fileName");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
+
+            if (IsBusy) throw new InvalidOperationException();
+
+            if (fileName == null) throw new ArgumentNullException(nameof(fileName));
 
             #endregion
 
@@ -360,10 +345,7 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
             #endregion
 
@@ -371,87 +353,66 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Gets the length in ticks of the Sequence.
+        ///     Gets the length in ticks of the Sequence.
         /// </summary>
         /// <returns>
-        /// The length in ticks of the Sequence.
+        ///     The length in ticks of the Sequence.
         /// </returns>
         /// <remarks>
-        /// The length in ticks of the Sequence is represented by the Track 
-        /// with the longest length.
+        ///     The length in ticks of the Sequence is represented by the Track
+        ///     with the longest length.
         /// </remarks>
         public int GetLength()
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
             #endregion
 
-            int length = 0;
-
-            foreach(Track t in this)
-            {
-                if(t.Length > length)
-                {
-                    length = t.Length;
-                }
-            }
-
-            return length;
+            return this.Select(t => t.Length).Prepend(0).Max();
         }
 
         private void OnLoadCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            EventHandler<AsyncCompletedEventArgs> handler = LoadCompleted;
+            var handler = LoadCompleted;
 
-            if(handler != null)
-            {
-                handler(this, new AsyncCompletedEventArgs(e.Error, e.Cancelled, null));
-            }
+            handler?.Invoke(this, new AsyncCompletedEventArgs(e.Error, e.Cancelled, null));
         }
 
         private void OnLoadProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            ProgressChangedEventHandler handler = LoadProgressChanged;
+            var handler = LoadProgressChanged;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         private void LoadDoWork(object sender, DoWorkEventArgs e)
         {
-            string fileName = (string)e.Argument;
+            var fileName = (string)e.Argument;
 
-            FileStream stream = new FileStream(fileName, FileMode.Open,
+            var stream = new FileStream(fileName, FileMode.Open,
                 FileAccess.Read, FileShare.Read);
 
-            using(stream)
+            using (stream)
             {
-                MidiFileProperties newProperties = new MidiFileProperties();
-                TrackReader reader = new TrackReader();
-                List<Track> newTracks = new List<Track>();
+                var newProperties = new MidiFileProperties();
+                var reader = new TrackReader();
+                var newTracks = new List<Track>();
 
                 newProperties.Read(stream);
 
-                float percentage;
-
-                for(int i = 0; i < newProperties.TrackCount && !loadWorker.CancellationPending; i++)
+                for (var i = 0; i < newProperties.TrackCount && !loadWorker.CancellationPending; i++)
                 {
                     reader.Read(stream);
                     newTracks.Add(reader.Track);
 
-                    percentage = (i + 1f) / newProperties.TrackCount;
+                    var percentage = (i + 1f) / newProperties.TrackCount;
 
                     loadWorker.ReportProgress((int)(100 * percentage));
                 }
 
-                if(loadWorker.CancellationPending)
+                if (loadWorker.CancellationPending)
                 {
                     e.Cancel = true;
                 }
@@ -460,58 +421,47 @@ namespace Sanford.Multimedia.Midi
                     properties = newProperties;
                     tracks = newTracks;
                 }
-            }            
+            }
         }
 
         private void OnSaveCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            EventHandler<AsyncCompletedEventArgs> handler = SaveCompleted;
+            var handler = SaveCompleted;
 
-            if(handler != null)
-            {
-                handler(this, new AsyncCompletedEventArgs(e.Error, e.Cancelled, null));
-            }
+            handler?.Invoke(this, new AsyncCompletedEventArgs(e.Error, e.Cancelled, null));
         }
 
         private void OnSaveProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            ProgressChangedEventHandler handler = SaveProgressChanged;
+            var handler = SaveProgressChanged;
 
-            if(handler != null)
-            {
-                handler(this, e);
-            }
+            handler?.Invoke(this, e);
         }
 
         private void SaveDoWork(object sender, DoWorkEventArgs e)
         {
-            string fileName = (string)e.Argument;
+            var fileName = (string)e.Argument;
 
-            FileStream stream = new FileStream(fileName, FileMode.Create,
+            var stream = new FileStream(fileName, FileMode.Create,
                 FileAccess.Write, FileShare.None);
 
-            using(stream)
+            using (stream)
             {
                 properties.Write(stream);
 
-                TrackWriter writer = new TrackWriter();
+                var writer = new TrackWriter();
 
-                float percentage;
-
-                for(int i = 0; i < tracks.Count && !saveWorker.CancellationPending; i++)
+                for (var i = 0; i < tracks.Count && !saveWorker.CancellationPending; i++)
                 {
                     writer.Track = tracks[i];
                     writer.Write(stream);
 
-                    percentage = (i + 1f) / properties.TrackCount;
+                    var percentage = (i + 1f) / properties.TrackCount;
 
                     saveWorker.ReportProgress((int)(100 * percentage));
                 }
 
-                if(saveWorker.CancellationPending)
-                {
-                    e.Cancel = true;
-                }
+                if (saveWorker.CancellationPending) e.Cancel = true;
             }
         }
 
@@ -520,13 +470,13 @@ namespace Sanford.Multimedia.Midi
         #region Properties
 
         /// <summary>
-        /// Gets the Track at the specified index.
+        ///     Gets the Track at the specified index.
         /// </summary>
         /// <param name="index">
-        /// The index of the Track to get.
+        ///     The index of the Track to get.
         /// </param>
         /// <returns>
-        /// The Track at the specified index.
+        ///     The Track at the specified index.
         /// </returns>
         public Track this[int index]
         {
@@ -534,15 +484,11 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("Sequence");
-                }
-                else if(index < 0 || index >= Count)
-                {
-                    throw new ArgumentOutOfRangeException("index", index,
+                if (disposed) throw new ObjectDisposedException("Sequence");
+
+                if (index < 0 || index >= Count)
+                    throw new ArgumentOutOfRangeException(nameof(index), index,
                         "Sequence index out of range.");
-                }
 
                 #endregion
 
@@ -551,7 +497,7 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Gets the Sequence's division value.
+        ///     Gets the Sequence's division value.
         /// </summary>
         public int Division
         {
@@ -559,10 +505,7 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("Sequence");
-                }
+                if (disposed) throw new ObjectDisposedException("Sequence");
 
                 #endregion
 
@@ -571,7 +514,7 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Gets or sets the Sequence's format value.
+        ///     Gets or sets the Sequence's format value.
         /// </summary>
         public int Format
         {
@@ -579,10 +522,7 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("Sequence");
-                }
+                if (disposed) throw new ObjectDisposedException("Sequence");
 
                 #endregion
 
@@ -592,14 +532,9 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("Sequence");
-                }
-                else if(IsBusy)
-                {
-                    throw new InvalidOperationException();
-                }
+                if (disposed) throw new ObjectDisposedException("Sequence");
+
+                if (IsBusy) throw new InvalidOperationException();
 
                 #endregion
 
@@ -608,7 +543,7 @@ namespace Sanford.Multimedia.Midi
         }
 
         /// <summary>
-        /// Gets the Sequence's type.
+        ///     Gets the Sequence's type.
         /// </summary>
         public SequenceType SequenceType
         {
@@ -616,10 +551,7 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("Sequence");
-                }
+                if (disposed) throw new ObjectDisposedException("Sequence");
 
                 #endregion
 
@@ -627,13 +559,7 @@ namespace Sanford.Multimedia.Midi
             }
         }
 
-        public bool IsBusy
-        {
-            get
-            {
-                return loadWorker.IsBusy || saveWorker.IsBusy;
-            }
-        }
+        public bool IsBusy => loadWorker.IsBusy || saveWorker.IsBusy;
 
         #endregion
 
@@ -645,14 +571,9 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            } 
-            else if(item == null)
-            {
-                throw new ArgumentNullException("item");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
+
+            if (item == null) throw new ArgumentNullException(nameof(item));
 
             #endregion
 
@@ -665,10 +586,7 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
             #endregion
 
@@ -681,10 +599,7 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
             #endregion
 
@@ -695,10 +610,7 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
             #endregion
 
@@ -711,10 +623,7 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("Sequence");
-                }
+                if (disposed) throw new ObjectDisposedException("Sequence");
 
                 #endregion
 
@@ -728,10 +637,7 @@ namespace Sanford.Multimedia.Midi
             {
                 #region Require
 
-                if(disposed)
-                {
-                    throw new ObjectDisposedException("Sequence");
-                }
+                if (disposed) throw new ObjectDisposedException("Sequence");
 
                 #endregion
 
@@ -743,57 +649,15 @@ namespace Sanford.Multimedia.Midi
         {
             #region Require
 
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
+            if (disposed) throw new ObjectDisposedException("Sequence");
 
             #endregion
 
-            bool result = tracks.Remove(item);
+            var result = tracks.Remove(item);
 
-            if(result)
-            {
-                properties.TrackCount = tracks.Count;
-            }
+            if (result) properties.TrackCount = tracks.Count;
 
             return result;
-        }
-
-        #endregion
-
-        #region IEnumerable<Track> Members
-
-        public IEnumerator<Track> GetEnumerator()
-        {
-            #region Require
-
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
-
-            #endregion
-
-            return tracks.GetEnumerator();
-        }
-
-        #endregion
-
-        #region IEnumerable Members
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            #region Require
-
-            if(disposed)
-            {
-                throw new ObjectDisposedException("Sequence");
-            }
-
-            #endregion
-
-            return tracks.GetEnumerator();
         }
 
         #endregion
@@ -802,45 +666,7 @@ namespace Sanford.Multimedia.Midi
 
         public event EventHandler Disposed;
 
-        public ISite Site
-        {
-            get
-            {
-                return site;
-            }
-            set
-            {
-                site = value;
-            }
-        }
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            #region Guard
-
-            if(disposed)
-            {
-                return;
-            }
-
-            #endregion
-
-            loadWorker.Dispose();
-            saveWorker.Dispose();
-
-            disposed = true;
-
-            EventHandler handler = Disposed;
-
-            if(handler != null)
-            {
-                handler(this, EventArgs.Empty);
-            }
-        }
+        public ISite Site { get; set; }
 
         #endregion
     }

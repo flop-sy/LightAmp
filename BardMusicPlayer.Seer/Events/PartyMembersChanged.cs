@@ -11,7 +11,7 @@ namespace BardMusicPlayer.Seer.Events
 {
     public sealed class PartyMembersChanged : SeerEvent
     {
-        internal PartyMembersChanged(EventSource readerBackendType, SortedDictionary<uint, string> partyMembers) : base(
+        internal PartyMembersChanged(EventSource readerBackendType, IDictionary<uint, string> partyMembers) : base(
             readerBackendType)
         {
             EventType = GetType();
@@ -22,7 +22,7 @@ namespace BardMusicPlayer.Seer.Events
 
         public override bool IsValid()
         {
-            return (PartyMembers.Count == 0 || (PartyMembers.Count > 1 && PartyMembers.Count < 9)) &&
+            return PartyMembers.Count is 0 or > 1 and < 9 &&
                    PartyMembers.Keys.All(ActorIdTools.RangeOkay) && !PartyMembers.Values.Any(string.IsNullOrEmpty);
         }
     }

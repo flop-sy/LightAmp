@@ -167,16 +167,17 @@ namespace BardMusicPlayer.Maestro.Sequencing.Internal
 
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
-                lock (lockObject)
-                {
-                    Stop();
+            if (!disposing) return;
 
-                    InternalClock.Dispose();
-                    disposed = true;
+            lock (lockObject)
+            {
+                Stop();
 
-                    GC.SuppressFinalize(this);
-                }
+                InternalClock.Dispose();
+                disposed = true;
+
+                GC.SuppressFinalize(this);
+            }
         }
 
         public void Stop()
@@ -258,14 +259,14 @@ namespace BardMusicPlayer.Maestro.Sequencing.Internal
         {
             var handler = PlayStatusChange;
 
-            if (handler != null) handler(this, e);
+            handler?.Invoke(this, e);
         }
 
         protected virtual void OnDisposed(EventArgs e)
         {
             var handler = Disposed;
 
-            if (handler != null) handler(this, e);
+            handler?.Invoke(this, e);
         }
 
         #region Events

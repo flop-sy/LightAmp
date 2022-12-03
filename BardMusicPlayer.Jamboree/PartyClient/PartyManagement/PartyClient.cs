@@ -7,7 +7,7 @@ using BardMusicPlayer.Jamboree.PartyNetworking;
 
 namespace BardMusicPlayer.Jamboree.PartyClient.PartyManagement
 {
-    public class PartyClientInfo
+    public sealed class PartyClientInfo
     {
         private readonly Queue<NetworkPacket> _inPackets = new();
 

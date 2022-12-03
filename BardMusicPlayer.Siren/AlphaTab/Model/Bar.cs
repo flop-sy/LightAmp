@@ -1,5 +1,6 @@
 #region
 
+using System.Linq;
 using BardMusicPlayer.Siren.AlphaTab.Collections;
 
 #endregion
@@ -121,14 +122,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
 
         internal int CalculateDuration()
         {
-            var duration = 0;
-            foreach (var voice in Voices)
-            {
-                var voiceDuration = voice.CalculateDuration();
-                if (voiceDuration > duration) duration = voiceDuration;
-            }
-
-            return duration;
+            return Voices.Select(static voice => voice.CalculateDuration()).Prepend(0).Max();
         }
     }
 }

@@ -2,12 +2,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 #endregion
 
 namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
 {
-    public class NativeFormat
+    public sealed class NativeFormat
     {
         public static bool[] availableChannels = new bool[16];
 
@@ -49,12 +50,8 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         {
             var mid = new MidiExport();
             mid.midiTracks.Add(getMidiHeader()); //First, untitled track
-            foreach (var track in tracks)
-            {
-                var t = track.getMidi();
-                if (t != null)
-                    mid.midiTracks.Add(t);
-            }
+            foreach (var t in tracks.Select(static track => track.getMidi()).Where(static t => t != null))
+                mid.midiTracks.Add(t);
 
             return mid;
         }
@@ -62,9 +59,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         private MidiTrack getMidiHeader()
         {
             var midiHeader = new MidiTrack();
-            //text(s) - name of song, artist etc., created by Gitaro 
+            //text(s) - name of song, artist etc., created by Gitaro
             //copyright - by Gitaro
-            //midi port 0 
+            //midi port 0
             //time signature
             //key signature
             //set tempo
@@ -142,6 +139,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                     availableChannels[x] = true;
                 else
                     availableChannels[x] = false;
+
             foreach (var track in tracks) availableChannels[track.channel] = false;
         }
 
@@ -150,15 +148,19 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             var tracks = new List<Track>();
             foreach (var tr in file.tracks)
             {
-                var track = new Track();
-                track.name = tr.name;
-                track.patch = tr.channel.instrument;
-                track.port = tr.port;
-                track.channel = tr.channel.channel;
-                track.playbackState = PlaybackState.def;
-                track.capo = tr.offset;
+                var track = new Track
+                {
+                    name = tr.name,
+                    patch = tr.channel.instrument,
+                    port = tr.port,
+                    channel = tr.channel.channel,
+                    playbackState = PlaybackState.def,
+                    capo = tr.offset
+                };
                 if (tr.isMute) track.playbackState = PlaybackState.mute;
+
                 if (tr.isSolo) track.playbackState = PlaybackState.solo;
+
                 track.tuning = getTuning(tr.strings);
 
                 track.notes = retrieveNotes(tr, track.tuning, track);
@@ -168,41 +170,33 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             return tracks;
         }
 
-        public void addToTremoloBarList(int index, int duration, BendEffect bend, Track myTrack)
+        public static void addToTremoloBarList(int index, int duration, BendEffect bend, Track myTrack)
         {
-            int at;
             myTrack.tremoloPoints.Add(new TremoloPoint(0.0f,
                 index)); //So that it can later be recognized as the beginning
-            foreach (var bp in bend.points)
-            {
-                at = index + (int)(bp.GP6position * duration / 100.0f);
-                var point = new TremoloPoint();
-                point.index = at;
-                point.value = bp.GP6value;
+            foreach (var point in from bp in bend.points
+                     let at = index + (int)(bp.GP6position * duration / 100.0f)
+                     select new TremoloPoint
+                     {
+                         index = at,
+                         value = bp.GP6value
+                     })
                 myTrack.tremoloPoints.Add(point);
-            }
 
-            var tp = new TremoloPoint();
-            tp.index = index + duration;
-            tp.value = 0;
+            var tp = new TremoloPoint
+            {
+                index = index + duration,
+                value = 0
+            };
             myTrack.tremoloPoints
                 .Add(tp); //Back to 0 -> Worst case there will be on the same index the final of tone 1, 0, and the beginning of tone 2.
         }
 
-        public List<BendPoint> getBendPoints(int index, int duration, BendEffect bend)
+        public static List<BendPoint> getBendPoints(int index, int duration, BendEffect bend)
         {
-            var ret = new List<BendPoint>();
-            int at;
-            foreach (var bp in bend.points)
-            {
-                at = index + (int)(bp.GP6position * duration / 100.0f);
-                var point = new BendPoint();
-                point.index = at;
-                point.value = bp.GP6value;
-                ret.Add(point);
-            }
-
-            return ret;
+            return (from bp in bend.points
+                let at = index + (int)(bp.GP6position * duration / 100.0f)
+                select new BendPoint { index = at, value = bp.GP6value }).ToList();
         }
 
 
@@ -221,55 +215,62 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             var subtractSubindex = 0;
 
             for (var x = 0; x < 10; x++) last_notes[x] = null;
+
             var measureIndex = -1;
-            var notesInMeasure = 0;
             foreach (var m in track.measures)
             {
-                notesInMeasure = 0;
+                var notesInMeasure = 0;
                 measureIndex++;
                 var skipVoice = false;
-                if (m.simileMark == SimileMark.simple) //Repeat last measure
+                switch (m.simileMark)
                 {
-                    var amountNotes = notesInMeasures[notesInMeasures.Count - 1]; //misuse prohibited by guitarpro
-                    var endPoint = notes.Count;
-                    for (var x = endPoint - amountNotes; x < endPoint; x++)
+                    //Repeat last measure
+                    case SimileMark.simple:
                     {
-                        var newNote = new Note(notes[x]);
-                        var oldM = track.measures[measureIndex - 1];
-                        newNote.index += flipDuration(oldM.header.timeSignature.denominator) *
-                                         oldM.header.timeSignature.numerator;
-                        notes.Add(newNote);
-                        notesInMeasure++;
+                        var amountNotes = notesInMeasures[notesInMeasures.Count - 1]; //misuse prohibited by guitarpro
+                        var endPoint = notes.Count;
+                        for (var x = endPoint - amountNotes; x < endPoint; x++)
+                        {
+                            var newNote = new Note(notes[x]);
+                            var oldM = track.measures[measureIndex - 1];
+                            newNote.index += flipDuration(oldM.header.timeSignature.denominator) *
+                                             oldM.header.timeSignature.numerator;
+                            notes.Add(newNote);
+                            notesInMeasure++;
+                        }
+
+                        skipVoice = true;
+                        break;
                     }
-
-                    skipVoice = true;
-                }
-
-                if (m.simileMark == SimileMark.firstOfDouble ||
-                    m.simileMark == SimileMark.secondOfDouble) //Repeat first or second of last two measures
-                {
-                    var secondAmount = notesInMeasures[notesInMeasures.Count - 1]; //misuse prohibited by guitarpro
-                    var firstAmount = notesInMeasures[notesInMeasures.Count - 2];
-                    var endPoint = notes.Count - secondAmount;
-                    for (var x = endPoint - firstAmount; x < endPoint; x++)
+                    case SimileMark.firstOfDouble:
+                    //Repeat first or second of last two measures
+                    case SimileMark.secondOfDouble:
                     {
-                        var newNote = new Note(notes[x]);
-                        var oldM1 = track.measures[measureIndex - 2];
-                        var oldM2 = track.measures[measureIndex - 1];
-                        newNote.index += flipDuration(oldM1.header.timeSignature.denominator) *
-                                         oldM1.header.timeSignature.numerator;
-                        newNote.index += flipDuration(oldM2.header.timeSignature.denominator) *
-                                         oldM2.header.timeSignature.numerator;
-                        notes.Add(newNote);
-                        notesInMeasure++;
-                    }
+                        var secondAmount = notesInMeasures[notesInMeasures.Count - 1]; //misuse prohibited by guitarpro
+                        var firstAmount = notesInMeasures[notesInMeasures.Count - 2];
+                        var endPoint = notes.Count - secondAmount;
+                        for (var x = endPoint - firstAmount; x < endPoint; x++)
+                        {
+                            var newNote = new Note(notes[x]);
+                            var oldM1 = track.measures[measureIndex - 2];
+                            var oldM2 = track.measures[measureIndex - 1];
+                            newNote.index += flipDuration(oldM1.header.timeSignature.denominator) *
+                                             oldM1.header.timeSignature.numerator;
+                            newNote.index += flipDuration(oldM2.header.timeSignature.denominator) *
+                                             oldM2.header.timeSignature.numerator;
+                            notes.Add(newNote);
+                            notesInMeasure++;
+                        }
 
-                    skipVoice = true;
+                        skipVoice = true;
+                        break;
+                    }
                 }
 
                 foreach (var v in m.voices)
                 {
                     if (skipVoice) break;
+
                     var subIndex = 0;
                     foreach (var b in v.beats)
                     {
@@ -294,8 +295,10 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                             if (brushDirection != BeatStrokeDirection.none && notesCnt > 1)
                             {
                                 hasBrush = true;
-                                var temp = new Duration();
-                                temp.value = b.effect.stroke.value;
+                                var temp = new Duration
+                                {
+                                    value = b.effect.stroke.value
+                                };
                                 var brushTotalDuration = flipDuration(temp);
                                 var beatTotalDuration = flipDuration(b.duration);
 
@@ -319,13 +322,18 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
 
                         foreach (var n in b.notes)
                         {
-                            var note = new Note();
-                            //Beat values
-                            note.isTremBarVibrato = b.effect.vibrato;
-                            note.fading = Fading.none;
+                            var note = new Note
+                            {
+                                //Beat values
+                                isTremBarVibrato = b.effect.vibrato,
+                                fading = Fading.none
+                            };
                             if (b.effect.fadeIn) note.fading = Fading.fadeIn;
+
                             if (b.effect.fadeOut) note.fading = Fading.fadeOut;
+
                             if (b.effect.volumeSwell) note.fading = Fading.volumeSwell;
+
                             note.isSlapped = b.effect.slapEffect == SlapEffect.slapping;
                             note.isPopped = b.effect.slapEffect == SlapEffect.popping;
                             note.isHammer = n.effect.hammer;
@@ -349,35 +357,23 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                                     if (n.effect.harmonic.type == 2)
                                         note.harmonicFret =
                                             ((ArtificialHarmonic)n.effect.harmonic).pitch.actualOvertone;
-                                switch (n.effect.harmonic.type)
-                                {
-                                    case 1:
-                                        note.harmonic = HarmonicType.natural;
-                                        break;
-                                    case 2:
-                                        note.harmonic = HarmonicType.artificial;
-                                        break;
-                                    case 3:
-                                        note.harmonic = HarmonicType.pinch;
-                                        break;
-                                    case 4:
-                                        note.harmonic = HarmonicType.tapped;
-                                        break;
-                                    case 5:
-                                        note.harmonic = HarmonicType.semi;
-                                        break;
 
-                                    default:
-                                        note.harmonic = HarmonicType.natural;
-                                        break;
-                                }
+                                note.harmonic = n.effect.harmonic.type switch
+                                {
+                                    1 => HarmonicType.natural,
+                                    2 => HarmonicType.artificial,
+                                    3 => HarmonicType.pinch,
+                                    4 => HarmonicType.tapped,
+                                    5 => HarmonicType.semi,
+                                    _ => HarmonicType.natural
+                                };
                             }
 
                             if (n.effect.slides != null)
                                 foreach (var sl in n.effect.slides)
                                 {
-                                    note.slidesToNext = note.slidesToNext || sl == SlideType.shiftSlideTo ||
-                                                        sl == SlideType.legatoSlideTo;
+                                    note.slidesToNext = note.slidesToNext ||
+                                                        sl is SlideType.shiftSlideTo or SlideType.legatoSlideTo;
                                     note.slideInFromAbove = note.slideInFromAbove || sl == SlideType.intoFromAbove;
                                     note.slideInFromBelow = note.slideInFromBelow || sl == SlideType.intoFromBelow;
                                     note.slideOutDownwards = note.slideOutDownwards || sl == SlideType.outDownwards;
@@ -404,7 +400,8 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                                 {
                                     note.fret = last.fret; //For GP3 & GP4
                                     if (last.harmonic != note.harmonic || last.harmonicFret != note.harmonicFret
-                                       ) dontAddNote = false;
+                                       )
+                                        dontAddNote = false;
 
                                     if (dontAddNote)
                                     {
@@ -431,7 +428,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                                 var is_16th_pos = subIndex % 240 == 0;
                                 var is_first = true; //first of note pair
                                 if (is_8th_pos) is_first = subIndex % 960 == 0;
+
                                 if (is_16th_pos) is_first = is_8th_pos;
+
                                 var is_8th = b.duration.value == 8 && !b.duration.isDotted &&
                                              !b.duration.isDoubleDotted && b.duration.tuplet.enters == 1 &&
                                              b.duration.tuplet.times == 1;
@@ -439,39 +438,58 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                                               !b.duration.isDoubleDotted && b.duration.tuplet.enters == 1 &&
                                               b.duration.tuplet.times == 1;
 
-                                if ((trip == TripletFeel.eigth && is_8th_pos && is_8th) ||
-                                    (trip == TripletFeel.sixteenth && is_16th_pos && is_16th))
+                                switch (trip)
                                 {
-                                    if (is_first) note.duration = (int)(note.duration * (4.0f / 3.0f));
-                                    if (!is_first)
+                                    case TripletFeel.eigth when is_8th_pos && is_8th:
+                                    case TripletFeel.sixteenth when is_16th_pos && is_16th:
                                     {
-                                        note.duration = (int)(note.duration * (2.0f / 3.0f));
-                                        note.resizeValue *= 2.0f / 3.0f;
-                                        note.index += (int)(note.duration * (1.0f / 3.0f));
-                                    }
-                                }
+                                        switch (is_first)
+                                        {
+                                            case true:
+                                                note.duration = (int)(note.duration * (4.0f / 3.0f));
+                                                break;
+                                            case false:
+                                                note.duration = (int)(note.duration * (2.0f / 3.0f));
+                                                note.resizeValue *= 2.0f / 3.0f;
+                                                note.index += (int)(note.duration * (1.0f / 3.0f));
+                                                break;
+                                        }
 
-                                if ((trip == TripletFeel.dotted8th && is_8th_pos && is_8th) ||
-                                    (trip == TripletFeel.dotted16th && is_16th_pos && is_16th))
-                                {
-                                    if (is_first) note.duration = (int)(note.duration * 1.5f);
-                                    if (!is_first)
-                                    {
-                                        note.duration = (int)(note.duration * 0.5f);
-                                        note.resizeValue *= 0.5f;
-                                        note.index += (int)(note.duration * 0.5f);
+                                        break;
                                     }
-                                }
-
-                                if ((trip == TripletFeel.scottish8th && is_8th_pos && is_8th) ||
-                                    (trip == TripletFeel.scottish16th && is_16th_pos && is_16th))
-                                {
-                                    if (is_first) note.duration = (int)(note.duration * 0.5f);
-                                    if (!is_first)
+                                    case TripletFeel.dotted8th when is_8th_pos && is_8th:
+                                    case TripletFeel.dotted16th when is_16th_pos && is_16th:
                                     {
-                                        note.duration = (int)(note.duration * 1.5f);
-                                        note.resizeValue *= 1.5f;
-                                        note.index -= (int)(note.duration * 0.5f);
+                                        switch (is_first)
+                                        {
+                                            case true:
+                                                note.duration = (int)(note.duration * 1.5f);
+                                                break;
+                                            case false:
+                                                note.duration = (int)(note.duration * 0.5f);
+                                                note.resizeValue *= 0.5f;
+                                                note.index += (int)(note.duration * 0.5f);
+                                                break;
+                                        }
+
+                                        break;
+                                    }
+                                    case TripletFeel.scottish8th when is_8th_pos && is_8th:
+                                    case TripletFeel.scottish16th when is_16th_pos && is_16th:
+                                    {
+                                        switch (is_first)
+                                        {
+                                            case true:
+                                                note.duration = (int)(note.duration * 0.5f);
+                                                break;
+                                            case false:
+                                                note.duration = (int)(note.duration * 1.5f);
+                                                note.resizeValue *= 1.5f;
+                                                note.index -= (int)(note.duration * 0.5f);
+                                                break;
+                                        }
+
+                                        break;
                                     }
                                 }
                             }
@@ -483,7 +501,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                                 var len = note.duration;
                                 if (n.effect.tremoloPicking != null)
                                     len = flipDuration(n.effect.tremoloPicking.duration);
+
                                 if (n.effect.trill != null) len = flipDuration(n.effect.trill.duration);
+
                                 var origDuration = note.duration;
                                 note.duration = len;
                                 note.resizeValue *= (float)len / origDuration;
@@ -501,11 +521,15 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
 
                                 while (currentIndex + len <= note.index + origDuration)
                                 {
-                                    var newOne = new Note(note);
-                                    newOne.index = currentIndex;
+                                    var newOne = new Note(note)
+                                    {
+                                        index = currentIndex
+                                    };
                                     if (!originalFret) newOne.fret = secondFret; //For trills
+
                                     last_notes[Math.Max(0, note.str - 1)] = newOne;
                                     if (n.effect.trill != null) newOne.isHammer = true;
+
                                     notes.Add(newOne);
                                     notesInMeasure++;
                                     currentIndex += len;
@@ -532,12 +556,16 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                                 {
                                     //GP3,4,5 format
 
-                                    var graceNote = new Note();
-                                    graceNote.index = note.index;
-                                    graceNote.fret = n.effect.grace.fret;
-                                    graceNote.str = note.str;
-                                    var dur = new Duration();
-                                    dur.value = n.effect.grace.duration;
+                                    var graceNote = new Note
+                                    {
+                                        index = note.index,
+                                        fret = n.effect.grace.fret,
+                                        str = note.str
+                                    };
+                                    var dur = new Duration
+                                    {
+                                        value = n.effect.grace.duration
+                                    };
                                     graceNote.duration = flipDuration(dur); //works at least for GP5
                                     if (isOnBeat)
                                     {
@@ -604,6 +632,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                             }
 
                             if (n.effect.accentuatedNote) note.velocity = (int)(note.velocity * 1.2f);
+
                             if (n.effect.heavyAccentuatedNote) note.velocity = (int)(note.velocity * 1.4f);
 
                             //Arpeggio / Brush
@@ -613,12 +642,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                                 brushInit += brushIncrease;
                             }
 
-                            if (!dontAddNote)
-                            {
-                                last_notes[Math.Max(0, note.str - 1)] = note;
-                                notes.Add(note);
-                                notesInMeasure++;
-                            }
+                            if (dontAddNote) continue;
+
+                            last_notes[Math.Max(0, note.str - 1)] = note;
+                            notes.Add(note);
+                            notesInMeasure++;
                         }
 
                         if (rememberedGrace)
@@ -640,6 +668,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                             var temp = new Note[notesCnt];
                             for (var x = notes.Count - notesCnt; x < notes.Count; x++)
                                 temp[x - (notes.Count - notesCnt)] = new Note(notes[x]);
+
                             for (var x = notes.Count - notesCnt; x < notes.Count; x++)
                                 notes[x] = temp[temp.Length - (x - (notes.Count - notesCnt)) - 1];
                         }
@@ -663,7 +692,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         }
 
 
-        public int[] getTuning(List<GuitarString> strings)
+        public static int[] getTuning(List<GuitarString> strings)
         {
             var tuning = new int[strings.Count];
             for (var x = 0; x < tuning.Length; x++) tuning[x] = strings[x].value;
@@ -671,18 +700,20 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             return tuning;
         }
 
-        public List<MasterBar> retrieveMasterBars(GPFile file)
+        public static List<MasterBar> retrieveMasterBars(GPFile file)
         {
             var masterBars = new List<MasterBar>();
             foreach (var mh in file.measureHeaders)
             {
                 //(mh.timeSignature.denominator) * mh.timeSignature.numerator;
-                var mb = new MasterBar();
-                mb.time = mh.timeSignature.numerator + "/" + mh.timeSignature.denominator.value;
-                mb.num = mh.timeSignature.numerator;
-                mb.den = mh.timeSignature.denominator.value;
+                var mb = new MasterBar
+                {
+                    time = mh.timeSignature.numerator + "/" + mh.timeSignature.denominator.value,
+                    num = mh.timeSignature.numerator,
+                    den = mh.timeSignature.denominator.value
+                };
                 var keyFull = "" + (int)mh.keySignature;
-                if (!(keyFull.Length == 1))
+                if (keyFull.Length != 1)
                 {
                     mb.keyType = int.Parse(keyFull.Substring(keyFull.Length - 1));
                     mb.key = int.Parse(keyFull.Substring(0, keyFull.Length - 1));
@@ -703,7 +734,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             return masterBars;
         }
 
-        public List<Tempo> retrieveTempos(GPFile file)
+        public static List<Tempo> retrieveTempos(GPFile file)
         {
             var tempos = new List<Tempo>();
             //Version < 4 -> look at Measure Headers, >= 4 look at mixtablechanges
@@ -713,18 +744,22 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             if (version < 4) //Look at MeasureHeaders
             {
                 //Get inital tempo from file header
-                var init = new Tempo();
-                init.position = 0;
-                init.value = file.tempo;
+                var init = new Tempo
+                {
+                    position = 0,
+                    value = file.tempo
+                };
                 if (init.value != 0) tempos.Add(init);
 
                 var pos = 0;
                 float oldTempo = file.tempo;
                 foreach (var mh in file.measureHeaders)
                 {
-                    var t = new Tempo();
-                    t.value = mh.tempo.value;
-                    t.position = pos;
+                    var t = new Tempo
+                    {
+                        value = mh.tempo.value,
+                        position = pos
+                    };
                     pos += flipDuration(mh.timeSignature.denominator) * mh.timeSignature.numerator;
                     if (oldTempo != t.value) tempos.Add(t);
                     oldTempo = t.value;
@@ -735,30 +770,30 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                 var pos = 0;
 
                 //Get inital tempo from file header
-                var init = new Tempo();
-                init.position = 0;
-                init.value = file.tempo;
+                var init = new Tempo
+                {
+                    position = 0,
+                    value = file.tempo
+                };
                 if (init.value != 0) tempos.Add(init);
                 foreach (var m in file.tracks[0].measures)
                 {
-                    var smallPos = 0; //inner measure position 
+                    var smallPos = 0; //inner measure position
                     if (m.voices.Count == 0) continue;
 
                     foreach (var b in m.voices[0].beats)
                     {
-                        if (b.effect != null)
-                            if (b.effect.mixTableChange != null)
+                        var tempo = b.effect?.mixTableChange?.tempo;
+                        if (tempo != null)
+                        {
+                            var t = new Tempo
                             {
-                                var tempo = b.effect.mixTableChange.tempo;
-                                if (tempo != null)
-                                {
-                                    var t = new Tempo();
-                                    t.value = tempo.value;
-                                    t.position = pos + smallPos;
+                                value = tempo.value,
+                                position = pos + smallPos
+                            };
 
-                                    tempos.Add(t);
-                                }
-                            }
+                            tempos.Add(t);
+                        }
 
                         smallPos += flipDuration(b.duration);
                     }
@@ -803,6 +838,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             }
 
             if (d.isDotted) result = (int)(result * 1.5f);
+
             if (d.isDoubleDotted) result = (int)(result * 1.75f);
 
             var enters = d.tuplet.enters;
@@ -816,7 +852,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         }
     }
 
-    public class Note
+    public sealed class Note
     {
         public List<BendPoint> bendPoints = new();
         public bool connect; //= tie
@@ -884,7 +920,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         {
         }
 
-        public void addBendPoints(List<BendPoint> bendPoints)
+        public void addBendPoints(IEnumerable<BendPoint> bendPoints)
         {
             //Hopefully no calculation involved
             this.bendPoints.AddRange(bendPoints);
@@ -899,7 +935,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         volumeSwell = 3
     }
 
-    public class Annotation
+    public sealed class Annotation
     {
         public int position;
         public string value = "";
@@ -911,7 +947,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         }
     }
 
-    public class TremoloPoint
+    public sealed class TremoloPoint
     {
         public int index;
         public float value; //0 nothing, 100 one whole tone up
@@ -927,7 +963,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         }
     }
 
-    public class BendPoint
+    public sealed class BendPoint
     {
         public int index; //also global index of midi
         public int usedChannel; //After being part of BendingPlan
@@ -954,7 +990,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         tapped = 5
     }
 
-    public class Track
+    public sealed class Track
     {
         public int capo;
         public int channel;
@@ -985,9 +1021,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                 new List<int[]>(); //For bending and trembar: [original Channel, artificial Channel, index at when to delete artificial]
             var activeBendingPlans = new List<BendingPlan>();
             var currentIndex = 0;
-            var _temp = new Note();
-            _temp.index = notes[notes.Count - 1].index + notes[notes.Count - 1].duration;
-            _temp.str = -2;
+            var _temp = new Note
+            {
+                index = notes[notes.Count - 1].index + notes[notes.Count - 1].duration,
+                str = -2
+            };
             notes.Add(_temp);
 
             tremoloPoints = addDetailsToTremoloPoints(tremoloPoints, 60);
@@ -996,7 +1034,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
 
             foreach (var n in notes)
             {
-                noteOffs.Sort((x, y) => x[0].CompareTo(y[0]));
+                noteOffs.Sort(static (x, y) => x[0].CompareTo(y[0]));
 
 
                 //Check for active bendings in progress
@@ -1061,9 +1099,8 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                 foreach (var bpl in activeBendingPlans)
                 {
                     var newBPL = new BendingPlan(bpl.originalChannel, bpl.usedChannel, new List<BendPoint>());
-                    foreach (var bp in bpl.bendingPoints)
-                        if (bp.index > n.index)
-                            newBPL.bendingPoints.Add(bp);
+                    foreach (var bp in bpl.bendingPoints.Where(bp => bp.index > n.index))
+                        newBPL.bendingPoints.Add(bp);
                     if (newBPL.bendingPoints.Count > 0)
                     {
                         final.Add(newBPL);
@@ -1078,10 +1115,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                             new[] { "" + bpl.usedChannel, "10", "127" }, 0));
 
                         //Remove the channel from channelConnections
-                        var newChannelConnections = new List<int[]>();
-                        foreach (var cc in channelConnections)
-                            if (cc[1] != bpl.usedChannel)
-                                newChannelConnections.Add(cc);
+                        var newChannelConnections = channelConnections.Where(cc => cc[1] != bpl.usedChannel).ToList();
                         channelConnections = newChannelConnections;
 
                         NativeFormat.availableChannels[bpl.usedChannel] = true;
@@ -1154,9 +1188,11 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
 
                 //if (n.str-1 < 0) Debug.WriteLine("String was -1");
                 //if (n.str-1 >= tuning.Length && tuning.Length != 0) Debug.Log("String was higher than string amount (" + n.str + ")");
-                if (tuning.Length > 0) note = tuning[n.str - 1] + capo + n.fret;
+                if (tuning.Length > 0)
+                    note = tuning[n.str - 1] + capo + n.fret;
                 else
                     note = capo + n.fret;
+
                 if (n.harmonic != HarmonicType.none) //Has Harmonics
                 {
                     var harmonicNote = getHarmonic(tuning[n.str - 1], n.fret, capo, n.harmonicFret, n.harmonic);
@@ -1169,6 +1205,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                 {
                     var usedChannel = tryToFindChannel();
                     if (usedChannel == -1) usedChannel = channel;
+
                     NativeFormat.availableChannels[usedChannel] = false;
                     channelConnections.Add(new[] { channel, usedChannel, n.index + n.duration });
                     midiTrack.messages.Add(new MidiMessage("program_change", new[] { "" + usedChannel, "" + patch },
@@ -1228,10 +1265,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                     var lengthEach = 960 / 4 / Math.Abs(myFret - start);
                     for (var x = 0; x < Math.Abs(myFret - start); x++)
                     {
-                        var newOne = new Note(n);
-                        newOne.duration = lengthEach;
-                        newOne.index = beginIndex + x * lengthEach;
-                        newOne.fret = start + (n.slideInFromAbove ? -x : +x);
+                        var newOne = new Note(n)
+                        {
+                            duration = lengthEach,
+                            index = beginIndex + x * lengthEach,
+                            fret = start + (n.slideInFromAbove ? -x : +x)
+                        };
                         ret.Add(newOne);
                     }
                 }
@@ -1247,10 +1286,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                     skipWrite = true;
                     for (var x = 0; x < Math.Abs(myFret - end); x++)
                     {
-                        var newOne = new Note(n);
-                        newOne.duration = lengthEach;
-                        newOne.index = beginIndex + x * lengthEach;
-                        newOne.fret = myFret + (n.slideOutDownwards ? -x : +x);
+                        var newOne = new Note(n)
+                        {
+                            duration = lengthEach,
+                            index = beginIndex + x * lengthEach,
+                            fret = myFret + (n.slideOutDownwards ? -x : +x)
+                        };
                         ret.Add(newOne);
                     }
                 }
@@ -1296,32 +1337,40 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
 
         private List<int[]> createVolumeChanges(int index, int duration, int velocity, Fading fading)
         {
-            var segments = 20;
+            const int segments = 20;
             var changes = new List<int[]>();
-            if (fading == Fading.fadeIn || fading == Fading.fadeOut)
+            switch (fading)
             {
-                var step = velocity / segments;
-                var val = fading == Fading.fadeIn ? 0 : velocity;
-                if (fading == Fading.fadeOut) step = (int)(-step * 1.25f);
-
-                for (var x = index; x < index + duration; x += duration / segments)
+                case Fading.fadeIn:
+                case Fading.fadeOut:
                 {
-                    changes.Add(new[] { x, Math.Min(127, Math.Max(0, val)) });
-                    val += step;
+                    var step = velocity / segments;
+                    var val = fading == Fading.fadeIn ? 0 : velocity;
+                    if (fading == Fading.fadeOut) step = (int)(-step * 1.25f);
+
+                    for (var x = index; x < index + duration; x += duration / segments)
+                    {
+                        changes.Add(new[] { x, Math.Min(127, Math.Max(0, val)) });
+                        val += step;
+                    }
+
+                    break;
                 }
-            }
-
-            if (fading == Fading.volumeSwell)
-            {
-                var step = (int)(velocity / (segments * 0.8f));
-                var val = 0;
-                var times = 0;
-                for (var x = index; x < index + duration; x += duration / segments)
+                case Fading.volumeSwell:
                 {
-                    changes.Add(new[] { x, Math.Min(127, Math.Max(0, val)) });
-                    val += step;
-                    if (times == segments / 2) step = -step;
-                    times++;
+                    var step = (int)(velocity / (segments * 0.8f));
+                    var val = 0;
+                    var times = 0;
+                    for (var x = index; x < index + duration; x += duration / segments)
+                    {
+                        changes.Add(new[] { x, Math.Min(127, Math.Max(0, val)) });
+                        val += step;
+                        if (times == segments / 2) step = -step;
+
+                        times++;
+                    }
+
+                    break;
                 }
             }
 
@@ -1331,73 +1380,110 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             return changes;
         }
 
-        private List<int> getActiveChannels(List<int[]> channelConnections)
+        private List<int> getActiveChannels(IEnumerable<int[]> channelConnections)
         {
-            var ret_val = new List<int>();
-            ret_val.Add(channel);
-            foreach (var cc in channelConnections) ret_val.Add(cc[1]);
+            var ret_val = new List<int> { channel };
+            ret_val.AddRange(channelConnections.Select(static cc => cc[1]));
             return ret_val;
         }
 
-        public int tryToFindChannel()
+        public static int tryToFindChannel()
         {
             var cnt = 0;
             foreach (var available in NativeFormat.availableChannels)
             {
                 if (available) return cnt;
+
                 cnt++;
             }
 
             return -1;
         }
 
-        public int getHarmonic(int baseTone, int fret, int capo, float harmonicFret, HarmonicType type)
+        public static int getHarmonic(int baseTone, int fret, int capo, float harmonicFret, HarmonicType type)
         {
             var val = 0;
             //Capo, base tone and fret (if not natural harmonic) shift the harmonics simply
             val = val + baseTone + capo;
             if (type != HarmonicType.natural) val += (int)Math.Round(harmonicFret);
+
             val += fret;
 
-            if (harmonicFret == 2.4f) val += 34;
-            if (harmonicFret == 2.7f) val += 31;
-            if (harmonicFret == 3.2f) val += 28;
-            if (harmonicFret == 4f) val += 24;
-            if (harmonicFret == 5f) val += 19;
-            if (harmonicFret == 5.8f) val += 28;
-            if (harmonicFret == 7f) val += 12;
-            if (harmonicFret == 8.2f) val += 28;
-            if (harmonicFret == 9f) val += 19;
-            if (harmonicFret == 9.6f) val += 24;
-            if (harmonicFret == 12f) val += 0;
-            if (harmonicFret == 14.7f) val += 19;
-            if (harmonicFret == 16f) val += 12;
-            if (harmonicFret == 17f) val += 19;
-            if (harmonicFret == 19f) val += 0;
-            if (harmonicFret == 21.7f) val += 12;
-            if (harmonicFret == 24f) val += 0;
+            switch (harmonicFret)
+            {
+                case 2.4f:
+                    val += 34;
+                    break;
+                case 2.7f:
+                    val += 31;
+                    break;
+                case 3.2f:
+                    val += 28;
+                    break;
+                case 4f:
+                    val += 24;
+                    break;
+                case 5f:
+                    val += 19;
+                    break;
+                case 5.8f:
+                    val += 28;
+                    break;
+                case 7f:
+                    val += 12;
+                    break;
+                case 8.2f:
+                    val += 28;
+                    break;
+                case 9f:
+                    val += 19;
+                    break;
+                case 9.6f:
+                    val += 24;
+                    break;
+                case 12f:
+                    val += 0;
+                    break;
+                case 14.7f:
+                    val += 19;
+                    break;
+                case 16f:
+                    val += 12;
+                    break;
+                case 17f:
+                    val += 19;
+                    break;
+                case 19f:
+                    val += 0;
+                    break;
+                case 21.7f:
+                    val += 12;
+                    break;
+                case 24f:
+                    val += 0;
+                    break;
+            }
 
             return Math.Min(val, 127);
         }
 
 
-        public List<BendPoint> findAndSortCurrentBendPoints(List<BendingPlan> activeBendingPlans, int index)
+        public static List<BendPoint> findAndSortCurrentBendPoints(List<BendingPlan> activeBendingPlans, int index)
         {
             var bps = new List<BendPoint>();
             foreach (var bpl in activeBendingPlans)
-            foreach (var bp in bpl.bendingPoints)
-                if (bp.index <= index)
-                {
-                    bp.usedChannel = bpl.usedChannel;
-                    bps.Add(bp);
-                }
+            foreach (var bp in bpl.bendingPoints.Where(bp => bp.index <= index))
+            {
+                bp.usedChannel = bpl.usedChannel;
+                bps.Add(bp);
+            }
 
-            bps.Sort((x, y) => x.index.CompareTo(y.index));
+            bps.Sort(static (x, y) => x.index.CompareTo(y.index));
 
             return bps;
         }
 
-        public List<TremoloPoint> addDetailsToTremoloPoints(List<TremoloPoint> tremoloPoints, int maxDistance)
+        public static List<TremoloPoint> addDetailsToTremoloPoints(List<TremoloPoint> tremoloPoints, int maxDistance)
         {
             var tremPoints = new List<TremoloPoint>();
             var oldValue = 0.0f;
@@ -1423,7 +1509,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             return tremPoints;
         }
 
-        public BendingPlan createBendingPlan(List<BendPoint> bendPoints, int originalChannel, int usedChannel,
+        public static BendingPlan createBendingPlan(List<BendPoint> bendPoints, int originalChannel, int usedChannel,
             int duration, int index, float resize, bool isVibrato)
         {
             var maxDistance = duration / 10; //After this there should be a pitchwheel event
@@ -1452,7 +1538,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
             var vibratoSize = 0;
             var vibratoChange = 0;
             if (isVibrato) vibratoSize = 12;
+
             if (isVibrato) vibratoChange = 6;
+
             var vibrato = 0;
             foreach (var bp in bendPoints)
             {
@@ -1464,12 +1552,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                             (((float)x - old_pos) / ((float)bp.index - old_pos));
                         bendingPoints.Add(new BendPoint(value + vibrato, x));
                         if (isVibrato && Math.Abs(vibrato) == vibratoSize) vibratoChange = -vibratoChange;
+
                         vibrato += vibratoChange;
                     }
 
                 if (start || bp.index != old_pos)
                 {
                     if (isVibrato) bp.value += vibrato;
+
                     bendingPoints.Add(bp);
                 }
 
@@ -1477,8 +1567,10 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
                 old_value = bp.value;
                 if ((start || bp.index != old_pos) && isVibrato)
                     old_value -= vibrato; //Add back, so not to be influenced by it
+
                 start = false;
                 if (isVibrato && Math.Abs(vibrato) == vibratoSize) vibratoChange = -vibratoChange;
+
                 vibrato += vibratoChange;
             }
 
@@ -1489,7 +1581,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         }
     }
 
-    public class BendingPlan
+    public sealed class BendingPlan
     {
         public List<BendPoint> bendingPoints = new();
 
@@ -1506,7 +1598,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         }
     }
 
-    public class MasterBar
+    public sealed class MasterBar
     {
         public int den = 4;
         public int duration;
@@ -1530,7 +1622,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro.Native
         solo = 2
     }
 
-    public class Tempo
+    public sealed class Tempo
     {
         public int position; //total position in song @ 960 ticks_per_beat
         public float value = 120.0f;

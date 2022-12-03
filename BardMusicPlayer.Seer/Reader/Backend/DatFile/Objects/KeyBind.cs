@@ -8,15 +8,15 @@ using BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 {
-    internal class Keybind : IDisposable
+    internal sealed class Keybind : IDisposable
     {
-        public int MainKey1 { get; set; } = 0;
+        public int MainKey1 { get; set; }
 
-        public int ModKey1 { get; set; } = 0;
+        public int ModKey1 { get; set; }
 
-        public int MainKey2 { get; set; } = 0;
+        public int MainKey2 { get; set; }
 
-        public int ModKey2 { get; set; } = 0;
+        public int ModKey2 { get; set; }
 
         public void Dispose()
         {
@@ -51,8 +51,11 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
         {
             var modKeys = Keys.None;
             if ((mod & 1) != 0) modKeys |= Keys.Shift;
+
             if ((mod & 2) != 0) modKeys |= Keys.Control;
+
             if ((mod & 4) != 0) modKeys |= Keys.Alt;
+
             return modKeys;
         }
 
@@ -63,6 +66,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 
             var str = key.ToString();
             if (KeyDictionary.OemKeyFix.ContainsKey(str)) str = KeyDictionary.OemKeyFix[str];
+
             return str;
         }
 

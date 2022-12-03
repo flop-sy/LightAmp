@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 #endregion
@@ -64,6 +65,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var unsigned = extract(pointer, count, true);
             var ret_val = new sbyte[unsigned.Length];
             for (var x = 0; x < unsigned.Length; x++) ret_val[x] = (sbyte)unsigned[x];
+
             return ret_val;
         }
 
@@ -72,6 +74,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var vals = extract(pointer, count, true);
             var ret_val = new bool[vals.Length];
             for (var x = 0; x < vals.Length; x++) ret_val[x] = vals[x] != 0x0;
+
             return ret_val;
         }
 
@@ -80,6 +83,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var vals = extract(pointer, count * 2, true);
             var ret_val = new short[count];
             for (var x = 0; x < vals.Length; x += 2) ret_val[x / 2] = (short)(vals[x] + (vals[x + 1] << 8));
+
             return ret_val;
         }
 
@@ -89,6 +93,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var ret_val = new int[count];
             for (var x = 0; x < vals.Length; x += 4)
                 ret_val[x / 4] = vals[x] + (vals[x + 1] << 8) + (vals[x + 2] << 16) + (vals[x + 3] << 24);
+
             return ret_val;
         }
 
@@ -97,6 +102,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var vals = extract(pointer, count * 4, true);
             var ret_val = new float[count];
             for (var x = 0; x < vals.Length; x += 4) ret_val[x / 4] = BitConverter.ToSingle(vals, x);
+
             return ret_val;
         }
 
@@ -105,12 +111,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             var vals = extract(pointer, count * 8, true);
             var ret_val = new double[count];
             for (var x = 0; x < vals.Length; x += 8) ret_val[x / 8] = BitConverter.ToDouble(vals, x);
+
             return ret_val;
         }
 
         public static string readString(int size, int length = 0)
         {
             if (length == 0) length = size;
+
             var count = size > 0 ? size : length;
             var ss = length >= 0 ? extract(pointer, length, true) : extract(pointer, size, true);
             skip(count - ss.Length);
@@ -146,13 +154,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             var ret = new byte[length];
             for (var x = start; x < start + length; x++) ret[x - start] = data[x];
+
             if (advance_pointer) pointer += length;
 
             return ret;
         }
     }
 
-    public class Barre
+    public sealed class Barre
     {
         public int end;
         public int fret;
@@ -171,7 +180,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class Beat
+    public sealed class Beat
     {
         public BeatDisplay display = new();
         public Duration duration = new();
@@ -198,18 +207,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         public bool hasVibrato()
         {
-            foreach (var note in notes)
-                if (note.effect.vibrato)
-                    return true;
-            return false;
+            return notes.Any(static note => note.effect.vibrato);
         }
 
         public bool hasHarmonic()
         {
-            foreach (var note in notes)
-                if (note.effect.isHarmonic())
-                    return true;
-            return false;
+            return notes.Any(static note => note.effect.isHarmonic());
         }
 
         public void addNote(Note note)
@@ -219,7 +222,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class BeatDisplay
+    public sealed class BeatDisplay
     {
         public VoiceDirection beamDirection = VoiceDirection.none;
         public bool breakBeam = false;
@@ -230,7 +233,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public TupletBracket tupletBracket = TupletBracket.none;
     }
 
-    public class BeatEffect
+    public sealed class BeatEffect
     {
         public Chord chord = null;
         public bool fadeIn = false;
@@ -275,7 +278,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class BeatStroke
+    public sealed class BeatStroke
     {
         public BeatStrokeDirection direction = BeatStrokeDirection.none;
         public float startTime; //0 = falls on time, 1 = starts on time
@@ -319,30 +322,34 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public int getIncrementTime(Beat beat)
         {
             var duration = 0;
-            if (value > 0)
-                foreach (var voice in beat.voices)
-                {
-                    if (voice.isEmpty()) continue;
+            if (value <= 0) return 0;
 
-                    var currentDuration = voice.duration.time();
-                    if (duration == 0 || currentDuration < duration)
-                        duration = currentDuration <= Duration.quarterTime ? currentDuration : Duration.quarterTime;
-                    if (duration > 0) return (int)Math.Round(duration / 8.0f * (4.0f / value));
-                }
+            foreach (var currentDuration in from voice in beat.voices
+                     where !voice.isEmpty()
+                     select voice.duration.time())
+            {
+                if (duration == 0 || currentDuration < duration)
+                    duration = currentDuration <= Duration.quarterTime ? currentDuration : Duration.quarterTime;
+
+                if (duration > 0) return (int)Math.Round(duration / 8.0f * (4.0f / value));
+            }
 
             return 0;
         }
 
         public BeatStroke swapDirection()
         {
-            if (direction == BeatStrokeDirection.up)
-                direction = BeatStrokeDirection.down;
-            else if (direction == BeatStrokeDirection.down) direction = BeatStrokeDirection.up;
+            direction = direction switch
+            {
+                BeatStrokeDirection.up => BeatStrokeDirection.down,
+                BeatStrokeDirection.down => BeatStrokeDirection.up,
+                _ => direction
+            };
             return new BeatStroke(direction, value, 0.0f);
         }
     }
 
-    public class BeatText
+    public sealed class BeatText
     {
         public string value;
 
@@ -352,7 +359,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class BendEffect
+    public sealed class BendEffect
     {
         public const int semitoneLength = 1;
         public const int maxPosition = 12;
@@ -362,7 +369,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public int value = 0;
     }
 
-    public class BendPoint
+    public sealed class BendPoint
     {
         public float GP6position;
         public float GP6value;
@@ -404,7 +411,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class Chord
+    public sealed class Chord
     {
         public bool add;
         public List<Barre> barres = new();
@@ -433,18 +440,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         public int[] notes()
         {
-            var valids = new List<int>();
-            foreach (var s in strings)
-                if (s >= 0)
-                    valids.Add(s);
-            return valids.ToArray();
+            return strings.Where(static s => s >= 0).ToArray();
         }
     }
 
-    public class DirectionSign
+    public sealed class DirectionSign
     {
         public short measure;
-        public string name = "";
+        public string name;
 
         public DirectionSign(string name = "", short measure = 0)
         {
@@ -453,7 +456,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class Duration
+    public sealed class Duration
     {
         public const int quarterTime = 960;
         public const int whole = 1;
@@ -530,23 +533,25 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
             time -= substract;
             if (time >= value * 0.5f) isDotted = true;
-            if (time >= value * 0.75f)
-            {
-                isDotted = false;
-                isDoubleDotted = true;
-            }
+
+            if (!(time >= value * 0.75f)) return;
+
+            isDotted = false;
+            isDoubleDotted = true;
         }
 
         public int time()
         {
             var result = (int)(quarterTime * (4.0f / value));
             if (isDotted) result += (int)(result / 2.0f);
+
             if (isDoubleDotted) result += (int)(result / 4.0f * 3);
+
             return tuplet.convertTime(result);
         }
     }
 
-    public class GraceEffect
+    public sealed class GraceEffect
     {
         public int duration = -1;
         public int fret = 0;
@@ -561,7 +566,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class GuitarString
+    public sealed class GuitarString
     {
         public int number, value;
 
@@ -578,7 +583,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public int type;
     }
 
-    public class NaturalHarmonic : HarmonicEffect
+    public sealed class NaturalHarmonic : HarmonicEffect
     {
         public NaturalHarmonic()
         {
@@ -586,7 +591,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class ArtificialHarmonic : HarmonicEffect
+    public sealed class ArtificialHarmonic : HarmonicEffect
     {
         public Octave octave;
         public PitchClass pitch;
@@ -599,7 +604,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class TappedHarmonic : HarmonicEffect
+    public sealed class TappedHarmonic : HarmonicEffect
     {
         public TappedHarmonic(int fret = 0)
         {
@@ -608,7 +613,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class PinchHarmonic : HarmonicEffect
+    public sealed class PinchHarmonic : HarmonicEffect
     {
         public PinchHarmonic()
         {
@@ -616,7 +621,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class SemiHarmonic : HarmonicEffect
+    public sealed class SemiHarmonic : HarmonicEffect
     {
         public SemiHarmonic()
         {
@@ -624,7 +629,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class FeedbackHarmonic : HarmonicEffect
+    public sealed class FeedbackHarmonic : HarmonicEffect
     {
         public FeedbackHarmonic()
         {
@@ -632,13 +637,13 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class LyricLine
+    public sealed class LyricLine
     {
         public string lyrics = "";
         public int startingMeasure = 1;
     }
 
-    public class Lyrics
+    public sealed class Lyrics
     {
         private static readonly int maxLineCount = 5;
         public LyricLine[] lines;
@@ -653,7 +658,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class Marker
+    public sealed class Marker
     {
         public myColor color = new(255, 0, 0);
         public MeasureHeader measureHeader = null;
@@ -668,7 +673,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         secondOfDouble = 3
     }
 
-    public class Measure
+    public sealed class Measure
     {
         public const int maxVoices = 2;
         public List<Beat> beats = new();
@@ -690,11 +695,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         public bool isEmpty()
         {
-            foreach (var v in voices)
-                if (!v.isEmpty())
-                    return false;
-            if (beats.Count != 0) return false;
-            return true;
+            if (voices.Any(static v => !v.isEmpty())) return false;
+
+            return beats.Count == 0;
         }
 
         public int end()
@@ -764,7 +767,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class MeasureHeader
+    public sealed class MeasureHeader
     {
         public List<string> direction = new();
         public List<string> fromDirection = new();
@@ -794,7 +797,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class MidiChannel
+    public sealed class MidiChannel
     {
         private static readonly int DEFAULT_PERCUSSION_CHANNEL = 9;
 
@@ -837,13 +840,13 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         closed = 100
     }
 
-    public class WahEffect
+    public sealed class WahEffect
     {
         public bool display = false;
         public WahState state = WahState.none;
     }
 
-    public class MixTableChange
+    public sealed class MixTableChange
     {
         public MixTableItem balance = null;
         public MixTableItem chorus = null;
@@ -873,7 +876,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class MixTableItem
+    public sealed class MixTableItem
     {
         public bool allTracks;
         public int duration;
@@ -887,9 +890,9 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class myColor
+    public sealed class myColor
     {
-        private float r, g, b, a = 1.0f;
+        private float r, g, b, a;
 
         public myColor(int r, int g, int b, int a = 255)
         {
@@ -900,7 +903,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class Note
+    public sealed class Note
     {
         public Beat beat;
         public int duration;
@@ -924,7 +927,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class NoteEffect
+    public sealed class NoteEffect
     {
         public bool accentuatedNote = false;
         public BendEffect bend = null;
@@ -975,7 +978,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class Padding
+    public sealed class Padding
     {
         public int right, top, left, bottom;
 
@@ -988,7 +991,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class Point
+    public sealed class Point
     {
         public int x, y;
 
@@ -1014,7 +1017,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         all = title | subtitle | artist | album | words | music | wordsAndMusic | copyright | pageNumber
     }
 
-    public class PageSetup
+    public sealed class PageSetup
     {
         public string album = "%album%";
         public string artist = "%artist%";
@@ -1053,7 +1056,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public string wordsAndMusic = "Words & Music by %WORDSMUSIC%";
     }
 
-    public class PitchClass
+    public sealed class PitchClass
     {
         public int accidental;
         public float actualOvertone;
@@ -1106,13 +1109,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             string[] _notes_sharp = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" };
             string[] _notes_flat = { "C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B" };
             var value = 0;
-            var str = "";
             var accidental = 0;
-            var pitch = 0;
             this.actualOvertone = actualOvertone; //Make it simpler to use later in internal format
 
             if (arg1i == -1)
             {
+                var str = "";
                 if (!arg0s.Equals(""))
                 {
                     str = arg0s;
@@ -1124,11 +1126,10 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                             break;
                         }
 
-                        if (str.Equals(_notes_flat[x]))
-                        {
-                            value = x;
-                            break;
-                        }
+                        if (!str.Equals(_notes_flat[x])) continue;
+
+                        value = x;
+                        break;
                     }
                 }
                 else
@@ -1139,33 +1140,22 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                     if (intonation.Equals("flat")) str = _notes_flat[value];
                 }
 
-                if (str.EndsWith("b"))
+                if (str.EndsWith("b", StringComparison.Ordinal))
                     accidental = -1;
-                else if (str.EndsWith("#")) accidental = 1;
+                else if (str.EndsWith("#", StringComparison.Ordinal)) accidental = 1;
             }
             else
             {
-                pitch = arg0i;
                 accidental = arg1i;
-                just = pitch % 12;
+                just = arg0i % 12;
                 this.accidental = accidental;
                 this.value = just + accidental;
-                if (intonation != null)
-                {
-                    this.intonation = intonation;
-                }
-                else
-                {
-                    if (accidental == -1)
-                        this.intonation = "flat";
-                    else
-                        this.intonation = "sharp";
-                }
+                this.intonation = intonation ?? "sharp";
             }
         }
     }
 
-    public class RepeatGroup
+    public sealed class RepeatGroup
     {
         public List<MeasureHeader> closings = new();
         public bool isClosed;
@@ -1191,7 +1181,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class RSEEqualizer
+    public sealed class RSEEqualizer
     {
         public float gain;
         public List<float> knobs;
@@ -1203,7 +1193,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class RSEMasterEffect
+    public sealed class RSEMasterEffect
     {
         public RSEEqualizer equalizer;
         public int reverb;
@@ -1214,12 +1204,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             this.volume = volume;
             this.reverb = reverb;
             this.equalizer = equalizer;
-            if (equalizer != null && equalizer.knobs == null)
+            if (equalizer is { knobs: null })
                 equalizer.knobs = new List<float> { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
         }
     }
 
-    public class Tempo
+    public sealed class Tempo
     {
         public int value;
 
@@ -1229,14 +1219,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class TimeSignature
+    public sealed class TimeSignature
     {
         public int[] beams = { 0, 0, 0, 0 };
         public Duration denominator = new();
         public int numerator = 4;
     }
 
-    public class Track
+    public sealed class Track
     {
         public MidiChannel channel = new();
         public myColor color = new(255, 0, 0);
@@ -1265,6 +1255,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
             this.song = song;
             this.number = number;
             if (strings != null) this.strings = strings;
+
             if (measures != null) this.measures = measures;
         }
 
@@ -1275,7 +1266,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         }
     }
 
-    public class RSEInstrument
+    public sealed class RSEInstrument
     {
         public string effect = "";
         public string effectCategory = "";
@@ -1295,7 +1286,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         veryStrong = 5
     }
 
-    public class TrackRSE
+    public sealed class TrackRSE
     {
         public Accentuation autoAccentuation = Accentuation.none;
         public RSEEqualizer equalizer = null;
@@ -1304,12 +1295,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
         public TrackRSE()
         {
-            if (equalizer != null && equalizer.knobs == null)
+            if (equalizer is { knobs: null })
                 equalizer.knobs = new List<float> { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
         }
     }
 
-    public class TrackSettings
+    public sealed class TrackSettings
     {
         public bool autoBrush = false;
         public bool autoLetRing = false;
@@ -1324,18 +1315,18 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public bool tablature = true;
     }
 
-    public class TremoloPickingEffect
+    public sealed class TremoloPickingEffect
     {
         public Duration duration = new();
     }
 
-    public class TrillEffect
+    public sealed class TrillEffect
     {
         public Duration duration = new();
         public int fret = 0;
     }
 
-    public class Tuplet
+    public sealed class Tuplet
     {
         public int enters = 1;
         public int times = 1;
@@ -1361,7 +1352,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
         public const int def = forte;
     }
 
-    public class Voice
+    public sealed class Voice
     {
         public List<Beat> beats = new();
         public VoiceDirection direction = VoiceDirection.none;

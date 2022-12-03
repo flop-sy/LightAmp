@@ -8,7 +8,7 @@ using BardMusicPlayer.Seer.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Machina
 {
-    internal partial class Packet
+    internal sealed partial class Packet
     {
         /// <summary>
         ///     Handles EnsembleStart

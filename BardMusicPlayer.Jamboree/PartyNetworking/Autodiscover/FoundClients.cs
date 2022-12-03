@@ -9,7 +9,7 @@ using BardMusicPlayer.Jamboree.Events;
 
 namespace BardMusicPlayer.Jamboree.PartyNetworking
 {
-    public class ClientInfo
+    public sealed class ClientInfo
     {
         public ClientInfo(string IP, string version)
         {
@@ -23,7 +23,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         public NetworkSocket Sockets { get; set; }
     }
 
-    internal class FoundClients
+    internal sealed class FoundClients
     {
         private readonly List<string> _knownIP = new();
         private readonly Dictionary<string, ClientInfo> _partyClients = new();
@@ -44,22 +44,21 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         /// <param name="version"></param>
         public void Add(string IP, string version)
         {
-            if (!_partyClients.ContainsKey(IP))
+            if (_partyClients.ContainsKey(IP)) return;
+
+            lock (_knownIP)
             {
-                lock (_knownIP)
-                {
-                    _knownIP.Add(IP);
-                }
-
-                var client = new ClientInfo(IP, version);
-                lock (_partyClients)
-                {
-                    _partyClients.Add(client.IPAddress, client);
-                    OnNewAddress(this, IP);
-                }
-
-                BmpJamboree.Instance.PublishEvent(new PartyDebugLogEvent("Added Client IP " + IP + "\r\n"));
+                _knownIP.Add(IP);
             }
+
+            var client = new ClientInfo(IP, version);
+            lock (_partyClients)
+            {
+                _partyClients.Add(client.IPAddress, client);
+                OnNewAddress(this, IP);
+            }
+
+            BmpJamboree.Instance.PublishEvent(new PartyDebugLogEvent("Added Client IP " + IP + "\r\n"));
         }
 
         public void SendToAll(byte[] pck)
@@ -74,10 +73,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         /// <returns>null or NetworkSocket</returns>
         public NetworkSocket FindSocket(string ip)
         {
-            ClientInfo info;
-            if (_partyClients.TryGetValue(ip, out info))
-                return info.Sockets;
-            return null;
+            return _partyClients.TryGetValue(ip, out var info) ? info.Sockets : null;
         }
 
         /// <summary>
@@ -87,7 +83,10 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         /// <returns></returns>
         public bool IsIpInList(string IP)
         {
-            return _knownIP.Contains(IP);
+            lock (_knownIP)
+            {
+                return _knownIP.Contains(IP);
+            }
         }
 
         /// <summary>
@@ -110,12 +109,15 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         public void Clear()
         {
             _partyClients.Clear();
-            _knownIP.Clear();
+            lock (_knownIP)
+            {
+                _knownIP.Clear();
+            }
         }
 
         #region Instance Constructor/Destructor
 
-        private static readonly Lazy<FoundClients> LazyInstance = new(() => new FoundClients());
+        private static readonly Lazy<FoundClients> LazyInstance = new(static () => new FoundClients());
 
         private FoundClients()
         {

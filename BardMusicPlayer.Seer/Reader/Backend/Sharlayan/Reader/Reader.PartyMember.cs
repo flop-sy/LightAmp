@@ -9,7 +9,7 @@ using BardMusicPlayer.Seer.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
 {
-    internal partial class Reader
+    internal sealed partial class Reader
     {
         public bool CanGetPartyMembers()
         {
@@ -32,7 +32,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
                 var partyCount = MemoryHandler.GetByte(partyCountMap);
                 var sourceSize = MemoryHandler.Structures.PartyMember.SourceSize;
 
-                if (partyCount > 1 && partyCount < 9)
+                if (partyCount is > 1 and < 9)
                     for (uint i = 0; i < partyCount; i++)
                     {
                         var address = partyInfoMap.ToInt64() + i * (uint)sourceSize;

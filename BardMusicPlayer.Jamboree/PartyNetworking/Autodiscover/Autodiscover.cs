@@ -16,9 +16,9 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
     /// <summary>
     ///     The autodiscover, to get the client IP and version
     /// </summary>
-    internal class Autodiscover : IDisposable
+    internal sealed class Autodiscover : IDisposable
     {
-        private static readonly Lazy<Autodiscover> lazy = new(() => new Autodiscover());
+        private static readonly Lazy<Autodiscover> lazy = new(static () => new Autodiscover());
 
         private Autodiscover()
         {
@@ -58,7 +58,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
             objWorkerServerDiscoveryRx.RunWorkerAsync();
         }
 
-        private void logWorkers_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        private static void logWorkers_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             Console.WriteLine(e.UserState.ToString());
         }
@@ -69,11 +69,10 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         }
     }
 
-    public class SocketRx
+    public sealed class SocketRx
     {
         private readonly byte[] bytes = new byte[255];
 
-        private readonly BackgroundWorker worker;
         public string Address = "";
         public string BCAddress = "";
         public bool disposing;
@@ -86,8 +85,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
             Address = address;
             BCAddress = address.Split('.')[0] + "." + address.Split('.')[1] + "." + address.Split('.')[2] + ".255";
             version = ver;
-            worker = w;
-            worker.ReportProgress(1, "Server");
+            w.ReportProgress(1, "Server");
         }
 
         public void Start(object sender, DoWorkEventArgs e)
@@ -118,12 +116,11 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
                     }
                 }
 
-                if (!disposing)
-                {
-                    var t = "XIVAmp " + Address + " " + version; //Send the init ip and version
-                    var p = transmitter.SendTo(iPEndPoint, Encoding.ASCII.GetBytes(t));
-                    Thread.Sleep(3000);
-                }
+                if (disposing) continue;
+
+                var t = "XIVAmp " + Address + " " + version; //Send the init ip and version
+                var p = transmitter.SendTo(iPEndPoint, Encoding.ASCII.GetBytes(t));
+                Thread.Sleep(3000);
             }
 
             try

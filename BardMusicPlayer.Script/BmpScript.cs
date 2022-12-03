@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 using BardMusicPlayer.Maestro;
 using BardMusicPlayer.Pigeonhole;
 using BardMusicPlayer.Quotidian.Structs;
+using BardMusicPlayer.Script.BasicSharp;
 using BardMusicPlayer.Seer;
-using BasicSharp;
 
 #endregion
 
 namespace BardMusicPlayer.Script
 {
-    public class BmpScript
+    public sealed class BmpScript
     {
-        private static readonly Lazy<BmpScript> LazyInstance = new(() => new BmpScript());
+        private static readonly Lazy<BmpScript> LazyInstance = new(static () => new BmpScript());
         private Interpreter basic;
 
         private Thread thread;
@@ -58,8 +58,7 @@ namespace BardMusicPlayer.Script
             var task = Task.Run(() =>
             {
                 thread = Thread.CurrentThread;
-                if (OnRunningStateChanged != null)
-                    OnRunningStateChanged(this, true);
+                OnRunningStateChanged?.Invoke(this, true);
                 basic = new Interpreter(File.ReadAllText(basicfile));
                 basic.printHandler += Print;
                 basic.selectedBardHandler += SetSelectedBard;
@@ -73,8 +72,7 @@ namespace BardMusicPlayer.Script
                     Console.WriteLine("Error");
                 }
 
-                if (OnRunningStateChanged != null)
-                    OnRunningStateChanged(this, false);
+                OnRunningStateChanged?.Invoke(this, false);
 
                 basic.printHandler -= Print;
                 basic.selectedBardHandler -= SetSelectedBard;
@@ -89,9 +87,11 @@ namespace BardMusicPlayer.Script
         public void Start()
         {
             if (Started) return;
+
             if (!BmpPigeonhole.Initialized)
                 throw new BmpScriptException("Script requires Pigeonhole to be initialized.");
             if (!BmpSeer.Instance.Started) throw new BmpScriptException("Script requires Seer to be running.");
+
             Started = true;
         }
 
@@ -101,6 +101,7 @@ namespace BardMusicPlayer.Script
         public void Stop()
         {
             if (!Started) return;
+
             Started = false;
         }
 

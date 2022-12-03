@@ -94,15 +94,13 @@ namespace BardMusicPlayer.Seer.Utilities.KnownFolder
         private string GetPath(KnownFolderFlags flags)
         {
             var result = SHGetKnownFolderPath(Type.GetGuid(), (uint)flags, Identity.Token, out var outPath);
-            if (result >= 0)
-            {
-                var path = Marshal.PtrToStringUni(outPath);
-                Marshal.FreeCoTaskMem(outPath);
-                return path;
-            }
+            if (result < 0)
+                throw new ExternalException("Cannot get the known folder path. It may not be available on this system.",
+                    result);
 
-            throw new ExternalException("Cannot get the known folder path. It may not be available on this system.",
-                result);
+            var path = Marshal.PtrToStringUni(outPath);
+            Marshal.FreeCoTaskMem(outPath);
+            return path;
         }
 
         private void SetPath(KnownFolderFlags flags, string path)

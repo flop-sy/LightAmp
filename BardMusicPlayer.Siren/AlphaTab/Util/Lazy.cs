@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Util
 {
-    internal class Lazy<T>
+    internal sealed class Lazy<T>
     {
         private readonly Func<T> _factory;
         private bool _created;
@@ -21,11 +21,10 @@ namespace BardMusicPlayer.Siren.AlphaTab.Util
         {
             get
             {
-                if (!_created)
-                {
-                    _value = _factory();
-                    _created = true;
-                }
+                if (_created) return _value;
+
+                _value = _factory();
+                _created = true;
 
                 return _value;
             }

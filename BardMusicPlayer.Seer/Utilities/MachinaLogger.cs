@@ -8,7 +8,7 @@ using BardMusicPlayer.Seer.Events;
 
 namespace BardMusicPlayer.Seer.Utilities
 {
-    internal class MachinaLogger : TraceListener
+    internal sealed class MachinaLogger : TraceListener
     {
         public override bool IsThreadSafe => true;
 

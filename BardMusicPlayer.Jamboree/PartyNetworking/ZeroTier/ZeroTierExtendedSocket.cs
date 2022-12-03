@@ -10,7 +10,7 @@ using ZeroTier.Core;
 
 namespace ZeroTier.Sockets
 {
-    public class ZeroTierExtendedSocket
+    public sealed class ZeroTierExtendedSocket
     {
         /// <summary>No error.</summary>
         public static readonly int ZTS_ERR_OK = 0;
@@ -43,43 +43,32 @@ namespace ZeroTier.Sockets
             var type = -1;
             var protocol = -1;
             // Map .NET socket parameters to ZeroTier equivalents
-            switch (addressFamily)
+            family = addressFamily switch
             {
-                case AddressFamily.InterNetwork:
-                    family = Constants.AF_INET;
-                    break;
-                case AddressFamily.InterNetworkV6:
-                    family = Constants.AF_INET6;
-                    break;
-                case AddressFamily.Unknown:
-                    family = Constants.AF_UNSPEC;
-                    break;
-            }
+                AddressFamily.InterNetwork => Constants.AF_INET,
+                AddressFamily.InterNetworkV6 => Constants.AF_INET6,
+                AddressFamily.Unknown => Constants.AF_UNSPEC,
+                _ => family
+            };
 
-            switch (socketType)
+            type = socketType switch
             {
-                case SocketType.Stream:
-                    type = Constants.SOCK_STREAM;
-                    break;
-                case SocketType.Dgram:
-                    type = Constants.SOCK_DGRAM;
-                    break;
-            }
+                SocketType.Stream => Constants.SOCK_STREAM,
+                SocketType.Dgram => Constants.SOCK_DGRAM,
+                _ => type
+            };
 
-            switch (protocolType)
+            protocol = protocolType switch
             {
-                case ProtocolType.Udp:
-                    protocol = Constants.IPPROTO_UDP;
-                    break;
-                case ProtocolType.Tcp:
-                    protocol = Constants.IPPROTO_TCP;
-                    break;
-                case ProtocolType.Unspecified:
-                    protocol = 0; // ?
-                    break;
-            }
+                ProtocolType.Udp => Constants.IPPROTO_UDP,
+                ProtocolType.Tcp => Constants.IPPROTO_TCP,
+                ProtocolType.Unspecified => 0 // ?
+                ,
+                _ => protocol
+            };
 
             if ((_fd = zts_bsd_socket(family, type, protocol)) < 0) throw new SocketException(_fd);
+
             AddressFamily = addressFamily;
             SocketType = socketType;
             ProtocolType = protocolType;
@@ -131,7 +120,7 @@ namespace ZeroTier.Sockets
             set => zts_set_send_timeout(_fd, value, 0);
         }
 
-        public int ConnectTimeout { get; set; } = 30000;
+        public static int ConnectTimeout => 30000;
 
         public int ReceiveBufferSize
         {
@@ -209,9 +198,11 @@ namespace ZeroTier.Sockets
             if (_fd < 0)
                 // Invalid file descriptor
                 throw new SocketException(Constants.ERR_SOCKET);
-            if (remoteEndPoint == null) throw new ArgumentNullException("remoteEndPoint");
+            if (remoteEndPoint == null) throw new ArgumentNullException(nameof(remoteEndPoint));
+
             var err = zts_connect(_fd, remoteEndPoint.Address.ToString(), (ushort)remoteEndPoint.Port, ConnectTimeout);
             if (err < 0) throw new SocketException(err, Node.ErrNo);
+
             _remoteEndPoint = remoteEndPoint;
             Connected = true;
         }
@@ -222,14 +213,17 @@ namespace ZeroTier.Sockets
             if (_fd < 0)
                 // Invalid file descriptor
                 throw new SocketException(Constants.ERR_SOCKET);
-            if (localEndPoint == null) throw new ArgumentNullException("localEndPoint");
-            int err = Constants.ERR_OK;
-            if (localEndPoint.AddressFamily == AddressFamily.InterNetwork)
-                err = zts_bind(_fd, "0.0.0.0", (ushort)localEndPoint.Port);
-            if (localEndPoint.AddressFamily == AddressFamily.InterNetworkV6)
+            if (localEndPoint == null) throw new ArgumentNullException(nameof(localEndPoint));
+
+            var err = localEndPoint.AddressFamily switch
+            {
+                AddressFamily.InterNetwork => zts_bind(_fd, "0.0.0.0", (ushort)localEndPoint.Port),
                 // Todo: detect IPAddress.IPv6Any
-                err = zts_bind(_fd, "::", (ushort)localEndPoint.Port);
+                AddressFamily.InterNetworkV6 => zts_bind(_fd, "::", (ushort)localEndPoint.Port),
+                _ => Constants.ERR_OK
+            };
             if (err < 0) throw new SocketException(err);
+
             _localEndPoint = localEndPoint;
             IsBound = true;
         }
@@ -247,13 +241,15 @@ namespace ZeroTier.Sockets
             if (_fd < 0)
                 // Invalid file descriptor
                 throw new SocketException(Constants.ERR_SOCKET);
-            if (localEndPoint == null) throw new ArgumentNullException("localEndPoint");
+            if (localEndPoint == null) throw new ArgumentNullException(nameof(localEndPoint));
+
             int err = Constants.ERR_OK;
-            var broadcast = new zts_sockaddr_in();
-            broadcast.sin_family = (byte)Constants.AF_INET;
-            broadcast.sin_addr =
-                BitConverter.GetBytes(BitConverter.ToInt32(localEndPoint.Address.GetAddressBytes(), 0));
-            broadcast.sin_port = (short)localEndPoint.Port;
+            var broadcast = new zts_sockaddr_in
+            {
+                sin_family = (byte)Constants.AF_INET,
+                sin_addr = BitConverter.GetBytes(BitConverter.ToInt32(localEndPoint.Address.GetAddressBytes(), 0)),
+                sin_port = (short)localEndPoint.Port
+            };
 
             var bcPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(zts_sockaddr)));
             Marshal.StructureToPtr(broadcast, bcPtr, false);
@@ -277,10 +273,12 @@ namespace ZeroTier.Sockets
             if (_fd < 0)
                 // Invalid file descriptor
                 throw new SocketException(Constants.ERR_SOCKET);
+
             int err = Constants.ERR_OK;
             if ((err = zts_bsd_listen(_fd, backlog)) < 0)
                 // Invalid backlog value perhaps?
                 throw new SocketException(Constants.ERR_SOCKET);
+
             _isListening = true;
         }
 
@@ -292,6 +290,7 @@ namespace ZeroTier.Sockets
                 throw new SocketException(Constants.ERR_SOCKET);
             if (_isListening == false)
                 throw new InvalidOperationException("Socket is not in a listening state. Call Listen() first");
+
             var lpBuffer = Marshal.AllocHGlobal(Constants.INET6_ADDRSTRLEN);
             var port = 0;
             var accepted_fd = zts_accept(_fd, lpBuffer, Constants.INET6_ADDRSTRLEN, ref port);
@@ -299,6 +298,8 @@ namespace ZeroTier.Sockets
             var str = Marshal.PtrToStringAnsi(lpBuffer);
             Marshal.FreeHGlobal(lpBuffer);
             lpBuffer = IntPtr.Zero;
+            if (str == null) throw new InvalidOperationException();
+
             var clientEndPoint = new IPEndPoint(IPAddress.Parse(str), port);
             // Create new socket by providing file descriptor returned from zts_bsd_accept call.
             var clientSocket =
@@ -310,32 +311,23 @@ namespace ZeroTier.Sockets
         public void Shutdown(SocketShutdown how)
         {
             if (_isClosed) throw new ObjectDisposedException("Socket has been closed");
-            var ztHow = 0;
-            switch (how)
+
+            var ztHow = how switch
             {
-                case SocketShutdown.Receive:
-                    ztHow = Constants.O_RDONLY;
-                    break;
-                case SocketShutdown.Send:
-                    ztHow = Constants.O_WRONLY;
-                    break;
-                case SocketShutdown.Both:
-                    ztHow = Constants.O_RDWR;
-                    break;
-            }
+                SocketShutdown.Receive => Constants.O_RDONLY,
+                SocketShutdown.Send => Constants.O_WRONLY,
+                SocketShutdown.Both => Constants.O_RDWR,
+                _ => 0
+            };
 
             zts_bsd_shutdown(_fd, ztHow);
         }
 
-        public void Close()
-        {
-            Close(0);
-        }
-
-        public void Close(int timeout)
+        public void Close(int timeout = 0)
         {
             // TODO: Timeout needs to be implemented
             if (_isClosed) throw new ObjectDisposedException("Socket has already been closed");
+
             zts_bsd_close(_fd);
             _isClosed = true;
         }
@@ -343,12 +335,18 @@ namespace ZeroTier.Sockets
         public bool Poll(int microSeconds, SelectMode mode)
         {
             if (_isClosed) throw new ObjectDisposedException("Socket has been closed");
-            var poll_set = new zts_pollfd();
-            poll_set.fd = _fd;
-            if (mode == SelectMode.SelectRead) poll_set.events = (byte)Constants.POLLIN;
-            if (mode == SelectMode.SelectWrite) poll_set.events = (byte)Constants.POLLOUT;
-            if (mode == SelectMode.SelectError)
-                poll_set.events = (short)((byte)Constants.POLLERR | (byte)Constants.POLLNVAL);
+
+            var poll_set = new zts_pollfd
+            {
+                fd = _fd
+            };
+            poll_set.events = mode switch
+            {
+                SelectMode.SelectRead => Constants.POLLIN,
+                SelectMode.SelectWrite => Constants.POLLOUT,
+                SelectMode.SelectError => (short)((byte)Constants.POLLERR | (byte)Constants.POLLNVAL),
+                _ => poll_set.events
+            };
             var poll_fd_ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(zts_pollfd)));
             Marshal.StructureToPtr(poll_set, poll_fd_ptr, false);
             var result = 0;
@@ -356,18 +354,17 @@ namespace ZeroTier.Sockets
             uint numfds = 1;
             if ((result = zts_bsd_poll(poll_fd_ptr, numfds, timeout_ms)) < 0)
                 throw new SocketException(result, Node.ErrNo);
+
             poll_set = (zts_pollfd)Marshal.PtrToStructure(poll_fd_ptr, typeof(zts_pollfd));
             if (result != 0)
-            {
-                if (mode == SelectMode.SelectRead)
-                    result = Convert.ToInt32(((byte)poll_set.revents & (byte)Constants.POLLIN) != 0);
-                if (mode == SelectMode.SelectWrite)
-                    result = Convert.ToInt32(((byte)poll_set.revents & (byte)Constants.POLLOUT) != 0);
-                if (mode == SelectMode.SelectError)
-                    result = Convert.ToInt32(
-                        (poll_set.revents & (byte)Constants.POLLERR) != 0
-                        || (poll_set.revents & (byte)Constants.POLLNVAL) != 0);
-            }
+                result = mode switch
+                {
+                    SelectMode.SelectRead => Convert.ToInt32(((byte)poll_set.revents & (byte)Constants.POLLIN) != 0),
+                    SelectMode.SelectWrite => Convert.ToInt32(((byte)poll_set.revents & (byte)Constants.POLLOUT) != 0),
+                    SelectMode.SelectError => Convert.ToInt32((poll_set.revents & (byte)Constants.POLLERR) != 0 ||
+                                                              (poll_set.revents & (byte)Constants.POLLNVAL) != 0),
+                    _ => result
+                };
 
             Marshal.FreeHGlobal(poll_fd_ptr);
             return result > 0;
@@ -375,17 +372,18 @@ namespace ZeroTier.Sockets
 
         public int Send(byte[] buffer)
         {
-            return Send(buffer, 0, buffer != null ? buffer.Length : 0, SocketFlags.None);
+            return Send(buffer, 0, buffer?.Length ?? 0, SocketFlags.None);
         }
 
         public int Send(byte[] buffer, int offset, int size, SocketFlags socketFlags)
         {
             if (_isClosed) throw new ObjectDisposedException("Socket has been closed");
             if (_fd < 0) throw new SocketException(Constants.ERR_SOCKET);
-            if (buffer == null) throw new ArgumentNullException("buffer");
-            if (size < 0 || size > buffer.Length - offset) throw new ArgumentOutOfRangeException("size");
-            if (offset < 0 || offset > buffer.Length) throw new ArgumentOutOfRangeException("offset");
-            var flags = 0;
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (size < 0 || size > buffer.Length - offset) throw new ArgumentOutOfRangeException(nameof(size));
+            if (offset < 0 || offset > buffer.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+
+            const int flags = 0;
             var bufferPtr = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
             return zts_bsd_send(_fd, bufferPtr + offset, (uint)Buffer.ByteLength(buffer), flags);
         }
@@ -398,7 +396,7 @@ namespace ZeroTier.Sockets
         /// <returns></returns>
         public int SendTo(IPEndPoint localEndPoint, byte[] buffer)
         {
-            return SendTo(localEndPoint, buffer, 0, buffer != null ? buffer.Length : 0, SocketFlags.None);
+            return SendTo(localEndPoint, buffer, 0, buffer?.Length ?? 0, SocketFlags.None);
         }
 
         /// <summary>
@@ -418,19 +416,21 @@ namespace ZeroTier.Sockets
         {
             if (_isClosed) throw new ObjectDisposedException("Socket has been closed");
             if (_fd < 0) throw new SocketException(Constants.ERR_SOCKET);
-            if (buffer == null) throw new ArgumentNullException("buffer");
-            if (size < 0 || size > buffer.Length - offset) throw new ArgumentOutOfRangeException("size");
-            if (offset < 0 || offset > buffer.Length) throw new ArgumentOutOfRangeException("offset");
-            var broadcast = new zts_sockaddr_in();
-            broadcast.sin_family = (byte)Constants.AF_INET;
-            broadcast.sin_addr =
-                BitConverter.GetBytes(BitConverter.ToInt32(localEndPoint.Address.GetAddressBytes(), 0));
-            broadcast.sin_port = (short)localEndPoint.Port;
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (size < 0 || size > buffer.Length - offset) throw new ArgumentOutOfRangeException(nameof(size));
+            if (offset < 0 || offset > buffer.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+
+            var broadcast = new zts_sockaddr_in
+            {
+                sin_family = (byte)Constants.AF_INET,
+                sin_addr = BitConverter.GetBytes(BitConverter.ToInt32(localEndPoint.Address.GetAddressBytes(), 0)),
+                sin_port = (short)localEndPoint.Port
+            };
 
             var bcPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(zts_sockaddr)));
             Marshal.StructureToPtr(broadcast, bcPtr, false);
 
-            var flags = 0;
+            const int flags = 0;
             var bufferPtr = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
             var er = zts_bsd_sendto(_fd, bufferPtr + offset, (uint)Buffer.ByteLength(buffer), flags, bcPtr,
                 (ushort)Marshal.SizeOf(typeof(zts_sockaddr)));
@@ -440,17 +440,18 @@ namespace ZeroTier.Sockets
 
         public int Receive(byte[] buffer)
         {
-            return Receive(buffer, 0, buffer != null ? buffer.Length : 0, SocketFlags.None);
+            return Receive(buffer, 0, buffer?.Length ?? 0, SocketFlags.None);
         }
 
         public int Receive(byte[] buffer, int offset, int size, SocketFlags socketFlags)
         {
             if (_isClosed) throw new ObjectDisposedException("Socket has been closed");
             if (_fd < 0) throw new SocketException(Constants.ERR_SOCKET);
-            if (buffer == null) throw new ArgumentNullException("buffer");
-            if (size < 0 || size > buffer.Length - offset) throw new ArgumentOutOfRangeException("size");
-            if (offset < 0 || offset > buffer.Length) throw new ArgumentOutOfRangeException("offset");
-            var flags = 0;
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (size < 0 || size > buffer.Length - offset) throw new ArgumentOutOfRangeException(nameof(size));
+            if (offset < 0 || offset > buffer.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+
+            const int flags = 0;
             var bufferPtr = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
             var er = zts_bsd_recv(_fd, bufferPtr + offset, (uint)Buffer.ByteLength(buffer), flags);
             return er;
@@ -458,16 +459,17 @@ namespace ZeroTier.Sockets
 
         public int ReceiveFrom(byte[] buffer)
         {
-            return ReceiveFrom(buffer, buffer != null ? buffer.Length : 0);
+            return ReceiveFrom(buffer, buffer?.Length ?? 0);
         }
 
         public int ReceiveFrom(byte[] buffer, int size)
         {
             if (_isClosed) throw new ObjectDisposedException("Socket has been closed");
             if (_fd < 0) throw new SocketException(Constants.ERR_SOCKET);
-            if (buffer == null) throw new ArgumentNullException("buffer");
-            if (size < 0 || size > buffer.Length) throw new ArgumentOutOfRangeException("size");
-            var broadcast = 0;
+            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (size < 0 || size > buffer.Length) throw new ArgumentOutOfRangeException(nameof(size));
+
+            const int broadcast = 0;
             var lpBuffer = Marshal.AllocHGlobal(broadcast);
             var bufferPtr = Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0);
             var er = zts_bsd_recvfrom(_fd, bufferPtr, (uint)Buffer.ByteLength(buffer) - 1, 0, IntPtr.Zero, lpBuffer);
@@ -477,7 +479,7 @@ namespace ZeroTier.Sockets
 
         public int SetBroadcast()
         {
-            var broadcast = 1;
+            const int broadcast = 1;
             var lpBuffer = Marshal.AllocHGlobal(broadcast);
 
             return zts_bsd_setsockopt(_fd, Constants.SOL_SOCKET, Constants.SO_BROADCAST, lpBuffer, sizeof(int));

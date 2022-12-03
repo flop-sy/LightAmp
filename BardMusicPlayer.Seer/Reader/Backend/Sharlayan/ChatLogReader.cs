@@ -8,7 +8,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
 {
-    internal class ChatLogReader
+    internal sealed class ChatLogReader
     {
         private const int BUFFER_SIZE = 4000;
         private readonly MemoryHandler _memoryHandler;

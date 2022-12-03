@@ -12,10 +12,10 @@ using Newtonsoft.Json;
 
 namespace BardMusicPlayer.Ui.Functions
 {
-    public class SongContainer
+    public sealed class SongContainer
     {
         public string Name { get; set; } = "";
-        public byte[] Data { get; set; } = null;
+        public byte[] Data { get; set; }
     }
 
     public static class JsonPlaylist
@@ -56,13 +56,14 @@ namespace BardMusicPlayer.Ui.Functions
         public static void ImportPlaylist()
         {
             var httpClient = new HttpClient();
-            var publicFolderId = "1M1mU2ZxMgxz0_S274gf1oKLrea3AX_4Q";
-            var nextPageToken = "";
+            const string publicFolderId = "1M1mU2ZxMgxz0_S274gf1oKLrea3AX_4Q";
+            const string nextPageToken = "";
             do
             {
                 var folderContentsUri = "https://drive.google.com/drive/folders/" + publicFolderId + "?usp=sharing";
                 Console.WriteLine(folderContentsUri);
                 if (!string.IsNullOrEmpty(nextPageToken)) folderContentsUri += $"&pageToken={nextPageToken}";
+
                 var contentsJson = httpClient.GetStringAsync(folderContentsUri).Result;
                 var content = contentsJson.Split(new[] { "aria-label=" }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -74,14 +75,13 @@ namespace BardMusicPlayer.Ui.Functions
                     if (data.Contains("<path fill=\"none\""))
                         continue;
 
-                    if (data.Contains("jsdata"))
-                    {
-                        var name = data.Split('"')[1];
-                        var path =
-                            data.Split(new[] { "jsdata" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(';')[3];
-                        songs_url.Add(new KeyValuePair<string, string>(name, path));
-                        Console.WriteLine(data);
-                    }
+                    if (!data.Contains("jsdata")) continue;
+
+                    var name = data.Split('"')[1];
+                    var path =
+                        data.Split(new[] { "jsdata" }, StringSplitOptions.RemoveEmptyEntries)[1].Split(';')[3];
+                    songs_url.Add(new KeyValuePair<string, string>(name, path));
+                    Console.WriteLine(data);
                 }
 
                 Console.WriteLine(songs_url.ToString());
@@ -97,11 +97,9 @@ namespace BardMusicPlayer.Ui.Functions
             var httpClient = new HttpClient();
             var file = httpClient.GetByteArrayAsync("https://drive.google.com/uc?export=download&id=" + foundSong.Value)
                 .Result;
-            using (var stream = File.Open("output.mid", FileMode.Create))
-            {
-                foreach (var data in file)
-                    stream.WriteByte(data);
-            }
+            using var stream = File.Open("output.mid", FileMode.Create);
+            foreach (var data in file)
+                stream.WriteByte(data);
 
             return file;
         }

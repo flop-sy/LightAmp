@@ -36,10 +36,8 @@ namespace BardMusicPlayer.Ui.Functions
             if (openFileDialog.ShowDialog() != true)
                 return false;
 
-            foreach (var d in openFileDialog.FileNames)
+            foreach (var song in openFileDialog.FileNames.Select(static d => BmpSong.OpenFile(d).Result))
             {
-                var song = BmpSong.OpenFile(d).Result;
-
                 if (currentPlaylist.SingleOrDefault(x => x.Title.Equals(song.Title)) == null)
                     currentPlaylist.Add(song);
 
@@ -57,46 +55,43 @@ namespace BardMusicPlayer.Ui.Functions
         /// <returns>true if success</returns>
         public static bool AddFolderToPlaylist(IPlaylist currentPlaylist)
         {
-            var dlg = new FolderPicker();
-
-            if (Directory.Exists(BmpPigeonhole.Instance.SongDirectory))
-                dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory);
-            else
-                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            if (dlg.ShowDialog() == true)
+            var dlg = new FolderPicker
             {
-                var path = dlg.ResultPath;
+                InputPath = Directory.Exists(BmpPigeonhole.Instance.SongDirectory)
+                    ? Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory)
+                    : Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+            };
 
-                if (!Directory.Exists(path))
-                    return false;
+            if (dlg.ShowDialog() != true) return false;
 
-                var files = Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories)
-                    .Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
-                foreach (var d in files)
-                {
-                    var song = BmpSong.OpenFile(d).Result;
-                    if (currentPlaylist.SingleOrDefault(x => x.Title.Equals(song.Title)) == null)
-                        currentPlaylist.Add(song);
-                    BmpCoffer.Instance.SaveSong(song);
-                }
+            var path = dlg.ResultPath;
 
-                BmpCoffer.Instance.SavePlaylist(currentPlaylist);
-                return true;
+            if (!Directory.Exists(path))
+                return false;
+
+            var files = Directory.EnumerateFiles(path, "*.*", SearchOption.AllDirectories)
+                .Where(static s => s.EndsWith(".mid", StringComparison.Ordinal) ||
+                                   s.EndsWith(".mml", StringComparison.Ordinal) ||
+                                   s.EndsWith(".mmsong", StringComparison.Ordinal)).ToArray();
+            foreach (var song in files.Select(static d => BmpSong.OpenFile(d).Result))
+            {
+                if (currentPlaylist.SingleOrDefault(x => x.Title.Equals(song.Title)) == null)
+                    currentPlaylist.Add(song);
+                BmpCoffer.Instance.SaveSong(song);
             }
 
-            return false;
+            BmpCoffer.Instance.SavePlaylist(currentPlaylist);
+            return true;
         }
 
         /// <summary>
         ///     gets the first playlist or null if none was found
         /// </summary>
-        /// <param name="playlistname"></param>
         public static IPlaylist GetFirstPlaylist()
         {
-            if (BmpCoffer.Instance.GetPlaylistNames().Count > 0)
-                return BmpCoffer.Instance.GetPlaylist(BmpCoffer.Instance.GetPlaylistNames()[0]);
-            return null;
+            return BmpCoffer.Instance.GetPlaylistNames().Count > 0
+                ? BmpCoffer.Instance.GetPlaylist(BmpCoffer.Instance.GetPlaylistNames()[0])
+                : null;
         }
 
         /// <summary>
@@ -105,9 +100,9 @@ namespace BardMusicPlayer.Ui.Functions
         /// <param name="playlistname"></param>
         public static IPlaylist CreatePlaylist(string playlistname)
         {
-            if (BmpCoffer.Instance.GetPlaylistNames().Contains(playlistname))
-                return BmpCoffer.Instance.GetPlaylist(playlistname);
-            return BmpCoffer.Instance.CreatePlaylist(playlistname);
+            return BmpCoffer.Instance.GetPlaylistNames().Contains(playlistname)
+                ? BmpCoffer.Instance.GetPlaylist(playlistname)
+                : BmpCoffer.CreatePlaylist(playlistname);
         }
 
         /// <summary>
@@ -117,13 +112,7 @@ namespace BardMusicPlayer.Ui.Functions
         /// <param name="songname"></param>
         public static BmpSong GetSongFromPlaylist(IPlaylist playlist, string songname)
         {
-            if (playlist == null)
-                return null;
-
-            foreach (var item in playlist)
-                if (item.Title == songname)
-                    return item;
-            return null;
+            return playlist?.FirstOrDefault(item => item.Title == songname);
         }
 
         /// <summary>
@@ -137,29 +126,26 @@ namespace BardMusicPlayer.Ui.Functions
             if (playlist == null)
                 return data;
 
-            foreach (var item in playlist)
-                data.Add(item.Title);
+            data.AddRange(playlist.Select(static item => item.Title));
             return data;
         }
 
-        public static List<string> GetCurrentPlaylistItems(IPlaylist playlist, bool withupselector = false)
+        public static IEnumerable<string> GetCurrentPlaylistItems(IPlaylist playlist, bool withupselector = false)
         {
             var data = new List<string>();
             if (playlist == null)
                 return data;
+
             if (withupselector)
                 data.Add("..");
-            foreach (var item in playlist)
-                data.Add(item.Title);
+            data.AddRange(playlist.Select(static item => item.Title));
             return data;
         }
 
         public static TimeSpan GetTotalTime(IPlaylist playlist)
         {
             var totalTime = new TimeSpan(0);
-            foreach (var p in playlist) totalTime += p.Duration;
-            ;
-            return totalTime;
+            return playlist.Aggregate(totalTime, static (current, p) => current + p.Duration);
         }
     }
 }

@@ -792,7 +792,7 @@ namespace BardMusicPlayer.Seer.Utilities.KnownFolder
     ///     corresponding <see cref="Guid" /> on the Windows system.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field)]
-    internal class KnownFolderGuidAttribute : Attribute
+    internal sealed class KnownFolderGuidAttribute : Attribute
     {
         // ---- CONSTRUCTORS & DESTRUCTOR ------------------------------------------------------------------------------
 

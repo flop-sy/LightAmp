@@ -1,5 +1,6 @@
 ﻿#region
 
+using System.Linq;
 using BardMusicPlayer.Siren.AlphaTab.Collections;
 
 #endregion
@@ -9,7 +10,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     /// <summary>
     ///     Represents a list of beats that are grouped within the same tuplet.
     /// </summary>
-    internal class TupletGroup
+    internal sealed class TupletGroup
     {
         private const int HalfTicks = 1920;
         private const int QuarterTicks = 960;
@@ -100,12 +101,12 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
             else
             {
                 var factor = Beats[0].TupletNumerator / Beats[0].TupletDenominator;
-                foreach (var potentialMatch in AllTicks)
-                    if (_totalDuration == potentialMatch * factor)
-                    {
-                        IsFull = true;
-                        break;
-                    }
+                foreach (var potentialMatch in AllTicks.Where(potentialMatch =>
+                             _totalDuration == potentialMatch * factor))
+                {
+                    IsFull = true;
+                    break;
+                }
             }
 
             return true;

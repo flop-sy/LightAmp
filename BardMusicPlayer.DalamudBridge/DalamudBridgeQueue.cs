@@ -9,7 +9,7 @@ using BardMusicPlayer.DalamudBridge.Helper.Dalamud;
 
 namespace BardMusicPlayer.DalamudBridge
 {
-    public partial class DalamudBridge
+    public sealed partial class DalamudBridge
     {
         private ConcurrentQueue<DalamudBridgeCommandStruct> _eventQueue;
         private bool _eventQueueOpen;
@@ -39,15 +39,14 @@ namespace BardMusicPlayer.DalamudBridge
                                 await d_event.game.AcceptEnsemble(d_event.BoolData);
                                 break;
                         }
-
-                        ;
                     }
                     catch
                     {
+                        // ignored
                     }
                 }
 
-                await Task.Delay(25, token).ContinueWith(tsk => { });
+                await Task.Delay(25, token).ContinueWith(static tsk => { }, token);
             }
         }
 

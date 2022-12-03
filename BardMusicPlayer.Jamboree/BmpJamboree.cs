@@ -9,29 +9,26 @@ using BardMusicPlayer.Jamboree.PartyClient.PartyManagement;
 
 namespace BardMusicPlayer.Jamboree
 {
-    public partial class BmpJamboree : IDisposable
+    public sealed partial class BmpJamboree : IDisposable
     {
         private Pydna _pydna;
 
         public void JoinParty(string networkId, byte type, string name)
         {
-            if (_pydna == null)
-                _pydna = new Pydna();
+            _pydna ??= new Pydna();
             Task.Run(() => _pydna.JoinParty(networkId, type, name));
         }
 
         public void LeaveParty()
         {
-            if (_pydna == null)
-                _pydna = new Pydna();
+            _pydna ??= new Pydna();
             _pydna.LeaveParty();
         }
 
         public void SendPerformanceStart()
         {
-            if (_pydna == null)
-                _pydna = new Pydna();
-            _pydna.SendPerformanceStart();
+            _pydna ??= new Pydna();
+            Pydna.SendPerformanceStart();
         }
 
         /// <summary>
@@ -43,23 +40,18 @@ namespace BardMusicPlayer.Jamboree
         /// <param name="performer_name"></param>
         public void SendPerformerJoin(byte type, string performer_name)
         {
-            if (_pydna == null)
-                _pydna = new Pydna();
+            _pydna ??= new Pydna();
             _pydna.SendPerformerJoin(type, performer_name);
         }
 
         public void SendClientPacket(byte[] packet)
         {
-            if (_pydna == null)
-                return;
-            _pydna.SendClientPacket(packet);
+            _pydna?.SendClientPacket(packet);
         }
 
         public void SendServerPacket(byte[] packet)
         {
-            if (_pydna == null)
-                return;
-            _pydna.SendServerPacket(packet);
+            _pydna?.SendServerPacket(packet);
         }
 
         public List<PartyClientInfo> GetPartyMembers()
@@ -69,7 +61,7 @@ namespace BardMusicPlayer.Jamboree
 
         #region Instance Constructor/Destructor
 
-        private static readonly Lazy<BmpJamboree> LazyInstance = new(() => new BmpJamboree());
+        private static readonly Lazy<BmpJamboree> LazyInstance = new(static () => new BmpJamboree());
 
         /// <summary>
         /// </summary>
@@ -90,6 +82,7 @@ namespace BardMusicPlayer.Jamboree
         public void Start()
         {
             if (Started) return;
+
             StartEventsHandler();
             Started = true;
         }
@@ -101,6 +94,7 @@ namespace BardMusicPlayer.Jamboree
         public void Stop()
         {
             if (!Started) return;
+
             StopEventsHandler();
             Started = false;
         }

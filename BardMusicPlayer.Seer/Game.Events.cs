@@ -8,7 +8,7 @@ using BardMusicPlayer.Seer.Events;
 
 namespace BardMusicPlayer.Seer
 {
-    public partial class Game
+    public sealed partial class Game
     {
         private void OnEventReceived(SeerEvent seerEvent)
         {

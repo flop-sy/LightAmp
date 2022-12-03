@@ -1,6 +1,7 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -51,9 +52,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
             return dtDateTime;
         }
 
-        private static string ByteArrayToString(byte[] raw)
+        private static string ByteArrayToString(IReadOnlyCollection<byte> raw)
         {
-            var hex = new StringBuilder(raw.Length * 2);
+            var hex = new StringBuilder(raw.Count * 2);
             foreach (var b in raw) hex.AppendFormat($"{b:X2}");
 
             return hex.ToString();
@@ -64,8 +65,9 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
             // 0x3040 -> 0x309F === Hirigana
             // 0x30A0 -> 0x30FF === Katakana
             // 0x4E00 -> 0x9FBF === Kanji
-            return line.Any(c => c >= 0x3040 && c <= 0x309F) || line.Any(c => c >= 0x30A0 && c <= 0x30FF) ||
-                   line.Any(c => c >= 0x4E00 && c <= 0x9FBF);
+            return line.Any(static c => c >= 0x3040 && c <= 0x309F) ||
+                   line.Any(static c => c >= 0x30A0 && c <= 0x30FF) ||
+                   line.Any(static c => c >= 0x4E00 && c <= 0x9FBF);
         }
     }
 }

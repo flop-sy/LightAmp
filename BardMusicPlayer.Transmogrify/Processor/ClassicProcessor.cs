@@ -16,7 +16,7 @@ using Melanchall.DryWetMidi.Interaction;
 
 namespace BardMusicPlayer.Transmogrify.Processor
 {
-    internal class ClassicProcessor : BaseProcessor
+    internal sealed class ClassicProcessor : BaseProcessor
     {
         internal ClassicProcessor(ClassicProcessorConfig processorConfig, BmpSong song) : base(song)
         {
@@ -35,8 +35,7 @@ namespace BardMusicPlayer.Transmogrify.Processor
             if (ProcessorConfig.Instrument.InstrumentTone.Index == InstrumentTone.ElectricGuitar.Index)
                 foreach (var timedEvent in trackChunks.GetTimedEvents())
                 {
-                    var programChangeEvent = timedEvent.Event as ProgramChangeEvent;
-                    if (programChangeEvent == null)
+                    if (timedEvent.Event is not ProgramChangeEvent programChangeEvent)
                         continue;
 
                     //Skip all except guitar
@@ -45,13 +44,11 @@ namespace BardMusicPlayer.Transmogrify.Processor
 
                     var number = (int)Instrument.ParseByProgramChange(programChangeEvent.ProgramNumber)
                         .InstrumentToneMenuKey;
-                    using (var manager = trackChunks.Merge().ManageNotes())
-                    {
-                        var note = new Note((SevenBitNumber)number);
-                        var timedEvents = manager.Notes;
-                        note.Time = timedEvent.Time;
-                        timedEvents.Add(note);
-                    }
+                    using var manager = trackChunks.Merge().ManageNotes();
+                    var note = new Note((SevenBitNumber)number);
+                    var timedEvents = manager.Notes;
+                    note.Time = timedEvent.Time;
+                    timedEvents.Add(note);
                 }
 
             var trackChunk = (await

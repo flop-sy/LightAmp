@@ -9,7 +9,7 @@ using BardMusicPlayer.Seer.Reader.Backend;
 
 namespace BardMusicPlayer.Seer.Reader
 {
-    internal class ReaderHandler : IDisposable
+    internal sealed class ReaderHandler : IDisposable
     {
         private readonly IReaderBackend _readerBackend;
         internal readonly Game Game;

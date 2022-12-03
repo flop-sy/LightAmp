@@ -1,6 +1,6 @@
 ﻿namespace BardMusicPlayer.Seer.Events
 {
-    public class MachinaManagerLogEvent : SeerEvent
+    public sealed class MachinaManagerLogEvent : SeerEvent
     {
         public MachinaManagerLogEvent(string message) : base(EventSource.MachinaManager)
         {

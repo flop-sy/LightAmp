@@ -7,7 +7,7 @@ using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class VoiceEnvelope
+    internal sealed class VoiceEnvelope
     {
         private const float FastReleaseTime = 0.01f;
         public float Level { get; set; }
@@ -134,7 +134,6 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
                         }
 
                         return;
-                    case VoiceEnvelopeSegment.Release:
                     default:
                         Segment = VoiceEnvelopeSegment.Done;
                         SegmentIsExponential = false;
@@ -173,8 +172,10 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
         {
             if (Slope > 0)
             {
-                if (SegmentIsExponential) Level *= (float)Math.Pow(Slope, numSamples);
-                else Level += Slope * numSamples;
+                if (SegmentIsExponential)
+                    Level *= (float)Math.Pow(Slope, numSamples);
+                else
+                    Level += Slope * numSamples;
             }
 
             if ((SamplesUntilNextSegment -= numSamples) <= 0) NextSegment(Segment, outSampleRate);

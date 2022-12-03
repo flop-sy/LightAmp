@@ -4,7 +4,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Model
     ///     This class represents the rendering stylesheet.
     ///     It contains settings which control the display of the score when rendered.
     /// </summary>
-    internal class RenderStylesheet
+    internal sealed class RenderStylesheet
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="RenderStylesheet" /> class.

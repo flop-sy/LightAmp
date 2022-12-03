@@ -18,7 +18,7 @@ namespace BardMusicPlayer.Ui.Controls
     /// <summary>
     ///     The songbrowser but much faster than the BMP 1.x had
     /// </summary>
-    public partial class SongBrowser : UserControl
+    public sealed partial class SongBrowser : UserControl
     {
         public EventHandler<string> OnLoadSongFromBrowser;
 
@@ -53,10 +53,13 @@ namespace BardMusicPlayer.Ui.Controls
                 return;
 
             var files = Directory.EnumerateFiles(SongPath.Text, "*.*", SearchOption.AllDirectories)
-                .Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
+                .Where(static s => s.EndsWith(".mid", StringComparison.Ordinal) ||
+                                   s.EndsWith(".mml", StringComparison.Ordinal) ||
+                                   s.EndsWith(".mmsong", StringComparison.Ordinal)).ToArray();
             var list = new List<string>(files);
             if (SongSearch.Text != "")
                 list = list.FindAll(delegate(string s) { return s.ToLower().Contains(SongSearch.Text.ToLower()); });
+
             SongbrowserContainer.ItemsSource = list;
         }
 
@@ -70,11 +73,13 @@ namespace BardMusicPlayer.Ui.Controls
             if (!Directory.Exists(SongPath.Text))
                 return;
 
-            BmpPigeonhole.Instance.SongDirectory = SongPath.Text + (SongPath.Text.EndsWith("\\") ? "" : "\\");
-            ;
+            BmpPigeonhole.Instance.SongDirectory =
+                SongPath.Text + (SongPath.Text.EndsWith("\\", StringComparison.Ordinal) ? "" : "\\");
 
             var files = Directory.EnumerateFiles(SongPath.Text, "*.*", SearchOption.AllDirectories)
-                .Where(s => s.EndsWith(".mid") || s.EndsWith(".mml") || s.EndsWith(".mmsong")).ToArray();
+                .Where(static s => s.EndsWith(".mid", StringComparison.Ordinal) ||
+                                   s.EndsWith(".mml", StringComparison.Ordinal) ||
+                                   s.EndsWith(".mmsong", StringComparison.Ordinal)).ToArray();
             var list = new List<string>(files);
             SongbrowserContainer.ItemsSource = list;
         }
@@ -86,24 +91,23 @@ namespace BardMusicPlayer.Ui.Controls
         /// <param name="e"></param>
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new FolderPicker();
-
-            if (Directory.Exists(BmpPigeonhole.Instance.SongDirectory))
-                dlg.InputPath = Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory);
-            else
-                dlg.InputPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-
-            if (dlg.ShowDialog() == true)
+            var dlg = new FolderPicker
             {
-                var path = dlg.ResultPath;
-                if (!Directory.Exists(path))
-                    return;
+                InputPath = Directory.Exists(BmpPigeonhole.Instance.SongDirectory)
+                    ? Path.GetFullPath(BmpPigeonhole.Instance.SongDirectory)
+                    : Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)
+            };
 
-                path = path + (path.EndsWith("\\") ? "" : "\\");
-                SongPath.Text = path;
-                BmpPigeonhole.Instance.SongDirectory = path;
-                SongSearch_PreviewTextInput(null, null);
-            }
+            if (dlg.ShowDialog() != true) return;
+
+            var path = dlg.ResultPath;
+            if (!Directory.Exists(path))
+                return;
+
+            path += path.EndsWith("\\", StringComparison.Ordinal) ? "" : "\\";
+            SongPath.Text = path;
+            BmpPigeonhole.Instance.SongDirectory = path;
+            SongSearch_PreviewTextInput(null, null);
         }
     }
 }

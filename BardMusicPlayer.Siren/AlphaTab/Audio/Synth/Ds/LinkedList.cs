@@ -1,6 +1,6 @@
 ﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
 {
-    internal class LinkedList<T> where T : class
+    internal sealed class LinkedList<T> where T : class
     {
         public LinkedList()
         {
@@ -13,8 +13,10 @@
 
         public void AddFirst(T value)
         {
-            var node = new LinkedListNode<T>();
-            node.Value = value;
+            var node = new LinkedListNode<T>
+            {
+                Value = value
+            };
             if (First == null)
             {
                 InsertNodeToEmptyList(node);
@@ -28,8 +30,10 @@
 
         public void AddLast(T value)
         {
-            var node = new LinkedListNode<T>();
-            node.Value = value;
+            var node = new LinkedListNode<T>
+            {
+                Value = value
+            };
             if (First == null)
                 InsertNodeToEmptyList(node);
             else
@@ -49,7 +53,7 @@
         {
             if (First == null) return null;
 
-            var v = First.PrevInternal != null ? First.PrevInternal.Value : null;
+            var v = First.PrevInternal?.Value;
             Remove(First.PrevInternal);
             return v;
         }
@@ -91,7 +95,7 @@
         }
     }
 
-    internal class LinkedListNode<T> where T : class
+    internal sealed class LinkedListNode<T> where T : class
     {
         internal LinkedList<T> List;
         internal LinkedListNode<T> NextInternal;

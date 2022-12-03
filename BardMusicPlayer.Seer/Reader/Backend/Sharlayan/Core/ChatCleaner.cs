@@ -14,7 +14,7 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
 {
-    internal class ChatCleaner : INotifyPropertyChanged
+    internal sealed class ChatCleaner : INotifyPropertyChanged
     {
         private const RegexOptions DefaultOptions = RegexOptions.Compiled | RegexOptions.ExplicitCapture;
         private static readonly Regex Checks = new(@"^00(20|21|23|27|28|46|47|48|49|5C)$", DefaultOptions);
@@ -60,7 +60,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
             }
         }
 
-        public event PropertyChangedEventHandler PropertyChanged = delegate { };
+        public event PropertyChangedEventHandler PropertyChanged = static delegate { };
 
         private string ProcessFullLine(byte[] bytes)
         {
@@ -69,7 +69,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
             {
                 var autoTranslateList = new List<byte>();
                 var newList = new List<byte>();
-                for (var x = 0; x < bytes.Count(); x++)
+                for (var x = 0; x < bytes.Length; x++)
                 {
                     if (bytes[x] == 238)
                     {
@@ -140,7 +140,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
                                 if (id != 0)
                                     if (CompletionLookup.TryGetCompletion(id, out var completion))
                                     {
-                                        var c = string.Format("{{{0}}}", completion);
+                                        var c = $"{{{completion}}}";
                                         newList.AddRange(Encoding.UTF8.GetBytes(c));
                                     }
 
@@ -205,15 +205,11 @@ namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
 
                     // remove single placement
                     cleaned = cleaned.Replace(fullName, "•name•");
-                    switch (Regex.IsMatch(cleaned, @"^([Vv]ous|[Dd]u|[Yy]ou)"))
+                    cleaned = Regex.IsMatch(cleaned, @"^([Vv]ous|[Dd]u|[Yy]ou)") switch
                     {
-                        case true:
-                            cleaned = cleaned.Substring(1).Replace("•name•", string.Empty);
-                            break;
-                        case false:
-                            cleaned = cleaned.Replace("•name•", player);
-                            break;
-                    }
+                        true => cleaned.Substring(1).Replace("•name•", string.Empty),
+                        false => cleaned.Replace("•name•", player)
+                    };
                 }
 
                 cleaned = Regex.Replace(cleaned, @"[\r\n]+", string.Empty);

@@ -7,7 +7,7 @@ using BardMusicPlayer.Siren.AlphaTab.Collections;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class Channels
+    internal sealed class Channels
     {
         public Channels()
         {
@@ -31,20 +31,20 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
                 tinySoundFont.OutSampleRate
             );
 
-            if (newpan <= -0.5f)
+            switch (newpan)
             {
-                voice.PanFactorLeft = 1.0f;
-                voice.PanFactorRight = 0.0f;
-            }
-            else if (newpan >= 0.5f)
-            {
-                voice.PanFactorLeft = 0.0f;
-                voice.PanFactorRight = 1.0f;
-            }
-            else
-            {
-                voice.PanFactorLeft = (float)Math.Sqrt(0.5f - newpan);
-                voice.PanFactorRight = (float)Math.Sqrt(0.5f + newpan);
+                case <= -0.5f:
+                    voice.PanFactorLeft = 1.0f;
+                    voice.PanFactorRight = 0.0f;
+                    break;
+                case >= 0.5f:
+                    voice.PanFactorLeft = 0.0f;
+                    voice.PanFactorRight = 1.0f;
+                    break;
+                default:
+                    voice.PanFactorLeft = (float)Math.Sqrt(0.5f - newpan);
+                    voice.PanFactorRight = (float)Math.Sqrt(0.5f + newpan);
+                    break;
             }
         }
     }

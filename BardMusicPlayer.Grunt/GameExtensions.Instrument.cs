@@ -75,17 +75,17 @@ namespace BardMusicPlayer.Grunt
 
             while (exitLock > 0)
             {
-                if (game.InstrumentToneHeld.Equals(instrumentToneWanted)) return true;
+                if (Game.InstrumentToneHeld.Equals(instrumentToneWanted)) return true;
 
                 if (!instrumentToneWanted.Equals(InstrumentTone.None) &&
-                    game.InstrumentToneHeld.Equals(InstrumentTone.None))
+                    Game.InstrumentToneHeld.Equals(InstrumentTone.None))
                     await SyncTapKey(game, game.InstrumentToneKeys[instrumentToneWanted]);
                 else
                     await SyncTapKey(game, game.NavigationMenuKeys[NavigationMenuKey.ESC]);
                 exitLock--;
             }
 
-            return game.InstrumentToneHeld.Equals(instrumentToneWanted);
+            return Game.InstrumentToneHeld.Equals(instrumentToneWanted);
         }
     }
 }

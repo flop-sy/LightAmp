@@ -15,7 +15,7 @@ namespace BardMusicPlayer.Ui.Classic
     /// <summary>
     ///     only here cuz someone would like to have it back
     /// </summary>
-    public partial class Classic_MainView : UserControl
+    public sealed partial class Classic_MainView : UserControl
     {
         private List<int> _notesCountForTracks = new();
 
@@ -54,19 +54,20 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var song = PlaybackFunctions.CurrentSong;
             Stream myStream;
-            var saveFileDialog = new SaveFileDialog();
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = "MIDI file (*.mid)|*.mid",
+                FilterIndex = 2,
+                RestoreDirectory = true,
+                OverwritePrompt = true
+            };
 
-            saveFileDialog.Filter = "MIDI file (*.mid)|*.mid";
-            saveFileDialog.FilterIndex = 2;
-            saveFileDialog.RestoreDirectory = true;
-            saveFileDialog.OverwritePrompt = true;
+            if (saveFileDialog.ShowDialog() != true) return;
 
-            if (saveFileDialog.ShowDialog() == true)
-                if ((myStream = saveFileDialog.OpenFile()) != null)
-                {
-                    song.GetExportMidi().WriteTo(myStream);
-                    myStream.Close();
-                }
+            if ((myStream = saveFileDialog.OpenFile()) == null) return;
+
+            song.GetExportMidi().WriteTo(myStream);
+            myStream.Close();
         }
     }
 }

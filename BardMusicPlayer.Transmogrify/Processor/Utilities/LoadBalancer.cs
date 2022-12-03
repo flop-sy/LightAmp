@@ -21,6 +21,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
         {
             var voicePool = new BardVoice[voiceCount];
             for (var x = 0; x < voicePool.Length; x++) voicePool[x] = new BardVoice(x);
+
             _freeVoices = new SortedDictionary<int, BardVoice>();
             foreach (var voice in voicePool.Reverse()) _freeVoices.Add(voice.BardNumber, voice);
             _activeVoices = new Stack<BardVoice>();
@@ -61,6 +62,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
         internal (int, Note) NotifyNoteOff(long time, int channel, int note, int velocity)
         {
             if (_registry[channel, note, velocity] == null) return (-1, null);
+
             var voice = _registry[channel, note, velocity];
             _registry[channel, note, velocity] = null;
             var (stoppedBard, stoppedNote) = voice.Stop(time);
@@ -69,7 +71,7 @@ namespace BardMusicPlayer.Transmogrify.Processor.Utilities
             return (stoppedBard, stoppedNote);
         }
 
-        internal class BardVoice
+        internal sealed class BardVoice
         {
             internal BardVoice(int bardNumber)
             {

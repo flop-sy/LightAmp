@@ -8,7 +8,7 @@ using BardMusicPlayer.Transmogrify.Song.Config.Interfaces;
 
 namespace BardMusicPlayer.Transmogrify.Song.Config
 {
-    public class VSTProcessorConfig : IProcessorConfig
+    public sealed class VSTProcessorConfig : IProcessorConfig
     {
         /// <summary>
         ///     The instrument tone for this track
@@ -28,7 +28,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Config
         };
 
         /// <inheritdoc />
-        public int Track { get; set; } = 0;
+        public int Track { get; set; }
 
         /// <inheritdoc />
         public List<long> IncludedTracks { get; set; } = new();

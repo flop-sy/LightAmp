@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BardMusicPlayer.Quotidian
 {
-    public class TaskQueue
+    public sealed class TaskQueue
     {
         private readonly object key = new();
         private Task previous = Task.FromResult(false);

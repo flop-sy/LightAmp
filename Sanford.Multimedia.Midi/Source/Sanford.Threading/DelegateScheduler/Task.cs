@@ -1,59 +1,37 @@
-#region License
-
-/* Copyright (c) 2007 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 using System.Diagnostics;
 
+#endregion
+
 namespace Sanford.Threading
 {
-    public class Task : IComparable
+    public sealed class Task : IComparable
     {
+        #region IComparable Members
+
+        public int CompareTo(object obj)
+        {
+            if (!(obj is Task t)) throw new ArgumentException("obj is not the same type as this instance.");
+
+            return -nextTimeout.CompareTo(t.nextTimeout);
+        }
+
+        #endregion
+
         #region Task Members
 
         #region Fields
 
         // The number of times left to invoke the delegate associated with this Task.
-        private int count;
 
         // The interval between delegate invocation.
-        private int millisecondsTimeout;
 
         // The delegate to invoke.
-        private Delegate method;
 
         // The arguments to pass to the delegate when it is invoked.
-        private object[] args;
+        private readonly object[] args;
 
         // The time for the next timeout;
         private DateTime nextTimeout;
@@ -71,9 +49,9 @@ namespace Sanford.Threading
             Delegate method,
             object[] args)
         {
-            this.count = count;
-            this.millisecondsTimeout = millisecondsTimeout;
-            this.method = method;
+            Count = count;
+            MillisecondsTimeout = millisecondsTimeout;
+            Method = method;
             this.args = args;
 
             ResetNextTimeout();
@@ -85,27 +63,24 @@ namespace Sanford.Threading
 
         internal void ResetNextTimeout()
         {
-            nextTimeout = DateTime.Now.AddMilliseconds(millisecondsTimeout);
+            nextTimeout = DateTime.Now.AddMilliseconds(MillisecondsTimeout);
         }
 
         internal object Invoke(DateTime signalTime)
         {
-            Debug.Assert(count == DelegateScheduler.Infinite || count > 0);
+            Debug.Assert(Count == DelegateScheduler.Infinite || Count > 0);
 
-            object returnValue = method.DynamicInvoke(args);
+            var returnValue = Method.DynamicInvoke(args);
 
-            if(count == DelegateScheduler.Infinite)
+            if (Count == DelegateScheduler.Infinite)
             {
-                nextTimeout = nextTimeout.AddMilliseconds(millisecondsTimeout);
+                nextTimeout = nextTimeout.AddMilliseconds(MillisecondsTimeout);
             }
             else
             {
-                count--;
+                Count--;
 
-                if(count > 0)
-                {
-                    nextTimeout = nextTimeout.AddMilliseconds(millisecondsTimeout);
-                }
+                if (Count > 0) nextTimeout = nextTimeout.AddMilliseconds(MillisecondsTimeout);
             }
 
             return returnValue;
@@ -120,55 +95,15 @@ namespace Sanford.Threading
 
         #region Properties
 
-        public DateTime NextTimeout
-        {
-            get
-            {
-                return nextTimeout;
-            }
-        }
+        public DateTime NextTimeout => nextTimeout;
 
-        public int Count
-        {
-            get
-            {
-                return count;
-            }
-        }
+        public int Count { get; private set; }
 
-        public Delegate Method
-        {
-            get
-            {
-                return method;
-            }
-        }
+        public Delegate Method { get; }
 
-        public int MillisecondsTimeout
-        {
-            get
-            {
-                return millisecondsTimeout;
-            }
-        }
+        public int MillisecondsTimeout { get; }
 
         #endregion
-
-        #endregion
-
-        #region IComparable Members
-
-        public int CompareTo(object obj)
-        {
-            Task t = obj as Task;
-
-            if(t == null)
-            {
-                throw new ArgumentException("obj is not the same type as this instance.");
-            }
-
-            return -nextTimeout.CompareTo(t.nextTimeout);
-        }
 
         #endregion
     }

@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Events
 {
-    internal class ExceptionEvent : EventArgs
+    internal sealed class ExceptionEvent : EventArgs
     {
         public ExceptionEvent(object sender, Exception exception)
         {

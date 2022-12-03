@@ -12,7 +12,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi
     /// <summary>
     ///     Represents a midi file with a single track that can be played via <see cref="AlphaSynth" />
     /// </summary>
-    internal class MidiFile
+    internal sealed class MidiFile
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="MidiFile" /> class.
@@ -47,7 +47,7 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi
         /// </summary>
         public void Sort()
         {
-            Events = Events.OrderBy(x => x.Tick).ToList();
+            Events = Events.OrderBy(static x => x.Tick).ToList();
         }
 
         /// <summary>

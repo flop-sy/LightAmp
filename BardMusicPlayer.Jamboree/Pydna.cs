@@ -21,7 +21,7 @@ namespace BardMusicPlayer.Jamboree
     /// - create a Session and connect to the listenserver
     /// - add the listensocket from the listenserver to our session
     /// - handshake complete
-    public class Pydna
+    public sealed class Pydna
     {
         private ZeroTierConnector zeroTierConnector;
         private bool _online { get; set; }
@@ -30,6 +30,7 @@ namespace BardMusicPlayer.Jamboree
         {
             if (zeroTierConnector != null)
                 return;
+
             FoundClients.Instance.OwnName = name;
             FoundClients.Instance.Type = type;
 
@@ -55,7 +56,7 @@ namespace BardMusicPlayer.Jamboree
 
         #region NetworkSendFunctions
 
-        public void SendPerformanceStart()
+        public static void SendPerformanceStart()
         {
             FoundClients.Instance.SendToAll(ZeroTierPacketBuilder.PerformanceStart());
         }
@@ -88,6 +89,7 @@ namespace BardMusicPlayer.Jamboree
         {
             if (!_online)
                 return;
+
             FoundClients.Instance.SendToAll(packet);
         }
 

@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class VoiceLfo
+    internal sealed class VoiceLfo
     {
         public int SamplesUntil { get; set; }
         public float Level { get; set; }
@@ -28,15 +28,16 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
             }
 
             Level += Delta * blockSamples;
-            if (Level > 1.0f)
+            switch (Level)
             {
-                Delta = -Delta;
-                Level = 2.0f - Level;
-            }
-            else if (Level < -1.0f)
-            {
-                Delta = -Delta;
-                Level = -2.0f - Level;
+                case > 1.0f:
+                    Delta = -Delta;
+                    Level = 2.0f - Level;
+                    break;
+                case < -1.0f:
+                    Delta = -Delta;
+                    Level = -2.0f - Level;
+                    break;
             }
         }
     }

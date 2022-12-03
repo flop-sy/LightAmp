@@ -79,7 +79,6 @@ namespace BardMusicPlayer.Coffer
             target.Name = name ?? throw new ArgumentNullException();
         }
 
-        /// <inheritdoc />
         internal BmpPlaylist GetBmpPlaylist()
         {
             return target;

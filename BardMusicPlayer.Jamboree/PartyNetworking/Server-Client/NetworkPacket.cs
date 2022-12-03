@@ -9,7 +9,7 @@ using System.Text;
 
 namespace BardMusicPlayer.Jamboree.PartyNetworking
 {
-    public class NetworkPacket : IDisposable
+    public sealed class NetworkPacket : IDisposable
     {
         private readonly BinaryReader readStream;
         private byte _bitPosition = 8;
@@ -37,11 +37,9 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
 
         public void Dispose()
         {
-            if (writeStream != null)
-                writeStream.Dispose();
+            writeStream?.Dispose();
 
-            if (readStream != null)
-                readStream.Dispose();
+            readStream?.Dispose();
         }
 
         public bool HasUnfinishedBitPack()
@@ -76,8 +74,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
 
             var pos = stream.Position;
             stream.Seek(0, SeekOrigin.Begin);
-            for (var i = 0; i < data.Length; i++)
-                data[i] = (byte)stream.ReadByte();
+            for (var i = 0; i < data.Length; i++) data[i] = (byte)stream.ReadByte();
 
             stream.Seek(pos, SeekOrigin.Begin);
             return data;
@@ -90,9 +87,7 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
 
         public Stream GetCurrentStream()
         {
-            if (writeStream != null)
-                return writeStream.BaseStream;
-            return readStream.BaseStream;
+            return writeStream != null ? writeStream.BaseStream : readStream.BaseStream;
         }
 
         public void Clear()
@@ -404,16 +399,14 @@ namespace BardMusicPlayer.Jamboree.PartyNetworking
         {
             --_bitPosition;
 
-            if (bit)
-                BitValue |= (byte)(1 << _bitPosition);
+            if (bit) BitValue |= (byte)(1 << _bitPosition);
 
-            if (_bitPosition == 0)
-            {
-                writeStream.Write(BitValue);
+            if (_bitPosition != 0) return bit;
 
-                _bitPosition = 8;
-                BitValue = 0;
-            }
+            writeStream.Write(BitValue);
+
+            _bitPosition = 8;
+            BitValue = 0;
 
             return bit;
         }

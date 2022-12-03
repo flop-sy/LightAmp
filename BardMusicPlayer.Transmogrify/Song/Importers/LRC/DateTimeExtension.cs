@@ -56,7 +56,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             for (; i < end; i++)
             {
                 var v = value[i] - '0';
-                if (v >= 0 && v <= 9)
+                if (v is >= 0 and <= 9)
                 {
                     m = m * 10 + v;
                 }
@@ -77,7 +77,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             for (; i < end; i++)
             {
                 var v = value[i] - '0';
-                if (v >= 0 && v <= 9)
+                if (v is >= 0 and <= 9)
                 {
                     s = s * 10 + v;
                 }
@@ -99,7 +99,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             for (; i < end; i++)
             {
                 var v = value[i] - '0';
-                if (v >= 0 && v <= 9)
+                if (v is >= 0 and <= 9)
                 {
                     t += weight * v;
                     weight /= 10;
@@ -126,8 +126,10 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
         {
             if (dateTime.Kind != DateTimeKind.Unspecified)
                 throw new ArgumentException("Kind of value should be DateTimeKind.Unspecified");
+
             if (dateTime >= ONE_YEAR) //Auto correct.
                 dateTime = new DateTime(dateTime.TimeOfDay.Ticks);
+
             return dateTime;
         }
     }

@@ -6,7 +6,7 @@ using BardMusicPlayer.Siren.AlphaTab.IO;
 
 namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.SoundFont
 {
-    internal class HydraPmod
+    internal sealed class HydraPmod
     {
         public const int SizeInFile = 10;
 
@@ -18,13 +18,14 @@ namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.SoundFont
 
         public static HydraPmod Load(IReadable reader)
         {
-            var pmod = new HydraPmod();
-
-            pmod.ModSrcOper = reader.ReadUInt16LE();
-            pmod.ModDestOper = reader.ReadUInt16LE();
-            pmod.ModAmount = reader.ReadUInt16LE();
-            pmod.ModAmtSrcOper = reader.ReadUInt16LE();
-            pmod.ModTransOper = reader.ReadUInt16LE();
+            var pmod = new HydraPmod
+            {
+                ModSrcOper = reader.ReadUInt16LE(),
+                ModDestOper = reader.ReadUInt16LE(),
+                ModAmount = reader.ReadUInt16LE(),
+                ModAmtSrcOper = reader.ReadUInt16LE(),
+                ModTransOper = reader.ReadUInt16LE()
+            };
 
             return pmod;
         }

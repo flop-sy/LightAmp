@@ -28,9 +28,7 @@ namespace BardMusicPlayer.Grunt
             if (!await SyncTapKey(game, game.NavigationMenuKeys[NavigationMenuKey.OK])) return false;
 
             await Task.Delay(200);
-            if (!await SyncTapKey(game, game.NavigationMenuKeys[NavigationMenuKey.OK])) return false;
-
-            return true;
+            return await SyncTapKey(game, game.NavigationMenuKeys[NavigationMenuKey.OK]);
         }
 
         /// <summary>
@@ -46,9 +44,7 @@ namespace BardMusicPlayer.Grunt
             if (!await SyncTapKey(game, game.NavigationMenuKeys[NavigationMenuKey.OK])) return false;
 
             await Task.Delay(200);
-            if (!await SyncTapKey(game, game.NavigationMenuKeys[NavigationMenuKey.OK])) return false;
-
-            return true;
+            return await SyncTapKey(game, game.NavigationMenuKeys[NavigationMenuKey.OK]);
         }
     }
 }

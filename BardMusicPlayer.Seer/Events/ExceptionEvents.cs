@@ -22,7 +22,7 @@ namespace BardMusicPlayer.Seer.Events
         }
     }
 
-    public class GameExceptionEvent : SeerExceptionEvent
+    public sealed class GameExceptionEvent : SeerExceptionEvent
     {
         internal GameExceptionEvent(Game game, int pid, Exception exception) : base(exception, EventSource.Game)
         {

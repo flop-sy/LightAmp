@@ -73,9 +73,9 @@
                     PreviewMouseDown="Settings_Button_Down" BorderThickness="0">
                 <Button.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Header="Show Songbrowser Window" Click="ShowSongBrowserWindow_Click" />
+                        <MenuItem Header="Show Song Browser Window" Click="ShowSongBrowserWindow_Click" />
                         <MenuItem Header="Show Bards Window" Click="ShowBardsWindow_Click" />
-                        <MenuItem Header="Show Networkplay Window" Click="ShowNetworkWindow_Click" />
+                        <MenuItem Header="Show Network Play Window" Click="ShowNetworkWindow_Click" />
                         <MenuItem Header="Show Playlist Window" Click="ShowPlaylistWindow_Click" />
                         <MenuItem Header="ExtendedView(for some skins)" Click="ShowExtendedView_Click" />
                         <MenuItem Header="Reset window positions" Click="ResethWindowPositions_Click" />

@@ -1,6 +1,6 @@
 ﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
-    internal class Channel
+    internal sealed class Channel
     {
         public ushort PresetIndex { get; set; }
         public ushort Bank { get; set; }

@@ -6,7 +6,7 @@ using System;
 
 namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 {
-    internal class HotbarSlot : IDisposable
+    internal sealed class HotbarSlot : IDisposable
     {
         private byte _hotbar;
         private byte _slot;
@@ -23,17 +23,18 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
             {
                 var ss = _slot % 10;
                 if (_slot > 10) ss += _slot / 10 * 10 - 1;
+
                 return Convert.ToByte(ss);
             }
             set => _slot = Convert.ToByte(value + 1);
         }
 
-        public byte Action { get; set; } = 0; // Higher level? 0D for 60-70 spells
-        public byte Flag { get; set; } = 0;
-        public byte Unk1 { get; set; } = 0;
-        public byte Unk2 { get; set; } = 0;
-        public byte Job { get; set; } = 0;
-        public byte Type { get; set; } = 0;
+        public byte Action { get; set; } // Higher level? 0D for 60-70 spells
+        public byte Flag { get; set; }
+        public byte Unk1 { get; set; }
+        public byte Unk2 { get; set; }
+        public byte Job { get; set; }
+        public byte Type { get; set; }
 
         public bool IsBard => Job == 0x17;
 
@@ -43,7 +44,7 @@ namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
 
         public override string ToString()
         {
-            return string.Format("HOTBAR_{0}_{1:X}", Hotbar, Slot);
+            return $"HOTBAR_{Hotbar}_{Slot:X}";
         }
 
         ~HotbarSlot()
