@@ -1,18 +1,17 @@
-﻿namespace BardMusicPlayer.Jamboree.Events
-{
-    /// <summary>
-    ///     if the connection
-    /// </summary>
-    public sealed class PartyChangedEvent : JamboreeEvent
-    {
-        internal PartyChangedEvent()
-        {
-            EventType = GetType();
-        }
+﻿namespace BardMusicPlayer.Jamboree.Events;
 
-        public override bool IsValid()
-        {
-            return true;
-        }
+/// <summary>
+///     if the connection
+/// </summary>
+public sealed class PartyChangedEvent : JamboreeEvent
+{
+    internal PartyChangedEvent()
+    {
+        EventType = GetType();
+    }
+
+    public override bool IsValid()
+    {
+        return true;
     }
 }

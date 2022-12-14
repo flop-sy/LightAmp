@@ -26,18 +26,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="LibZeroTier" Version="1.0.8" />
-        <PackageReference Include="ZeroTier.Sockets" Version="1.8.4" />
+        <PackageReference Include="LibZeroTier" Version="1.0.8"/>
+        <PackageReference Include="ZeroTier.Sockets" Version="1.8.4"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj" />
-        <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj" />
+        <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj"/>
+        <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Lib\" />
-        <Folder Include="PartyClient\ZeroTier\" />
+        <Folder Include="Lib\"/>
+        <Folder Include="PartyClient\ZeroTier\"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -45,7 +45,7 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <TargetPath>libzt.dll</TargetPath>
         </ContentWithTargetPath>
-        <None Include="Lib\libzt.dll" />
+        <None Include="Lib\libzt.dll"/>
     </ItemGroup>
 
 </Project>
