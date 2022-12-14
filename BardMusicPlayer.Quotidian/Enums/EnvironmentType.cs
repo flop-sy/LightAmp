@@ -1,9 +1,8 @@
-﻿namespace BardMusicPlayer.Quotidian.Enums
+﻿namespace BardMusicPlayer.Quotidian.Enums;
+
+public enum EnvironmentType
 {
-    public enum EnvironmentType
-    {
-        Normal,
-        Sandboxie,
-        InnerSpace
-    }
+    Normal,
+    Sandboxie,
+    InnerSpace
 }

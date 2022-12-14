@@ -1,9 +1,8 @@
-﻿namespace BardMusicPlayer.Quotidian.Enums
+﻿namespace BardMusicPlayer.Quotidian.Enums;
+
+public enum GameRegion
 {
-    public enum GameRegion
-    {
-        Global,
-        China,
-        Korea
-    }
+    Global,
+    China,
+    Korea
 }

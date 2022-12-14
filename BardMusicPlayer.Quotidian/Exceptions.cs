@@ -4,20 +4,19 @@ using System;
 
 #endregion
 
-namespace BardMusicPlayer.Quotidian
+namespace BardMusicPlayer.Quotidian;
+
+public class BmpException : Exception
 {
-    public class BmpException : Exception
+    public BmpException()
     {
-        public BmpException()
-        {
-        }
+    }
 
-        public BmpException(string message) : base(message)
-        {
-        }
+    public BmpException(string message) : base(message)
+    {
+    }
 
-        public BmpException(string message, Exception inner) : base(message, inner)
-        {
-        }
+    public BmpException(string message, Exception inner) : base(message, inner)
+    {
     }
 }

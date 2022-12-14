@@ -7,336 +7,335 @@ using System.Linq;
 
 #endregion
 
-namespace BardMusicPlayer.Quotidian.Structs
+namespace BardMusicPlayer.Quotidian.Structs;
+
+/// <summary>
+///     Represents available instrument tone groups in game.
+/// </summary>
+public readonly struct InstrumentTone : IComparable, IConvertible, IComparable<InstrumentTone>,
+    IEquatable<InstrumentTone>
 {
+    public static readonly InstrumentTone None = new("None", 0, Instrument.None, Instrument.None, Instrument.None,
+        Instrument.None, Instrument.None);
+
+    public static readonly InstrumentTone Strummed = new("Strummed", 1, Instrument.Harp, Instrument.Piano,
+        Instrument.Lute, Instrument.Fiddle, Instrument.None);
+
+    public static readonly InstrumentTone Wind = new("Wind", 2, Instrument.Flute, Instrument.Oboe,
+        Instrument.Clarinet, Instrument.Fife, Instrument.Panpipes);
+
+    public static readonly InstrumentTone Drums = new("Drums", 3, Instrument.Timpani, Instrument.Bongo,
+        Instrument.BassDrum, Instrument.SnareDrum, Instrument.Cymbal);
+
+    public static readonly InstrumentTone Brass = new("Brass", 4, Instrument.Trumpet, Instrument.Trombone,
+        Instrument.Tuba, Instrument.Horn, Instrument.Saxophone);
+
+    public static readonly InstrumentTone Strings = new("Strings", 5, Instrument.Violin, Instrument.Viola,
+        Instrument.Cello, Instrument.DoubleBass, Instrument.None);
+
+    public static readonly InstrumentTone ElectricGuitar = new("ElectricGuitar", 6,
+        Instrument.ElectricGuitarOverdriven, Instrument.ElectricGuitarClean, Instrument.ElectricGuitarMuted,
+        Instrument.ElectricGuitarPowerChords, Instrument.ElectricGuitarSpecial);
+
+    public static readonly IReadOnlyList<InstrumentTone> All =
+        new ReadOnlyCollection<InstrumentTone>(new List<InstrumentTone>
+            { Strummed, Wind, Drums, Brass, Strings, ElectricGuitar });
+
     /// <summary>
-    ///     Represents available instrument tone groups in game.
+    ///     Gets the name.
     /// </summary>
-    public readonly struct InstrumentTone : IComparable, IConvertible, IComparable<InstrumentTone>,
-        IEquatable<InstrumentTone>
+    /// <value>The name.</value>
+    public string Name { get; }
+
+    /// <summary>
+    ///     Gets the index.
+    /// </summary>
+    /// <value>The index.</value>
+    public int Index { get; }
+
+    /// <summary>
+    /// </summary>
+    public Instrument Tone0 { get; }
+
+    /// <summary>
+    /// </summary>
+    public Instrument Tone1 { get; }
+
+    /// <summary>
+    /// </summary>
+    public Instrument Tone2 { get; }
+
+    /// <summary>
+    /// </summary>
+    public Instrument Tone3 { get; }
+
+    /// <summary>
+    /// </summary>
+    public Instrument Tone4 { get; }
+
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="InstrumentTone" /> struct.
+    /// </summary>
+    /// <param name="name">Name.</param>
+    /// <param name="index">Index.</param>
+    /// <param name="tone0"></param>
+    /// <param name="tone1"></param>
+    /// <param name="tone2"></param>
+    /// <param name="tone3"></param>
+    /// <param name="tone4"></param>
+    private InstrumentTone(string name, int index, Instrument tone0, Instrument tone1, Instrument tone2,
+        Instrument tone3, Instrument tone4)
     {
-        public static readonly InstrumentTone None = new("None", 0, Instrument.None, Instrument.None, Instrument.None,
-            Instrument.None, Instrument.None);
+        Name = name;
+        Index = index;
+        Tone0 = tone0;
+        Tone1 = tone1;
+        Tone2 = tone2;
+        Tone3 = tone3;
+        Tone4 = tone4;
+    }
 
-        public static readonly InstrumentTone Strummed = new("Strummed", 1, Instrument.Harp, Instrument.Piano,
-            Instrument.Lute, Instrument.Fiddle, Instrument.None);
+    /// <summary>
+    ///     Determines whether the specified <see cref="InstrumentTone" /> is equal to the
+    ///     current <see cref="InstrumentTone" />.
+    /// </summary>
+    /// <param name="other">The <see cref="InstrumentTone" /> to compare with the current <see cref="InstrumentTone" />.</param>
+    /// <returns>
+    ///     <c>true</c> if the specified <see cref="InstrumentTone" /> is equal to the current
+    ///     <see cref="InstrumentTone" />; otherwise, <c>false</c>.
+    /// </returns>
+    public bool Equals(InstrumentTone other)
+    {
+        return Index == other;
+    }
 
-        public static readonly InstrumentTone Wind = new("Wind", 2, Instrument.Flute, Instrument.Oboe,
-            Instrument.Clarinet, Instrument.Fife, Instrument.Panpipes);
+    bool IEquatable<InstrumentTone>.Equals(InstrumentTone other)
+    {
+        return Equals(other);
+    }
 
-        public static readonly InstrumentTone Drums = new("Drums", 3, Instrument.Timpani, Instrument.Bongo,
-            Instrument.BassDrum, Instrument.SnareDrum, Instrument.Cymbal);
+    /// <summary>
+    ///     Determines whether the specified <see cref="object" /> is equal to the current <see cref="InstrumentTone" />.
+    /// </summary>
+    /// <param name="obj">The <see cref="object" /> to compare with the current <see cref="InstrumentTone" />.</param>
+    /// <returns>
+    ///     <c>true</c> if the specified <see cref="object" /> is equal to the current
+    ///     <see cref="InstrumentTone" />; otherwise, <c>false</c>.
+    /// </returns>
+    public override bool Equals(object obj)
+    {
+        return obj is InstrumentTone instrumentTone && Equals(instrumentTone);
+    }
 
-        public static readonly InstrumentTone Brass = new("Brass", 4, Instrument.Trumpet, Instrument.Trombone,
-            Instrument.Tuba, Instrument.Horn, Instrument.Saxophone);
+    /// <summary>
+    ///     Serves as a hash function for a <see cref="Instrument" /> object.
+    /// </summary>
+    /// <returns>
+    ///     A hash code for this instance that is suitable for use in hashing algorithms and data structures such as a
+    ///     hash table.
+    /// </returns>
+    public override int GetHashCode()
+    {
+        return (Name, Index).GetHashCode();
+    }
 
-        public static readonly InstrumentTone Strings = new("Strings", 5, Instrument.Violin, Instrument.Viola,
-            Instrument.Cello, Instrument.DoubleBass, Instrument.None);
+    public static implicit operator string(InstrumentTone instrumentTone)
+    {
+        return instrumentTone.Name;
+    }
 
-        public static readonly InstrumentTone ElectricGuitar = new("ElectricGuitar", 6,
-            Instrument.ElectricGuitarOverdriven, Instrument.ElectricGuitarClean, Instrument.ElectricGuitarMuted,
-            Instrument.ElectricGuitarPowerChords, Instrument.ElectricGuitarSpecial);
+    public static implicit operator InstrumentTone(string name)
+    {
+        return Parse(name);
+    }
 
-        public static readonly IReadOnlyList<InstrumentTone> All =
-            new ReadOnlyCollection<InstrumentTone>(new List<InstrumentTone>
-                { Strummed, Wind, Drums, Brass, Strings, ElectricGuitar });
+    public static implicit operator int(InstrumentTone instrumentTone)
+    {
+        return instrumentTone.Index;
+    }
 
-        /// <summary>
-        ///     Gets the name.
-        /// </summary>
-        /// <value>The name.</value>
-        public string Name { get; }
+    public static implicit operator InstrumentTone(int index)
+    {
+        return Parse(index);
+    }
 
-        /// <summary>
-        ///     Gets the index.
-        /// </summary>
-        /// <value>The index.</value>
-        public int Index { get; }
+    public int CompareTo(object obj)
+    {
+        if (obj == null) return 1;
 
-        /// <summary>
-        /// </summary>
-        public Instrument Tone0 { get; }
+        if (obj is not Instrument instrument) throw new ArgumentException("This is not an InstrumentTone");
 
-        /// <summary>
-        /// </summary>
-        public Instrument Tone1 { get; }
+        return Index - instrument.Index;
+    }
 
-        /// <summary>
-        /// </summary>
-        public Instrument Tone2 { get; }
+    public int CompareTo(InstrumentTone other)
+    {
+        return Index - other.Index;
+    }
 
-        /// <summary>
-        /// </summary>
-        public Instrument Tone3 { get; }
+    public TypeCode GetTypeCode()
+    {
+        return TypeCode.Int32;
+    }
 
-        /// <summary>
-        /// </summary>
-        public Instrument Tone4 { get; }
+    public bool ToBoolean(IFormatProvider provider)
+    {
+        throw new InvalidCastException("Invalid cast from InstrumentTone to Boolean");
+    }
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="InstrumentTone" /> struct.
-        /// </summary>
-        /// <param name="name">Name.</param>
-        /// <param name="index">Index.</param>
-        /// <param name="tone0"></param>
-        /// <param name="tone1"></param>
-        /// <param name="tone2"></param>
-        /// <param name="tone3"></param>
-        /// <param name="tone4"></param>
-        private InstrumentTone(string name, int index, Instrument tone0, Instrument tone1, Instrument tone2,
-            Instrument tone3, Instrument tone4)
+    public char ToChar(IFormatProvider provider)
+    {
+        throw new InvalidCastException("Invalid cast from InstrumentTone to Char");
+    }
+
+    public sbyte ToSByte(IFormatProvider provider)
+    {
+        return Convert.ToSByte(Index);
+    }
+
+    public byte ToByte(IFormatProvider provider)
+    {
+        return Convert.ToByte(Index);
+    }
+
+    public short ToInt16(IFormatProvider provider)
+    {
+        return Convert.ToInt16(Index);
+    }
+
+    public ushort ToUInt16(IFormatProvider provider)
+    {
+        return Convert.ToUInt16(Index);
+    }
+
+    public int ToInt32(IFormatProvider provider)
+    {
+        return Convert.ToInt32(Index);
+    }
+
+    public uint ToUInt32(IFormatProvider provider)
+    {
+        return Convert.ToUInt32(Index);
+    }
+
+    public long ToInt64(IFormatProvider provider)
+    {
+        return Convert.ToInt64(Index);
+    }
+
+    public ulong ToUInt64(IFormatProvider provider)
+    {
+        return Convert.ToUInt64(Index);
+    }
+
+    public float ToSingle(IFormatProvider provider)
+    {
+        throw new InvalidCastException("Invalid cast from InstrumentTone to Single");
+    }
+
+    public double ToDouble(IFormatProvider provider)
+    {
+        throw new InvalidCastException("Invalid cast from InstrumentTone to Double");
+    }
+
+    public decimal ToDecimal(IFormatProvider provider)
+    {
+        throw new InvalidCastException("Invalid cast from InstrumentTone to Decimal");
+    }
+
+    public DateTime ToDateTime(IFormatProvider provider)
+    {
+        throw new InvalidCastException("Invalid cast from InstrumentTone to DateTime");
+    }
+
+    public string ToString(IFormatProvider provider)
+    {
+        return Name;
+    }
+
+    public override string ToString()
+    {
+        return Name;
+    }
+
+    public object ToType(Type conversionType, IFormatProvider provider)
+    {
+        throw new InvalidCastException("Invalid cast from InstrumentTone to " + conversionType);
+    }
+
+    public Instrument GetInstrumentFromChannel(int channel)
+    {
+        return channel switch
         {
-            Name = name;
-            Index = index;
-            Tone0 = tone0;
-            Tone1 = tone1;
-            Tone2 = tone2;
-            Tone3 = tone3;
-            Tone4 = tone4;
+            0 => Tone0,
+            1 => Tone1,
+            2 => Tone2,
+            3 => Tone3,
+            4 => Tone4,
+            _ => Instrument.None
+        };
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="instrumentTone"></param>
+    /// <returns></returns>
+    public static InstrumentTone Parse(int instrumentTone)
+    {
+        TryParse(instrumentTone, out var result);
+        return result;
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="instrumentTone"></param>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public static bool TryParse(int instrumentTone, out InstrumentTone result)
+    {
+        if (All.Any(x => x.Index.Equals(instrumentTone)))
+        {
+            result = All.First(x => x.Index.Equals(instrumentTone));
+            return true;
         }
 
-        /// <summary>
-        ///     Determines whether the specified <see cref="InstrumentTone" /> is equal to the
-        ///     current <see cref="InstrumentTone" />.
-        /// </summary>
-        /// <param name="other">The <see cref="InstrumentTone" /> to compare with the current <see cref="InstrumentTone" />.</param>
-        /// <returns>
-        ///     <c>true</c> if the specified <see cref="InstrumentTone" /> is equal to the current
-        ///     <see cref="InstrumentTone" />; otherwise, <c>false</c>.
-        /// </returns>
-        public bool Equals(InstrumentTone other)
+        result = None;
+        return false;
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="instrumentTone"></param>
+    /// <returns></returns>
+    public static InstrumentTone Parse(string instrumentTone)
+    {
+        TryParse(instrumentTone, out var result);
+        return result;
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="instrumentTone"></param>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    public static bool TryParse(string instrumentTone, out InstrumentTone result)
+    {
+        if (instrumentTone is null)
         {
-            return Index == other;
-        }
-
-        bool IEquatable<InstrumentTone>.Equals(InstrumentTone other)
-        {
-            return Equals(other);
-        }
-
-        /// <summary>
-        ///     Determines whether the specified <see cref="object" /> is equal to the current <see cref="InstrumentTone" />.
-        /// </summary>
-        /// <param name="obj">The <see cref="object" /> to compare with the current <see cref="InstrumentTone" />.</param>
-        /// <returns>
-        ///     <c>true</c> if the specified <see cref="object" /> is equal to the current
-        ///     <see cref="InstrumentTone" />; otherwise, <c>false</c>.
-        /// </returns>
-        public override bool Equals(object obj)
-        {
-            return obj is InstrumentTone instrumentTone && Equals(instrumentTone);
-        }
-
-        /// <summary>
-        ///     Serves as a hash function for a <see cref="Instrument" /> object.
-        /// </summary>
-        /// <returns>
-        ///     A hash code for this instance that is suitable for use in hashing algorithms and data structures such as a
-        ///     hash table.
-        /// </returns>
-        public override int GetHashCode()
-        {
-            return (Name, Index).GetHashCode();
-        }
-
-        public static implicit operator string(InstrumentTone instrumentTone)
-        {
-            return instrumentTone.Name;
-        }
-
-        public static implicit operator InstrumentTone(string name)
-        {
-            return Parse(name);
-        }
-
-        public static implicit operator int(InstrumentTone instrumentTone)
-        {
-            return instrumentTone.Index;
-        }
-
-        public static implicit operator InstrumentTone(int index)
-        {
-            return Parse(index);
-        }
-
-        public int CompareTo(object obj)
-        {
-            if (obj == null) return 1;
-
-            if (obj is not Instrument instrument) throw new ArgumentException("This is not an InstrumentTone");
-
-            return Index - instrument.Index;
-        }
-
-        public int CompareTo(InstrumentTone other)
-        {
-            return Index - other.Index;
-        }
-
-        public TypeCode GetTypeCode()
-        {
-            return TypeCode.Int32;
-        }
-
-        public bool ToBoolean(IFormatProvider provider)
-        {
-            throw new InvalidCastException("Invalid cast from InstrumentTone to Boolean");
-        }
-
-        public char ToChar(IFormatProvider provider)
-        {
-            throw new InvalidCastException("Invalid cast from InstrumentTone to Char");
-        }
-
-        public sbyte ToSByte(IFormatProvider provider)
-        {
-            return Convert.ToSByte(Index);
-        }
-
-        public byte ToByte(IFormatProvider provider)
-        {
-            return Convert.ToByte(Index);
-        }
-
-        public short ToInt16(IFormatProvider provider)
-        {
-            return Convert.ToInt16(Index);
-        }
-
-        public ushort ToUInt16(IFormatProvider provider)
-        {
-            return Convert.ToUInt16(Index);
-        }
-
-        public int ToInt32(IFormatProvider provider)
-        {
-            return Convert.ToInt32(Index);
-        }
-
-        public uint ToUInt32(IFormatProvider provider)
-        {
-            return Convert.ToUInt32(Index);
-        }
-
-        public long ToInt64(IFormatProvider provider)
-        {
-            return Convert.ToInt64(Index);
-        }
-
-        public ulong ToUInt64(IFormatProvider provider)
-        {
-            return Convert.ToUInt64(Index);
-        }
-
-        public float ToSingle(IFormatProvider provider)
-        {
-            throw new InvalidCastException("Invalid cast from InstrumentTone to Single");
-        }
-
-        public double ToDouble(IFormatProvider provider)
-        {
-            throw new InvalidCastException("Invalid cast from InstrumentTone to Double");
-        }
-
-        public decimal ToDecimal(IFormatProvider provider)
-        {
-            throw new InvalidCastException("Invalid cast from InstrumentTone to Decimal");
-        }
-
-        public DateTime ToDateTime(IFormatProvider provider)
-        {
-            throw new InvalidCastException("Invalid cast from InstrumentTone to DateTime");
-        }
-
-        public string ToString(IFormatProvider provider)
-        {
-            return Name;
-        }
-
-        public override string ToString()
-        {
-            return Name;
-        }
-
-        public object ToType(Type conversionType, IFormatProvider provider)
-        {
-            throw new InvalidCastException("Invalid cast from InstrumentTone to " + conversionType);
-        }
-
-        public Instrument GetInstrumentFromChannel(int channel)
-        {
-            return channel switch
-            {
-                0 => Tone0,
-                1 => Tone1,
-                2 => Tone2,
-                3 => Tone3,
-                4 => Tone4,
-                _ => Instrument.None
-            };
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="instrumentTone"></param>
-        /// <returns></returns>
-        public static InstrumentTone Parse(int instrumentTone)
-        {
-            TryParse(instrumentTone, out var result);
-            return result;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="instrumentTone"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static bool TryParse(int instrumentTone, out InstrumentTone result)
-        {
-            if (All.Any(x => x.Index.Equals(instrumentTone)))
-            {
-                result = All.First(x => x.Index.Equals(instrumentTone));
-                return true;
-            }
-
             result = None;
             return false;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="instrumentTone"></param>
-        /// <returns></returns>
-        public static InstrumentTone Parse(string instrumentTone)
+        instrumentTone = instrumentTone.Replace(" ", "").Replace("_", "");
+        if (int.TryParse(instrumentTone, out var number)) return TryParse(number, out result);
+
+        if (All.Any(x => x.Name.Equals(instrumentTone, StringComparison.CurrentCultureIgnoreCase)))
         {
-            TryParse(instrumentTone, out var result);
-            return result;
+            result = All.First(x => x.Name.Equals(instrumentTone, StringComparison.CurrentCultureIgnoreCase));
+            return true;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="instrumentTone"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        public static bool TryParse(string instrumentTone, out InstrumentTone result)
-        {
-            if (instrumentTone is null)
-            {
-                result = None;
-                return false;
-            }
-
-            instrumentTone = instrumentTone.Replace(" ", "").Replace("_", "");
-            if (int.TryParse(instrumentTone, out var number)) return TryParse(number, out result);
-
-            if (All.Any(x => x.Name.Equals(instrumentTone, StringComparison.CurrentCultureIgnoreCase)))
-            {
-                result = All.First(x => x.Name.Equals(instrumentTone, StringComparison.CurrentCultureIgnoreCase));
-                return true;
-            }
-
-            result = None;
-            return false;
-        }
+        result = None;
+        return false;
     }
 }

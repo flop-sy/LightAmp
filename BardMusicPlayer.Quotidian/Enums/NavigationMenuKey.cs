@@ -1,40 +1,39 @@
-﻿namespace BardMusicPlayer.Quotidian.Enums
+﻿namespace BardMusicPlayer.Quotidian.Enums;
+
+public enum NavigationMenuKey
 {
-    public enum NavigationMenuKey
-    {
-        /// <summary>
-        ///     close ui component/open system menu
-        /// </summary>
-        ESC,
+    /// <summary>
+    ///     close ui component/open system menu
+    /// </summary>
+    ESC,
 
-        /// <summary>
-        ///     Confirm
-        /// </summary>
-        OK,
+    /// <summary>
+    ///     Confirm
+    /// </summary>
+    OK,
 
-        /// <summary>
-        ///     move cursor up/cycle up through party list
-        /// </summary>
-        UP,
+    /// <summary>
+    ///     move cursor up/cycle up through party list
+    /// </summary>
+    UP,
 
-        /// <summary>
-        ///     move cursor down/cycle down through partylist
-        /// </summary>
-        DOWN,
+    /// <summary>
+    ///     move cursor down/cycle down through partylist
+    /// </summary>
+    DOWN,
 
-        /// <summary>
-        ///     move cursor/target cursor right
-        /// </summary>
-        RIGHT,
+    /// <summary>
+    ///     move cursor/target cursor right
+    /// </summary>
+    RIGHT,
 
-        /// <summary>
-        ///     move cursor/target cursor left
-        /// </summary>
-        LEFT,
+    /// <summary>
+    ///     move cursor/target cursor left
+    /// </summary>
+    LEFT,
 
-        /// <summary>
-        ///     xbox back, playstation select
-        /// </summary>
-        VIRTUAL_PAD_SELECT
-    }
+    /// <summary>
+    ///     xbox back, playstation select
+    /// </summary>
+    VIRTUAL_PAD_SELECT
 }
