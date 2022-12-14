@@ -33,16 +33,17 @@
         <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
         <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
         <EnableDefaultPageItems>false</EnableDefaultPageItems>
+        <Platforms>x64</Platforms>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
         <DebugType>portable</DebugType>
         <PlatformTarget>x64</PlatformTarget>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
         <DebugType>portable</DebugType>
         <PlatformTarget>x64</PlatformTarget>
         <DefineConstants>TRACE</DefineConstants>

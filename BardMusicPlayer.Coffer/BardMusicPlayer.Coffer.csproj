@@ -13,7 +13,7 @@
         <RepositoryUrl>https://github.com/BardMusicPlayer/BardMusicPlayer</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <UserSecretsId>9705d18d-4e1e-4eba-a865-deffc1c16d5b</UserSecretsId>
-        <Platforms>AnyCPU;x64</Platforms>
+        <Platforms>x64</Platforms>
         <Configurations>Debug;Release</Configurations>
         <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>

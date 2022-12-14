@@ -27,7 +27,7 @@ public static partial class GameExtensions
 #if DEBUG
             throw new BmpGruntException("Note is not in C3toC6 range.");
 #else
-                return false;
+            return false;
 #endif
 
         if (game.InstrumentHeld.Equals(Instrument.None) || game.ChatStatus || !game.IsBard) return false;
@@ -54,7 +54,7 @@ public static partial class GameExtensions
 #if DEBUG
             throw new BmpGruntException("Note is not in C3toC6 range.");
 #else
-                return false;
+            return false;
 #endif
 
         if (game.InstrumentHeld.Equals(Instrument.None) || game.ChatStatus || !game.IsBard) return false;

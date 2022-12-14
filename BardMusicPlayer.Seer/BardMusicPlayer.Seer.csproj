@@ -12,20 +12,12 @@
         <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/BardMusicPlayer/BardMusicPlayer</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <Platforms>AnyCPU;x64</Platforms>
+        <Platforms>x64</Platforms>
         <Configurations>Debug;Release</Configurations>
         <PlatformTarget>x64</PlatformTarget>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
