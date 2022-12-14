@@ -4,12 +4,11 @@ using LiteDB;
 
 #endregion
 
-namespace BardMusicPlayer.Coffer
+namespace BardMusicPlayer.Coffer;
+
+public sealed class LiteDBSchema
 {
-    public sealed class LiteDBSchema
-    {
-        [BsonId]
-        public int Id { get; set; } = Constants.SCHEMA_DOCUMENT_ID;
-        public static byte Version => Constants.SCHEMA_VERSION;
-    }
+    [BsonId] public int Id { get; set; } = Constants.SCHEMA_DOCUMENT_ID;
+
+    public static byte Version => Constants.SCHEMA_VERSION;
 }
