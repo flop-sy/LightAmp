@@ -1,4 +1,4 @@
-﻿namespace BardMusicPlayer.Seer.Utilities
+namespace BardMusicPlayer.Seer.Utilities
 {
     internal static class ActorIdTools
     {

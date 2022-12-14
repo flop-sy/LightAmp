@@ -1,4 +1,4 @@
-﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event
+namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi.Event
 {
     internal enum MetaEventTypeEnum
     {

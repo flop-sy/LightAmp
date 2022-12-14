@@ -145,7 +145,6 @@ namespace BardMusicPlayer.Ui.Controls
         }
 
         #region CPU-Tab
-
         private void PopulateCPUTab()
         {
             //Get the our application's process.

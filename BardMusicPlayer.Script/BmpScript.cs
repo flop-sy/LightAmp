@@ -78,7 +78,6 @@ namespace BardMusicPlayer.Script
                 {
                     Console.WriteLine("Error");
                 }
-
                 OnRunningStateChanged?.Invoke(this, false);
 
                 unselected_bards = null;

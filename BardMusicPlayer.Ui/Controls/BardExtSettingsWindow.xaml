@@ -132,8 +132,6 @@
                                   VerticalAlignment="Center" />
                     </Grid>
                 </Grid>
-
-
             </TabItem>
 
             <TabItem Header="XIV Affinity">

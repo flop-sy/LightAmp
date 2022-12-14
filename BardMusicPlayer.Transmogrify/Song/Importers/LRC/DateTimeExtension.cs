@@ -116,7 +116,7 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.LrcParser
             result = new DateTime(t + TICKS_PER_SECOND * s + TICKS_PER_MINUTE * m, DateTimeKind.Unspecified);
             return true;
 
-            ERROR:
+        ERROR:
             result = default;
             return false;
         }

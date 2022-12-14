@@ -1,5 +1,7 @@
 ﻿#region
 
+#region
+
 using System;
 using BardMusicPlayer.Quotidian;
 using BardMusicPlayer.Seer.Events;

@@ -1,4 +1,5 @@
-﻿namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events
+
 {
     public sealed class GameStopped : SeerEvent
     {

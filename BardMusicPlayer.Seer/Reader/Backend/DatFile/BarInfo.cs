@@ -1,4 +1,4 @@
-﻿namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
+namespace BardMusicPlayer.Seer.Reader.Backend.DatFile
 {
     internal sealed class BarInfo
     {

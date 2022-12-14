@@ -1,4 +1,4 @@
-﻿#region
+#region
 
 using System;
 using System.Collections.ObjectModel;
@@ -266,7 +266,7 @@ namespace BardMusicPlayer.Ui.Classic
         {
             var openFileDialog = new SaveFileDialog
             {
-                Filter = "Performer Config | *.lrc"
+                Filter = "Lyrics File | *.lrc"
             };
 
             if (openFileDialog.ShowDialog() != true)

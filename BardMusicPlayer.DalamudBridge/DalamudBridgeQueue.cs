@@ -7,6 +7,7 @@ using BardMusicPlayer.DalamudBridge.Helper.Dalamud;
 
 #endregion
 
+
 namespace BardMusicPlayer.DalamudBridge
 {
     public sealed partial class DalamudBridge

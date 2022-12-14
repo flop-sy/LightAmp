@@ -22,7 +22,7 @@ namespace BardMusicPlayer.Ui.Classic
         public string File { get; set; } = "";
     }
 
-    public partial class MacroLaunchpad
+    public sealed partial class MacroLaunchpad
     {
         public MacroLaunchpad()
         {

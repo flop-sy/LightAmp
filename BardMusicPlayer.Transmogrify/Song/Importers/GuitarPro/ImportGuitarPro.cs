@@ -43,7 +43,6 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                 case 5:
                     gpfile = new GP5File(loader);
                     gpfile.readSong();
-
                     break;
                 case 6:
                     gpfile = new GP6File(loader);
@@ -51,15 +50,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                     gpfile = gpfile.self; //Replace with transferred GP5 file
 
                     break;
-                /*case 7:
-                    string archiveName = url.Substring(8).Replace("%20", " ");
+                case 7:
+                    string archiveName = path;
                     byte[] buffer = new byte[8200000];
                     MemoryStream stream = new MemoryStream(buffer);
                     using (var unzip = new Unzip(archiveName))
                     {
-                        //Console.WriteLine("Listing files in the archive:");
-                        ListFiles(unzip);
-
                         unzip.Extract("Content/score.gpif", stream);
                         stream.Position = 0;
                         var sr = new StreamReader(stream);
@@ -68,15 +64,12 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
                         gpfile = new GP7File(gp7xml);
                         gpfile.readSong();
                         gpfile = gpfile.self; //Replace with transferred GP5 file
-
                     }
-                    break;*/
+                    break;
                 default:
                     Debug.WriteLine("Unknown File Format");
-                    break;
+                    return null;
             }
-
-            Debug.WriteLine("Done");
 
             var song = new NativeFormat(gpfile);
             var midi = song.toMidi();

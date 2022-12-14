@@ -1,4 +1,4 @@
-﻿namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities
 {
     internal class EnsembleMessageLookup
     {

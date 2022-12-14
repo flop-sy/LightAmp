@@ -71,21 +71,11 @@ namespace BardMusicPlayer.Coffer
         internal static BmpCoffer CreateInstance(string dbPath)
         {
             var mapper = new BsonMapper();
-            mapper.RegisterType
-            (static group => group.Index, static bson => Instrument.Parse(bson.AsInt32)
-            );
-            mapper.RegisterType
-            (static group => group.Index, static bson => InstrumentTone.Parse(bson.AsInt32)
-            );
-            mapper.RegisterType
-            (static group => group.Index, static bson => OctaveRange.Parse(bson.AsInt32)
-            );
-            mapper.RegisterType
-            (static tempoMap => SerializeTempoMap(tempoMap), static bson => DeserializeTempoMap(bson.AsBinary)
-            );
-            mapper.RegisterType
-            (static trackChunk => SerializeTrackChunk(trackChunk), static bson => DeserializeTrackChunk(bson.AsBinary)
-            );
+            mapper.RegisterType(static group => group.Index, static bson => Instrument.Parse(bson.AsInt32));
+            mapper.RegisterType(static group => group.Index, static bson => InstrumentTone.Parse(bson.AsInt32));
+            mapper.RegisterType(static group => group.Index, static bson => OctaveRange.Parse(bson.AsInt32));
+            mapper.RegisterType(static tempoMap => SerializeTempoMap(tempoMap), static bson => DeserializeTempoMap(bson.AsBinary));
+            mapper.RegisterType(static trackChunk => SerializeTrackChunk(trackChunk), static bson => DeserializeTrackChunk(bson.AsBinary));
 
             var dbi = new LiteDatabase(@"filename=" + dbPath + "; journal = false", mapper);
             MigrateDatabase(dbi);
@@ -101,21 +91,11 @@ namespace BardMusicPlayer.Coffer
         {
             this.dbi.Dispose();
             var mapper = new BsonMapper();
-            mapper.RegisterType
-            (static group => group.Index, static bson => Instrument.Parse(bson.AsInt32)
-            );
-            mapper.RegisterType
-            (static group => group.Index, static bson => InstrumentTone.Parse(bson.AsInt32)
-            );
-            mapper.RegisterType
-            (static group => group.Index, static bson => OctaveRange.Parse(bson.AsInt32)
-            );
-            mapper.RegisterType
-            (static tempoMap => SerializeTempoMap(tempoMap), static bson => DeserializeTempoMap(bson.AsBinary)
-            );
-            mapper.RegisterType
-            (static trackChunk => SerializeTrackChunk(trackChunk), static bson => DeserializeTrackChunk(bson.AsBinary)
-            );
+            mapper.RegisterType(static group => group.Index, static bson => Instrument.Parse(bson.AsInt32));
+            mapper.RegisterType(static group => group.Index, static bson => InstrumentTone.Parse(bson.AsInt32));
+            mapper.RegisterType(static group => group.Index, static bson => OctaveRange.Parse(bson.AsInt32));
+            mapper.RegisterType(static tempoMap => SerializeTempoMap(tempoMap), static bson => DeserializeTempoMap(bson.AsBinary));
+            mapper.RegisterType(static trackChunk => SerializeTrackChunk(trackChunk), static bson => DeserializeTrackChunk(bson.AsBinary));
 
             var dbi = new LiteDatabase(@"filename=" + file + "; journal = false",
                 mapper); //turn journal off, for big containers
@@ -547,7 +527,6 @@ namespace BardMusicPlayer.Coffer
                 throw new BmpCofferException(e.Message, e);
             }
         }
-
         #endregion
     }
 }

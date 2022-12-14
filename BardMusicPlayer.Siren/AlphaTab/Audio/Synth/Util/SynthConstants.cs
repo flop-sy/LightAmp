@@ -1,4 +1,4 @@
-﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util
+namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Util
 {
     internal static class SynthConstants
     {

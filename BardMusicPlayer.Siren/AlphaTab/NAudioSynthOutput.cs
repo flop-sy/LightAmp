@@ -1,5 +1,7 @@
 ﻿#region
 
+#region
+
 using System;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds;

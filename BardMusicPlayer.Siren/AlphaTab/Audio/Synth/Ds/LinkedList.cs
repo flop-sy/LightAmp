@@ -1,4 +1,5 @@
-﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
+namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
+
 {
     internal sealed class LinkedList<T> where T : class
     {

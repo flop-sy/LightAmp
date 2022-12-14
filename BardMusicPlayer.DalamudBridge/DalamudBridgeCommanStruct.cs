@@ -6,6 +6,7 @@ using BardMusicPlayer.Seer;
 
 #endregion
 
+
 namespace BardMusicPlayer.DalamudBridge
 {
     public struct DalamudBridgeCommandStruct

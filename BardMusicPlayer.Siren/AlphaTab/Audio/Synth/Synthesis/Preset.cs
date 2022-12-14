@@ -1,4 +1,4 @@
-﻿namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
+namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
 {
     internal sealed class Preset
     {

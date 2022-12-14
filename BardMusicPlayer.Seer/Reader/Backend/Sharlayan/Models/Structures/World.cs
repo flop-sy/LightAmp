@@ -1,4 +1,4 @@
-﻿namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.Structures
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models.Structures
 {
     internal sealed class World
     {
