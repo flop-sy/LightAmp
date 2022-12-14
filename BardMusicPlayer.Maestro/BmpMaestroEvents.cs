@@ -8,111 +8,110 @@ using BardMusicPlayer.Maestro.Events;
 
 #endregion
 
-namespace BardMusicPlayer.Maestro
+namespace BardMusicPlayer.Maestro;
+
+public sealed partial class BmpMaestro
 {
-    public sealed partial class BmpMaestro
+    private ConcurrentQueue<MaestroEvent> _eventQueue;
+    private bool _eventQueueOpen;
+
+    private CancellationTokenSource _eventsTokenSource;
+    public EventHandler<OctaveShiftChangedEvent> OnOctaveShiftChanged;
+    public EventHandler<bool> OnPerformerChanged;
+    public EventHandler<PerformerUpdate> OnPerformerUpdate;
+    public EventHandler<bool> OnPlaybackStarted;
+    public EventHandler<bool> OnPlaybackStopped;
+    public EventHandler<CurrentPlayPositionEvent> OnPlaybackTimeChanged;
+    public EventHandler<SongLoadedEvent> OnSongLoaded;
+    public EventHandler<MaxPlayTimeEvent> OnSongMaxTime;
+    public EventHandler<SpeedShiftEvent> OnSpeedChanged;
+    public EventHandler<TrackNumberChangedEvent> OnTrackNumberChanged;
+
+    private async Task RunEventsHandler(CancellationToken token)
     {
-        private ConcurrentQueue<MaestroEvent> _eventQueue;
-        private bool _eventQueueOpen;
-
-        private CancellationTokenSource _eventsTokenSource;
-        public EventHandler<OctaveShiftChangedEvent> OnOctaveShiftChanged;
-        public EventHandler<bool> OnPerformerChanged;
-        public EventHandler<PerformerUpdate> OnPerformerUpdate;
-        public EventHandler<bool> OnPlaybackStarted;
-        public EventHandler<bool> OnPlaybackStopped;
-        public EventHandler<CurrentPlayPositionEvent> OnPlaybackTimeChanged;
-        public EventHandler<SongLoadedEvent> OnSongLoaded;
-        public EventHandler<MaxPlayTimeEvent> OnSongMaxTime;
-        public EventHandler<SpeedShiftEvent> OnSpeedChanged;
-        public EventHandler<TrackNumberChangedEvent> OnTrackNumberChanged;
-
-        private async Task RunEventsHandler(CancellationToken token)
+        while (!token.IsCancellationRequested)
         {
-            while (!token.IsCancellationRequested)
+            while (_eventQueue.TryDequeue(out var meastroEvent))
             {
-                while (_eventQueue.TryDequeue(out var meastroEvent))
+                if (token.IsCancellationRequested)
+                    break;
+
+                try
                 {
-                    if (token.IsCancellationRequested)
-                        break;
-
-                    try
+                    switch (meastroEvent)
                     {
-                        switch (meastroEvent)
-                        {
-                            case CurrentPlayPositionEvent currentPlayPosition:
-                                OnPlaybackTimeChanged(this, currentPlayPosition);
-                                break;
-                            case MaxPlayTimeEvent maxPlayTime:
-                                OnSongMaxTime(this, maxPlayTime);
-                                break;
-                            case SongLoadedEvent songloaded:
+                        case CurrentPlayPositionEvent currentPlayPosition:
+                            OnPlaybackTimeChanged(this, currentPlayPosition);
+                            break;
+                        case MaxPlayTimeEvent maxPlayTime:
+                            OnSongMaxTime(this, maxPlayTime);
+                            break;
+                        case SongLoadedEvent songloaded:
 
-                                OnSongLoaded?.Invoke(this, songloaded);
-                                break;
-                            case PlaybackStartedEvent playbackStarted:
+                            OnSongLoaded?.Invoke(this, songloaded);
+                            break;
+                        case PlaybackStartedEvent playbackStarted:
 
-                                OnPlaybackStarted?.Invoke(this, playbackStarted.Started);
-                                break;
-                            case PlaybackStoppedEvent playbackStopped:
+                            OnPlaybackStarted?.Invoke(this, playbackStarted.Started);
+                            break;
+                        case PlaybackStoppedEvent playbackStopped:
 
-                                OnPlaybackStopped?.Invoke(this, playbackStopped.Stopped);
-                                break;
-                            case PerformersChangedEvent performerChanged:
+                            OnPlaybackStopped?.Invoke(this, playbackStopped.Stopped);
+                            break;
+                        case PerformersChangedEvent performerChanged:
 
-                                OnPerformerChanged?.Invoke(this, performerChanged.Changed);
-                                break;
-                            case TrackNumberChangedEvent trackNumberChanged:
+                            OnPerformerChanged?.Invoke(this, performerChanged.Changed);
+                            break;
+                        case TrackNumberChangedEvent trackNumberChanged:
 
-                                OnTrackNumberChanged?.Invoke(this, trackNumberChanged);
-                                break;
-                            case OctaveShiftChangedEvent octaveShiftChanged:
+                            OnTrackNumberChanged?.Invoke(this, trackNumberChanged);
+                            break;
+                        case OctaveShiftChangedEvent octaveShiftChanged:
 
-                                OnOctaveShiftChanged?.Invoke(this, octaveShiftChanged);
-                                break;
-                            case SpeedShiftEvent speedChanged:
+                            OnOctaveShiftChanged?.Invoke(this, octaveShiftChanged);
+                            break;
+                        case SpeedShiftEvent speedChanged:
 
-                                OnSpeedChanged?.Invoke(this, speedChanged);
-                                break;
-                            case PerformerUpdate performerUpdate:
+                            OnSpeedChanged?.Invoke(this, speedChanged);
+                            break;
+                        case PerformerUpdate performerUpdate:
 
-                                OnPerformerUpdate?.Invoke(this, performerUpdate);
-                                break;
-                        }
-                    }
-                    catch
-                    {
-                        // ignored
+                            OnPerformerUpdate?.Invoke(this, performerUpdate);
+                            break;
                     }
                 }
-
-                await Task.Delay(25, token).ContinueWith(static tsk => { }, token);
+                catch
+                {
+                    // ignored
+                }
             }
-        }
 
-        private void StartEventsHandler()
+            await Task.Delay(25, token).ContinueWith(static tsk => { }, token);
+        }
+    }
+
+    private void StartEventsHandler()
+    {
+        _eventQueue = new ConcurrentQueue<MaestroEvent>();
+        _eventsTokenSource = new CancellationTokenSource();
+        Task.Factory.StartNew(() => RunEventsHandler(_eventsTokenSource.Token), TaskCreationOptions.LongRunning);
+        _eventQueueOpen = true;
+    }
+
+    private void StopEventsHandler()
+    {
+        _eventQueueOpen = false;
+        _eventsTokenSource.Cancel();
+        while (_eventQueue.TryDequeue(out _))
         {
-            _eventQueue = new ConcurrentQueue<MaestroEvent>();
-            _eventsTokenSource = new CancellationTokenSource();
-            Task.Factory.StartNew(() => RunEventsHandler(_eventsTokenSource.Token), TaskCreationOptions.LongRunning);
-            _eventQueueOpen = true;
         }
+    }
 
-        private void StopEventsHandler()
-        {
-            _eventQueueOpen = false;
-            _eventsTokenSource.Cancel();
-            while (_eventQueue.TryDequeue(out _))
-            {
-            }
-        }
+    internal void PublishEvent(MaestroEvent meastroEvent)
+    {
+        if (!_eventQueueOpen)
+            return;
 
-        internal void PublishEvent(MaestroEvent meastroEvent)
-        {
-            if (!_eventQueueOpen)
-                return;
-
-            _eventQueue.Enqueue(meastroEvent);
-        }
+        _eventQueue.Enqueue(meastroEvent);
     }
 }

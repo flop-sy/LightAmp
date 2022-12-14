@@ -6,31 +6,30 @@ using BardMusicPlayer.Maestro.Sequencing;
 
 #endregion
 
-namespace BardMusicPlayer.Maestro.Events
+namespace BardMusicPlayer.Maestro.Events;
+
+public sealed class SongLoadedEvent : MaestroEvent
 {
-    public sealed class SongLoadedEvent : MaestroEvent
+    private readonly Sequencer _sequencer;
+
+    internal SongLoadedEvent(int maxtracks, Sequencer sequencer)
     {
-        private readonly Sequencer _sequencer;
+        EventType = GetType();
+        MaxTracks = maxtracks;
+        _sequencer = sequencer;
+    }
 
-        internal SongLoadedEvent(int maxtracks, Sequencer sequencer)
-        {
-            EventType = GetType();
-            MaxTracks = maxtracks;
-            _sequencer = sequencer;
-        }
+    public int MaxTracks { get; }
 
-        public int MaxTracks { get; }
+    public int TotalNoteCount => _sequencer.notesPlayedCount.Values.Sum();
 
-        public int TotalNoteCount => _sequencer.notesPlayedCount.Values.Sum();
+    public List<int> CurrentNoteCountForTracks
+    {
+        get { return _sequencer.notesPlayedCount.Select(static s => s.Key.Count).ToList(); }
+    }
 
-        public List<int> CurrentNoteCountForTracks
-        {
-            get { return _sequencer.notesPlayedCount.Select(static s => s.Key.Count).ToList(); }
-        }
-
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

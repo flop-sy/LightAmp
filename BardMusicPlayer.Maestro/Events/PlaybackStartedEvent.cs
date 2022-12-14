@@ -1,18 +1,17 @@
-﻿namespace BardMusicPlayer.Maestro.Events
+﻿namespace BardMusicPlayer.Maestro.Events;
+
+public sealed class PlaybackStartedEvent : MaestroEvent
 {
-    public sealed class PlaybackStartedEvent : MaestroEvent
+    public bool Started;
+
+    internal PlaybackStartedEvent()
     {
-        public bool Started;
+        EventType = GetType();
+        Started = true;
+    }
 
-        internal PlaybackStartedEvent()
-        {
-            EventType = GetType();
-            Started = true;
-        }
-
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

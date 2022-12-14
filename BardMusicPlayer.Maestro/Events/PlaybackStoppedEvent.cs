@@ -1,18 +1,17 @@
-﻿namespace BardMusicPlayer.Maestro.Events
+﻿namespace BardMusicPlayer.Maestro.Events;
+
+public sealed class PlaybackStoppedEvent : MaestroEvent
 {
-    public sealed class PlaybackStoppedEvent : MaestroEvent
+    public bool Stopped;
+
+    internal PlaybackStoppedEvent()
     {
-        public bool Stopped;
+        EventType = GetType();
+        Stopped = true;
+    }
 
-        internal PlaybackStoppedEvent()
-        {
-            EventType = GetType();
-            Stopped = true;
-        }
-
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

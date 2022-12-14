@@ -5,32 +5,31 @@ using Sanford.Multimedia.Midi;
 
 #endregion
 
-namespace BardMusicPlayer.Maestro.Utils
-{
-    public static class MidiInput
-    {
-        public static Dictionary<int, string> ReloadMidiInputDevices()
-        {
-            var midiInputs = new Dictionary<int, string> { { -1, "None" } };
-            for (var i = 0; i < InputDevice.DeviceCount; i++)
-            {
-                var cap = InputDevice.GetDeviceCapabilities(i);
-                midiInputs.Add(i, cap.name);
-            }
+namespace BardMusicPlayer.Maestro.Utils;
 
-            return midiInputs;
+public static class MidiInput
+{
+    public static Dictionary<int, string> ReloadMidiInputDevices()
+    {
+        var midiInputs = new Dictionary<int, string> { { -1, "None" } };
+        for (var i = 0; i < InputDevice.DeviceCount; i++)
+        {
+            var cap = InputDevice.GetDeviceCapabilities(i);
+            midiInputs.Add(i, cap.name);
         }
 
-        public struct MidiInputDescription
-        {
-            public string name;
-            public int id;
+        return midiInputs;
+    }
 
-            public MidiInputDescription(string n, int i)
-            {
-                name = n;
-                id = i;
-            }
+    public struct MidiInputDescription
+    {
+        public string name;
+        public int id;
+
+        public MidiInputDescription(string n, int i)
+        {
+            name = n;
+            id = i;
         }
     }
 }

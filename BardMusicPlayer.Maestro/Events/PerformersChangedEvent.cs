@@ -1,18 +1,17 @@
-﻿namespace BardMusicPlayer.Maestro.Events
+﻿namespace BardMusicPlayer.Maestro.Events;
+
+public sealed class PerformersChangedEvent : MaestroEvent
 {
-    public sealed class PerformersChangedEvent : MaestroEvent
+    public bool Changed;
+
+    internal PerformersChangedEvent()
     {
-        public bool Changed;
+        EventType = GetType();
+        Changed = true;
+    }
 
-        internal PerformersChangedEvent()
-        {
-            EventType = GetType();
-            Changed = true;
-        }
-
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }
