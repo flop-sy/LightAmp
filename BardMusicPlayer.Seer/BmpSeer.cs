@@ -13,126 +13,125 @@ using WindowsFirewallHelper;
 
 #endregion
 
-namespace BardMusicPlayer.Seer
+namespace BardMusicPlayer.Seer;
+
+public sealed partial class BmpSeer : IDisposable
 {
-    public sealed partial class BmpSeer : IDisposable
+    private static readonly Lazy<BmpSeer> LazyInstance = new(static () => new BmpSeer());
+
+    private readonly ConcurrentDictionary<int, Game> _games;
+
+    private BmpSeer()
     {
-        private static readonly Lazy<BmpSeer> LazyInstance = new(static () => new BmpSeer());
+        _games = new ConcurrentDictionary<int, Game>();
+    }
 
-        private readonly ConcurrentDictionary<int, Game> _games;
+    /// <summary>
+    /// </summary>
+    public bool Started { get; private set; }
 
-        private BmpSeer()
+    public static BmpSeer Instance => LazyInstance.Value;
+
+    /// <summary>
+    ///     Current active games
+    /// </summary>
+    public IReadOnlyDictionary<int, Game> Games => new ReadOnlyDictionary<int, Game>(_games);
+
+    public void Dispose()
+    {
+        Stop();
+        MachinaManager.Instance.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    ///     Configure the firewall for Machina
+    /// </summary>
+    /// <param name="appName">This application name.</param>
+    /// <returns>true if successful</returns>
+    public bool SetupFirewall(string appName)
+    {
+        try
         {
-            _games = new ConcurrentDictionary<int, Game>();
+            if (!FirewallManager.IsServiceRunning) return true;
+
+            if (FirewallManager.Instance.Rules.Any(x => x.Name != null && x.Name.Equals(appName)))
+                FirewallManager.Instance.Rules.Remove(
+                    FirewallManager.Instance.Rules.First(x => x.Name.Equals(appName)));
+
+            var rule = FirewallManager.Instance.CreateApplicationRule(
+                appName,
+                FirewallAction.Allow,
+                Assembly.GetEntryAssembly()?.Location
+            );
+
+            FirewallManager.Instance.Rules.Add(rule);
+            return true;
         }
-
-        /// <summary>
-        /// </summary>
-        public bool Started { get; private set; }
-
-        public static BmpSeer Instance => LazyInstance.Value;
-
-        /// <summary>
-        ///     Current active games
-        /// </summary>
-        public IReadOnlyDictionary<int, Game> Games => new ReadOnlyDictionary<int, Game>(_games);
-
-        public void Dispose()
+        catch (Exception ex)
         {
-            Stop();
-            MachinaManager.Instance.Dispose();
-            GC.SuppressFinalize(this);
+            PublishEvent(new SeerExceptionEvent(ex));
+            return false;
         }
+    }
 
-        /// <summary>
-        ///     Configure the firewall for Machina
-        /// </summary>
-        /// <param name="appName">This application name.</param>
-        /// <returns>true if successful</returns>
-        public bool SetupFirewall(string appName)
+    /// <summary>
+    ///     Unconfigure the firewall for Machina
+    /// </summary>
+    /// <param name="appName">This application name.</param>
+    /// <returns>true if successful</returns>
+    public bool DestroyFirewall(string appName)
+    {
+        try
         {
-            try
-            {
-                if (!FirewallManager.IsServiceRunning) return true;
+            if (!FirewallManager.IsServiceRunning) return true;
 
-                if (FirewallManager.Instance.Rules.Any(x => x.Name != null && x.Name.Equals(appName)))
-                    FirewallManager.Instance.Rules.Remove(
-                        FirewallManager.Instance.Rules.First(x => x.Name.Equals(appName)));
+            if (FirewallManager.Instance.Rules.Any(x => x.Name != null && x.Name.Equals(appName)))
+                FirewallManager.Instance.Rules.Remove(
+                    FirewallManager.Instance.Rules.First(x => x.Name.Equals(appName)));
 
-                var rule = FirewallManager.Instance.CreateApplicationRule(
-                    appName,
-                    FirewallAction.Allow,
-                    Assembly.GetEntryAssembly()?.Location
-                );
-
-                FirewallManager.Instance.Rules.Add(rule);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                PublishEvent(new SeerExceptionEvent(ex));
-                return false;
-            }
+            return true;
         }
-
-        /// <summary>
-        ///     Unconfigure the firewall for Machina
-        /// </summary>
-        /// <param name="appName">This application name.</param>
-        /// <returns>true if successful</returns>
-        public bool DestroyFirewall(string appName)
+        catch (Exception ex)
         {
-            try
-            {
-                if (!FirewallManager.IsServiceRunning) return true;
-
-                if (FirewallManager.Instance.Rules.Any(x => x.Name != null && x.Name.Equals(appName)))
-                    FirewallManager.Instance.Rules.Remove(
-                        FirewallManager.Instance.Rules.First(x => x.Name.Equals(appName)));
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                PublishEvent(new SeerExceptionEvent(ex));
-                return false;
-            }
+            PublishEvent(new SeerExceptionEvent(ex));
+            return false;
         }
+    }
 
-        /// <summary>
-        ///     Start Seer monitoring.
-        /// </summary>
-        public void Start()
-        {
-            if (Started) return;
+    /// <summary>
+    ///     Start Seer monitoring.
+    /// </summary>
+    public void Start()
+    {
+        if (Started) return;
 
-            if (!BmpPigeonhole.Initialized) throw new BmpSeerException("Seer requires Pigeonhole to be initialized.");
+        if (!BmpPigeonhole.Initialized) throw new BmpSeerException("Seer requires Pigeonhole to be initialized.");
 
-            StartEventsHandler();
-            StartProcessWatcher();
-            Started = true;
-        }
+        StartEventsHandler();
+        StartProcessWatcher();
+        Started = true;
+    }
 
-        /// <summary>
-        ///     Stop Seer monitoring.
-        /// </summary>
-        public void Stop()
-        {
-            if (!Started) return;
+    /// <summary>
+    ///     Stop Seer monitoring.
+    /// </summary>
+    public void Stop()
+    {
+        if (!Started) return;
 
-            StopProcessWatcher();
-            StopEventsHandler();
+        StopProcessWatcher();
+        StopEventsHandler();
 
-            foreach (var game in _games.Values) game?.Dispose();
+        foreach (var game in _games.Values) game?.Dispose();
 
-            _games.Clear();
+        _games.Clear();
 
-            Started = false;
-        }
+        Started = false;
+    }
 
-        ~BmpSeer()
-        {
-            Dispose();
-        }
+    ~BmpSeer()
+    {
+        Dispose();
     }
 }

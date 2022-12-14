@@ -7,44 +7,43 @@ using BardMusicPlayer.Seer.Utilities;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Reader;
+
+internal sealed partial class Reader
 {
-    internal sealed partial class Reader
+    public bool CanGetPlayerInfo()
     {
-        public bool CanGetPlayerInfo()
+        return Scanner.Locations.ContainsKey(Signatures.PlayerInformationKey);
+    }
+
+    public KeyValuePair<uint, (string, bool, bool)> GetCurrentPlayer()
+    {
+        var result = new KeyValuePair<uint, (string, bool, bool)>();
+
+        if (!CanGetPlayerInfo() || !MemoryHandler.IsAttached) return result;
+
+        var playerInfoMap = (IntPtr)Scanner.Locations[Signatures.PlayerInformationKey];
+
+        if (playerInfoMap.ToInt64() <= 6496) return result;
+
+        try
         {
-            return Scanner.Locations.ContainsKey(Signatures.PlayerInformationKey);
+            var source =
+                MemoryHandler.GetByteArray(playerInfoMap, MemoryHandler.Structures.CurrentPlayer.SourceSize);
+            var actorId = SBitConverter.TryToUInt32(source, MemoryHandler.Structures.CurrentPlayer.ID);
+            var playerName = MemoryHandler.GetStringFromBytes(source, MemoryHandler.Structures.CurrentPlayer.Name);
+            var isCurrentlyBard = source[MemoryHandler.Structures.CurrentPlayer.JobID] == 0x17;
+            var isLoggedIn = source[MemoryHandler.Structures.CurrentPlayer.JobID] != 0x00;
+
+            if (ActorIdTools.RangeOkay(actorId) && !string.IsNullOrEmpty(playerName))
+                result = new KeyValuePair<uint, (string, bool, bool)>(actorId,
+                    (playerName, isCurrentlyBard, isLoggedIn));
+        }
+        catch (Exception ex)
+        {
+            MemoryHandler?.RaiseException(ex);
         }
 
-        public KeyValuePair<uint, (string, bool, bool)> GetCurrentPlayer()
-        {
-            var result = new KeyValuePair<uint, (string, bool, bool)>();
-
-            if (!CanGetPlayerInfo() || !MemoryHandler.IsAttached) return result;
-
-            var playerInfoMap = (IntPtr)Scanner.Locations[Signatures.PlayerInformationKey];
-
-            if (playerInfoMap.ToInt64() <= 6496) return result;
-
-            try
-            {
-                var source =
-                    MemoryHandler.GetByteArray(playerInfoMap, MemoryHandler.Structures.CurrentPlayer.SourceSize);
-                var actorId = SBitConverter.TryToUInt32(source, MemoryHandler.Structures.CurrentPlayer.ID);
-                var playerName = MemoryHandler.GetStringFromBytes(source, MemoryHandler.Structures.CurrentPlayer.Name);
-                var isCurrentlyBard = source[MemoryHandler.Structures.CurrentPlayer.JobID] == 0x17;
-                var isLoggedIn = source[MemoryHandler.Structures.CurrentPlayer.JobID] != 0x00;
-
-                if (ActorIdTools.RangeOkay(actorId) && !string.IsNullOrEmpty(playerName))
-                    result = new KeyValuePair<uint, (string, bool, bool)>(actorId,
-                        (playerName, isCurrentlyBard, isLoggedIn));
-            }
-            catch (Exception ex)
-            {
-                MemoryHandler?.RaiseException(ex);
-            }
-
-            return result;
-        }
+        return result;
     }
 }

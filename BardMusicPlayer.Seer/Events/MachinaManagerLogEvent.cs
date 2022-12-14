@@ -1,19 +1,17 @@
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
 
+public sealed class MachinaManagerLogEvent : SeerEvent
 {
-    public sealed class MachinaManagerLogEvent : SeerEvent
+    public MachinaManagerLogEvent(string message) : base(EventSource.MachinaManager)
     {
-        public MachinaManagerLogEvent(string message) : base(EventSource.MachinaManager)
-        {
-            EventType = GetType();
-            Message = message;
-        }
+        EventType = GetType();
+        Message = message;
+    }
 
-        public string Message { get; }
+    public string Message { get; }
 
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

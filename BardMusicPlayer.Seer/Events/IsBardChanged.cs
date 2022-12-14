@@ -1,18 +1,17 @@
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
+
+public sealed class IsBardChanged : SeerEvent
 {
-    public sealed class IsBardChanged : SeerEvent
+    internal IsBardChanged(EventSource readerBackendType, bool isBard) : base(readerBackendType)
     {
-        internal IsBardChanged(EventSource readerBackendType, bool isBard) : base(readerBackendType)
-        {
-            EventType = GetType();
-            IsBard = isBard;
-        }
+        EventType = GetType();
+        IsBard = isBard;
+    }
 
-        public bool IsBard { get; }
+    public bool IsBard { get; }
 
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

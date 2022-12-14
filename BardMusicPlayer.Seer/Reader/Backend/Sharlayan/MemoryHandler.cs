@@ -14,305 +14,304 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan;
+
+internal sealed class MemoryHandler
 {
-    internal sealed class MemoryHandler
+    private bool _isNewInstance = true;
+
+    public MemoryHandler(Scanner scanner, GameRegion gameRegion)
     {
-        private bool _isNewInstance = true;
+        GameRegion = gameRegion;
+        Scanner = scanner;
+        Scanner.MemoryHandler = this;
+    }
 
-        public MemoryHandler(Scanner scanner, GameRegion gameRegion)
+    internal Scanner Scanner { get; }
+
+    internal Reader.Reader Reader { get; set; }
+
+    internal bool IsAttached { get; set; }
+
+    internal GameRegion GameRegion { get; }
+
+    internal IntPtr ProcessHandle { get; set; }
+
+    internal ProcessModel ProcessModel { get; set; }
+
+    internal StructuresContainer Structures { get; set; }
+
+    private List<ProcessModule> SystemModules { get; } = new();
+
+    public event EventHandler<ExceptionEvent> ExceptionEvent = static delegate { };
+
+    public event EventHandler<SignaturesFoundEvent> SignaturesFoundEvent = static delegate { };
+
+    ~MemoryHandler()
+    {
+        UnsetProcess();
+    }
+
+    public byte GetByte(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[1];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return array[0];
+    }
+
+    public byte[] GetByteArray(IntPtr address, int length)
+    {
+        if (length < 1) return Array.Empty<byte>();
+
+        var array = new byte[length];
+        Peek(address, array);
+        return array;
+    }
+
+    public short GetInt16(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[2];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return SBitConverter.TryToInt16(array, 0);
+    }
+
+    public int GetInt32(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[4];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return SBitConverter.TryToInt32(array, 0);
+    }
+
+    public long GetInt64(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[8];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return SBitConverter.TryToInt64(array, 0);
+    }
+
+    public long GetPlatformInt(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[8];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return GetPlatformIntFromBytes(array);
+    }
+
+    public static long GetPlatformIntFromBytes(byte[] source, int index = 0)
+    {
+        return SBitConverter.TryToInt64(source, index);
+    }
+
+    public long GetPlatformUInt(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[8];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return GetPlatformUIntFromBytes(array);
+    }
+
+    public static long GetPlatformUIntFromBytes(byte[] source, int index = 0)
+    {
+        return (long)SBitConverter.TryToUInt64(source, index);
+    }
+
+    public IntPtr GetStaticAddress(long offset)
+    {
+        return new IntPtr(ProcessModel.Process.MainModule.BaseAddress.ToInt64() + offset);
+    }
+
+    public string GetString(IntPtr address, long offset = 0L, int size = 256)
+    {
+        var array = new byte[size];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        var newSize = 0;
+        for (var i = 0; i < size; i++)
         {
-            GameRegion = gameRegion;
-            Scanner = scanner;
-            Scanner.MemoryHandler = this;
+            if (array[i] != 0) continue;
+
+            newSize = i;
+            break;
         }
 
-        internal Scanner Scanner { get; }
+        Array.Resize(ref array, newSize);
+        return Encoding.UTF8.GetString(array);
+    }
 
-        internal Reader.Reader Reader { get; set; }
+    public static string GetStringFromBytes(byte[] source, int offset = 0, int size = 256)
+    {
+        var num = source.Length - offset;
+        if (num < size) size = num;
 
-        internal bool IsAttached { get; set; }
-
-        internal GameRegion GameRegion { get; }
-
-        internal IntPtr ProcessHandle { get; set; }
-
-        internal ProcessModel ProcessModel { get; set; }
-
-        internal StructuresContainer Structures { get; set; }
-
-        private List<ProcessModule> SystemModules { get; } = new();
-
-        public event EventHandler<ExceptionEvent> ExceptionEvent = static delegate { };
-
-        public event EventHandler<SignaturesFoundEvent> SignaturesFoundEvent = static delegate { };
-
-        ~MemoryHandler()
+        var array = new byte[size];
+        Array.Copy(source, offset, array, 0, size);
+        var newSize = 0;
+        for (var i = 0; i < size; i++)
         {
-            UnsetProcess();
+            if (array[i] != 0) continue;
+
+            newSize = i;
+            break;
         }
 
-        public byte GetByte(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[1];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return array[0];
-        }
+        Array.Resize(ref array, newSize);
+        return Encoding.UTF8.GetString(array);
+    }
 
-        public byte[] GetByteArray(IntPtr address, int length)
-        {
-            if (length < 1) return Array.Empty<byte>();
+    public T GetStructure<T>(IntPtr address, int offset = 0)
+    {
+        var intPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(T)));
+        UnsafeNativeMethods.ReadProcessMemory(ProcessModel.Process.Handle, address + offset, intPtr,
+            new IntPtr(Marshal.SizeOf(typeof(T))), out _);
+        var result = (T)Marshal.PtrToStructure(intPtr, typeof(T));
+        Marshal.FreeCoTaskMem(intPtr);
+        return result;
+    }
 
-            var array = new byte[length];
-            Peek(address, array);
-            return array;
-        }
+    public ushort GetUInt16(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[4];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return SBitConverter.TryToUInt16(array, 0);
+    }
 
-        public short GetInt16(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[2];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return SBitConverter.TryToInt16(array, 0);
-        }
+    public uint GetUInt32(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[4];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return SBitConverter.TryToUInt32(array, 0);
+    }
 
-        public int GetInt32(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[4];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return SBitConverter.TryToInt32(array, 0);
-        }
+    public ulong GetUInt64(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[8];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return SBitConverter.TryToUInt32(array, 0);
+    }
 
-        public long GetInt64(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[8];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return SBitConverter.TryToInt64(array, 0);
-        }
+    public bool Peek(IntPtr address, byte[] buffer)
+    {
+        return UnsafeNativeMethods.ReadProcessMemory(ProcessHandle, address, buffer, new IntPtr(buffer.Length),
+            out _);
+    }
 
-        public long GetPlatformInt(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[8];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return GetPlatformIntFromBytes(array);
-        }
+    public IntPtr ReadPointer(IntPtr address, long offset = 0L)
+    {
+        var array = new byte[8];
+        Peek(new IntPtr(address.ToInt64() + offset), array);
+        return new IntPtr(SBitConverter.TryToInt64(array, 0));
+    }
 
-        public static long GetPlatformIntFromBytes(byte[] source, int index = 0)
-        {
-            return SBitConverter.TryToInt64(source, index);
-        }
-
-        public long GetPlatformUInt(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[8];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return GetPlatformUIntFromBytes(array);
-        }
-
-        public static long GetPlatformUIntFromBytes(byte[] source, int index = 0)
-        {
-            return (long)SBitConverter.TryToUInt64(source, index);
-        }
-
-        public IntPtr GetStaticAddress(long offset)
-        {
-            return new IntPtr(ProcessModel.Process.MainModule.BaseAddress.ToInt64() + offset);
-        }
-
-        public string GetString(IntPtr address, long offset = 0L, int size = 256)
-        {
-            var array = new byte[size];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            var newSize = 0;
-            for (var i = 0; i < size; i++)
+    public IntPtr ResolvePointerPath(IEnumerable<long> path, IntPtr baseAddress, bool IsASMSignature = false)
+    {
+        var intPtr = baseAddress;
+        foreach (var item in path)
+            try
             {
-                if (array[i] != 0) continue;
+                baseAddress = new IntPtr(intPtr.ToInt64() + item);
+                if (baseAddress == IntPtr.Zero) return IntPtr.Zero;
 
-                newSize = i;
-                break;
-            }
-
-            Array.Resize(ref array, newSize);
-            return Encoding.UTF8.GetString(array);
-        }
-
-        public static string GetStringFromBytes(byte[] source, int offset = 0, int size = 256)
-        {
-            var num = source.Length - offset;
-            if (num < size) size = num;
-
-            var array = new byte[size];
-            Array.Copy(source, offset, array, 0, size);
-            var newSize = 0;
-            for (var i = 0; i < size; i++)
-            {
-                if (array[i] != 0) continue;
-
-                newSize = i;
-                break;
-            }
-
-            Array.Resize(ref array, newSize);
-            return Encoding.UTF8.GetString(array);
-        }
-
-        public T GetStructure<T>(IntPtr address, int offset = 0)
-        {
-            var intPtr = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(T)));
-            UnsafeNativeMethods.ReadProcessMemory(ProcessModel.Process.Handle, address + offset, intPtr,
-                new IntPtr(Marshal.SizeOf(typeof(T))), out _);
-            var result = (T)Marshal.PtrToStructure(intPtr, typeof(T));
-            Marshal.FreeCoTaskMem(intPtr);
-            return result;
-        }
-
-        public ushort GetUInt16(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[4];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return SBitConverter.TryToUInt16(array, 0);
-        }
-
-        public uint GetUInt32(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[4];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return SBitConverter.TryToUInt32(array, 0);
-        }
-
-        public ulong GetUInt64(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[8];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return SBitConverter.TryToUInt32(array, 0);
-        }
-
-        public bool Peek(IntPtr address, byte[] buffer)
-        {
-            return UnsafeNativeMethods.ReadProcessMemory(ProcessHandle, address, buffer, new IntPtr(buffer.Length),
-                out _);
-        }
-
-        public IntPtr ReadPointer(IntPtr address, long offset = 0L)
-        {
-            var array = new byte[8];
-            Peek(new IntPtr(address.ToInt64() + offset), array);
-            return new IntPtr(SBitConverter.TryToInt64(array, 0));
-        }
-
-        public IntPtr ResolvePointerPath(IEnumerable<long> path, IntPtr baseAddress, bool IsASMSignature = false)
-        {
-            var intPtr = baseAddress;
-            foreach (var item in path)
-                try
+                if (IsASMSignature)
                 {
-                    baseAddress = new IntPtr(intPtr.ToInt64() + item);
-                    if (baseAddress == IntPtr.Zero) return IntPtr.Zero;
-
-                    if (IsASMSignature)
-                    {
-                        intPtr = baseAddress + GetInt32(new IntPtr(baseAddress.ToInt64())) + 4;
-                        IsASMSignature = false;
-                    }
-                    else
-                    {
-                        intPtr = ReadPointer(baseAddress);
-                    }
+                    intPtr = baseAddress + GetInt32(new IntPtr(baseAddress.ToInt64())) + 4;
+                    IsASMSignature = false;
                 }
-                catch
+                else
                 {
-                    return IntPtr.Zero;
+                    intPtr = ReadPointer(baseAddress);
                 }
+            }
+            catch
+            {
+                return IntPtr.Zero;
+            }
 
-            return baseAddress;
+        return baseAddress;
+    }
+
+    public void SetProcess(ProcessModel processModel)
+    {
+        ProcessModel = processModel;
+
+        UnsetProcess();
+        try
+        {
+            ProcessHandle = UnsafeNativeMethods.OpenProcess(UnsafeNativeMethods.ProcessAccessFlags.PROCESS_VM_ALL,
+                false, (uint)ProcessModel.ProcessID);
+        }
+        catch (Exception)
+        {
+            ProcessHandle = processModel.Process.Handle;
+        }
+        finally
+        {
+            IsAttached = true;
         }
 
-        public void SetProcess(ProcessModel processModel)
+        if (_isNewInstance)
         {
-            ProcessModel = processModel;
-
-            UnsetProcess();
-            try
-            {
-                ProcessHandle = UnsafeNativeMethods.OpenProcess(UnsafeNativeMethods.ProcessAccessFlags.PROCESS_VM_ALL,
-                    false, (uint)ProcessModel.ProcessID);
-            }
-            catch (Exception)
-            {
-                ProcessHandle = processModel.Process.Handle;
-            }
-            finally
-            {
-                IsAttached = true;
-            }
-
-            if (_isNewInstance)
-            {
-                _isNewInstance = false;
-                ResolveMemoryStructures();
-            }
-
-            SystemModules.Clear();
-            GetProcessModules();
-            Scanner.Locations.Clear();
-            Scanner.LoadOffsets(Signatures.Resolve(this));
+            _isNewInstance = false;
+            ResolveMemoryStructures();
         }
 
-        public void UnsetProcess()
-        {
-            try
-            {
-                if (IsAttached) UnsafeNativeMethods.CloseHandle(ProcessHandle);
-            }
-            catch (Exception)
-            {
-                // Ignored
-            }
-            finally
-            {
-                ProcessHandle = IntPtr.Zero;
-                IsAttached = false;
-            }
-        }
+        SystemModules.Clear();
+        GetProcessModules();
+        Scanner.Locations.Clear();
+        Scanner.LoadOffsets(Signatures.Resolve(this));
+    }
 
-        internal ProcessModule GetModuleByAddress(IntPtr address)
+    public void UnsetProcess()
+    {
+        try
         {
-            try
-            {
-                return (from processModule in SystemModules
-                    let num = processModule.BaseAddress.ToInt64()
-                    where num <= (long)address && num + processModule.ModuleMemorySize >= (long)address
-                    select processModule).FirstOrDefault();
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            if (IsAttached) UnsafeNativeMethods.CloseHandle(ProcessHandle);
         }
-
-        internal void ResolveMemoryStructures()
+        catch (Exception)
         {
-            Structures = new APIHelper(this).GetStructures();
+            // Ignored
         }
-
-        internal void RaiseException(Exception ex)
+        finally
         {
-            ExceptionEvent?.Invoke(this, new ExceptionEvent(this, ex));
+            ProcessHandle = IntPtr.Zero;
+            IsAttached = false;
         }
+    }
 
-        internal void RaiseSignaturesFound(Dictionary<string, Signature> signatures,
-            long processingTime)
+    internal ProcessModule GetModuleByAddress(IntPtr address)
+    {
+        try
         {
-            SignaturesFoundEvent?.Invoke(this, new SignaturesFoundEvent(this, signatures, processingTime));
+            return (from processModule in SystemModules
+                let num = processModule.BaseAddress.ToInt64()
+                where num <= (long)address && num + processModule.ModuleMemorySize >= (long)address
+                select processModule).FirstOrDefault();
         }
-
-        private void GetProcessModules()
+        catch (Exception)
         {
-            var modules = ProcessModel.Process.Modules;
-            for (var i = 0; i < modules.Count; i++)
-            {
-                var item = modules[i];
-                SystemModules.Add(item);
-            }
+            return null;
+        }
+    }
+
+    internal void ResolveMemoryStructures()
+    {
+        Structures = new APIHelper(this).GetStructures();
+    }
+
+    internal void RaiseException(Exception ex)
+    {
+        ExceptionEvent?.Invoke(this, new ExceptionEvent(this, ex));
+    }
+
+    internal void RaiseSignaturesFound(Dictionary<string, Signature> signatures,
+        long processingTime)
+    {
+        SignaturesFoundEvent?.Invoke(this, new SignaturesFoundEvent(this, signatures, processingTime));
+    }
+
+    private void GetProcessModules()
+    {
+        var modules = ProcessModel.Process.Modules;
+        for (var i = 0; i < modules.Count; i++)
+        {
+            var item = modules[i];
+            SystemModules.Add(item);
         }
     }
 }

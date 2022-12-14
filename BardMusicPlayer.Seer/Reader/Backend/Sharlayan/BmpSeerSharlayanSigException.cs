@@ -1,9 +1,8 @@
-namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan;
+
+public sealed class BmpSeerSharlayanSigException : BmpSeerException
 {
-    public sealed class BmpSeerSharlayanSigException : BmpSeerException
+    public BmpSeerSharlayanSigException(string message) : base("Unable to find memory signature for: " + message)
     {
-        public BmpSeerSharlayanSigException(string message) : base("Unable to find memory signature for: " + message)
-        {
-        }
     }
 }

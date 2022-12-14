@@ -5,36 +5,35 @@ using System.Collections.Generic;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Reader.Backend.Machina
+namespace BardMusicPlayer.Seer.Reader.Backend.Machina;
+
+internal sealed partial class Packet : IDisposable
 {
-    internal sealed partial class Packet : IDisposable
+    private readonly Dictionary<ulong, uint> _contentId2ActorId = new();
+    private readonly MachinaReaderBackend _machinaReader;
+
+    internal Packet(MachinaReaderBackend machinaReader)
     {
-        private readonly Dictionary<ulong, uint> _contentId2ActorId = new();
-        private readonly MachinaReaderBackend _machinaReader;
+        _machinaReader = machinaReader;
+    }
 
-        internal Packet(MachinaReaderBackend machinaReader)
-        {
-            _machinaReader = machinaReader;
-        }
+    public void Dispose()
+    {
+        _contentId2ActorId.Clear();
+    }
 
-        public void Dispose()
-        {
-            _contentId2ActorId.Clear();
-        }
+    private static bool ValidTimeSig(byte timeSig)
+    {
+        return timeSig is > 1 and < 8;
+    }
 
-        private static bool ValidTimeSig(byte timeSig)
-        {
-            return timeSig is > 1 and < 8;
-        }
+    private static bool ValidTempo(byte tempo)
+    {
+        return tempo is > 29 and < 201;
+    }
 
-        private static bool ValidTempo(byte tempo)
-        {
-            return tempo is > 29 and < 201;
-        }
-
-        ~Packet()
-        {
-            Dispose();
-        }
+    ~Packet()
+    {
+        Dispose();
     }
 }

@@ -34,13 +34,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-        <PackageReference Include="WindowsFirewallHelper" Version="2.2.0.86" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2"/>
+        <PackageReference Include="WindowsFirewallHelper" Version="2.2.0.86"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj" />
-        <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj" />
+        <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj"/>
+        <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -50,8 +50,8 @@
         <Reference Include="Machina.FFXIV">
             <HintPath>Lib\Machina\Machina.FFXIV.dll</HintPath>
         </Reference>
-        <Reference Include="System.Web" />
-        <Reference Include="WindowsBase" />
+        <Reference Include="System.Web"/>
+        <Reference Include="WindowsBase"/>
     </ItemGroup>
     <ItemGroup>
         <ContentWithTargetPath Include="Lib\Machina\\oo2net_9_win64.dll">

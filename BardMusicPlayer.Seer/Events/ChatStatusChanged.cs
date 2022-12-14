@@ -1,18 +1,17 @@
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
+
+public sealed class ChatStatusChanged : SeerEvent
 {
-    public sealed class ChatStatusChanged : SeerEvent
+    internal ChatStatusChanged(EventSource readerBackendType, bool chatStatus) : base(readerBackendType, 0, true)
     {
-        internal ChatStatusChanged(EventSource readerBackendType, bool chatStatus) : base(readerBackendType, 0, true)
-        {
-            EventType = GetType();
-            ChatStatus = chatStatus;
-        }
+        EventType = GetType();
+        ChatStatus = chatStatus;
+    }
 
-        public bool ChatStatus { get; }
+    public bool ChatStatus { get; }
 
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

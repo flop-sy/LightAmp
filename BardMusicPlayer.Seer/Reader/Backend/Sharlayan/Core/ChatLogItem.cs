@@ -5,22 +5,21 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core.Interfaces;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core;
+
+internal sealed class ChatLogItem : IChatLogItem
 {
-    internal sealed class ChatLogItem : IChatLogItem
-    {
-        public byte[] Bytes { get; set; }
+    public byte[] Bytes { get; set; }
 
-        public string Code { get; set; }
+    public string Code { get; set; }
 
-        public string Combined { get; set; }
+    public string Combined { get; set; }
 
-        public bool JP { get; set; }
+    public bool JP { get; set; }
 
-        public string Line { get; set; }
+    public string Line { get; set; }
 
-        public string Raw { get; set; }
+    public string Raw { get; set; }
 
-        public DateTime TimeStamp { get; set; }
-    }
+    public DateTime TimeStamp { get; set; }
 }

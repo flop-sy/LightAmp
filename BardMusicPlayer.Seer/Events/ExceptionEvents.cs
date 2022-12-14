@@ -4,52 +4,51 @@ using System;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
+
+public class SeerExceptionEvent : SeerEvent
 {
-    public class SeerExceptionEvent : SeerEvent
+    internal SeerExceptionEvent(Exception exception, EventSource eventSource = EventSource.Seer) : base(eventSource)
     {
-        internal SeerExceptionEvent(Exception exception, EventSource eventSource = EventSource.Seer) : base(eventSource)
-        {
-            EventType = GetType();
-            Exception = exception;
-        }
-
-        public Exception Exception { get; }
-
-        public override bool IsValid()
-        {
-            return true;
-        }
+        EventType = GetType();
+        Exception = exception;
     }
 
-    public sealed class GameExceptionEvent : SeerExceptionEvent
+    public Exception Exception { get; }
+
+    public override bool IsValid()
     {
-        internal GameExceptionEvent(Game game, int pid, Exception exception) : base(exception, EventSource.Game)
-        {
-            EventType = GetType();
-            Game = game;
-            Pid = pid;
-        }
+        return true;
+    }
+}
 
-        public int Pid { get; }
-
-        public override bool IsValid()
-        {
-            return true;
-        }
+public sealed class GameExceptionEvent : SeerExceptionEvent
+{
+    internal GameExceptionEvent(Game game, int pid, Exception exception) : base(exception, EventSource.Game)
+    {
+        EventType = GetType();
+        Game = game;
+        Pid = pid;
     }
 
-    public sealed class BackendExceptionEvent : SeerExceptionEvent
-    {
-        internal BackendExceptionEvent(EventSource readerBackendType, Exception exception) : base(exception,
-            readerBackendType)
-        {
-            EventType = GetType();
-        }
+    public int Pid { get; }
 
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
+    }
+}
+
+public sealed class BackendExceptionEvent : SeerExceptionEvent
+{
+    internal BackendExceptionEvent(EventSource readerBackendType, Exception exception) : base(exception,
+        readerBackendType)
+    {
+        EventType = GetType();
+    }
+
+    public override bool IsValid()
+    {
+        return true;
     }
 }

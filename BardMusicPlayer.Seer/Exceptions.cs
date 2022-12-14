@@ -5,59 +5,58 @@ using BardMusicPlayer.Seer.Events;
 
 #endregion
 
-namespace BardMusicPlayer.Seer
+namespace BardMusicPlayer.Seer;
+
+public class BmpSeerException : BmpException
 {
-    public class BmpSeerException : BmpException
+    internal BmpSeerException()
     {
-        internal BmpSeerException()
-        {
-        }
-
-        internal BmpSeerException(string message) : base(message)
-        {
-        }
     }
 
-    public sealed class BmpSeerGamePathException : BmpSeerException
+    internal BmpSeerException(string message) : base(message)
     {
-        internal BmpSeerGamePathException(string message) : base(message)
-        {
-        }
     }
+}
 
-    public sealed class BmpSeerEnvironmentTypeException : BmpSeerException
+public sealed class BmpSeerGamePathException : BmpSeerException
+{
+    internal BmpSeerGamePathException(string message) : base(message)
     {
-        internal BmpSeerEnvironmentTypeException(string message) : base(message)
-        {
-        }
     }
+}
 
-    public sealed class BmpSeerGameRegionException : BmpSeerException
+public sealed class BmpSeerEnvironmentTypeException : BmpSeerException
+{
+    internal BmpSeerEnvironmentTypeException(string message) : base(message)
     {
-        internal BmpSeerGameRegionException(string message) : base(message)
-        {
-        }
     }
+}
 
-    public sealed class BmpSeerConfigPathException : BmpSeerException
+public sealed class BmpSeerGameRegionException : BmpSeerException
+{
+    internal BmpSeerGameRegionException(string message) : base(message)
     {
-        internal BmpSeerConfigPathException(string message) : base(message)
-        {
-        }
     }
+}
 
-    public sealed class BmpSeerBackendAlreadyRunningException : BmpSeerException
+public sealed class BmpSeerConfigPathException : BmpSeerException
+{
+    internal BmpSeerConfigPathException(string message) : base(message)
     {
-        internal BmpSeerBackendAlreadyRunningException(int pid, EventSource readerBackendType) : base("Backend " +
-            readerBackendType + " already running for pid " + pid)
-        {
-        }
     }
+}
 
-    public sealed class BmpSeerMachinaException : BmpSeerException
+public sealed class BmpSeerBackendAlreadyRunningException : BmpSeerException
+{
+    internal BmpSeerBackendAlreadyRunningException(int pid, EventSource readerBackendType) : base("Backend " +
+        readerBackendType + " already running for pid " + pid)
     {
-        internal BmpSeerMachinaException(string message) : base(message)
-        {
-        }
+    }
+}
+
+public sealed class BmpSeerMachinaException : BmpSeerException
+{
+    internal BmpSeerMachinaException(string message) : base(message)
+    {
     }
 }

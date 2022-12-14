@@ -11,77 +11,76 @@ using BardMusicPlayer.Seer.Events;
 
 #endregion
 
-namespace BardMusicPlayer.Seer
+namespace BardMusicPlayer.Seer;
+
+public sealed partial class BmpSeer
 {
-    public sealed partial class BmpSeer
+    private CancellationTokenSource _watcherTokenSource;
+
+    private void StartProcessWatcher()
     {
-        private CancellationTokenSource _watcherTokenSource;
+        _watcherTokenSource = new CancellationTokenSource();
 
-        private void StartProcessWatcher()
+        Task.Factory.StartNew(() => RunProcessWatcher(_watcherTokenSource.Token), TaskCreationOptions.LongRunning);
+    }
+
+    private async Task RunProcessWatcher(CancellationToken token)
+    {
+        long coolDown = 0;
+        while (!_watcherTokenSource.IsCancellationRequested)
         {
-            _watcherTokenSource = new CancellationTokenSource();
-
-            Task.Factory.StartNew(() => RunProcessWatcher(_watcherTokenSource.Token), TaskCreationOptions.LongRunning);
-        }
-
-        private async Task RunProcessWatcher(CancellationToken token)
-        {
-            long coolDown = 0;
-            while (!_watcherTokenSource.IsCancellationRequested)
+            try
             {
-                try
+                var processes = Process.GetProcessesByName("ffxiv_dx11");
+
+                foreach (var game in _games.Values.TakeWhile(game => !token.IsCancellationRequested).Where(game =>
+                             game.Process is null || game.Process.HasExited || !game.Process.Responding ||
+                             processes.All(process => process.Id != game.Pid)))
                 {
-                    var processes = Process.GetProcessesByName("ffxiv_dx11");
+                    _games.TryRemove(game.Pid, out _);
+                    game?.Dispose();
+                }
 
-                    foreach (var game in _games.Values.TakeWhile(game => !token.IsCancellationRequested).Where(game =>
-                                 game.Process is null || game.Process.HasExited || !game.Process.Responding ||
-                                 processes.All(process => process.Id != game.Pid)))
+                foreach (var process in processes)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+
+                    // Add new games.
+                    if (process is null || _games.ContainsKey(process.Id) || process.HasExited ||
+                        !process.Responding)
+                        continue;
+
+                    // Adding a game spikes the cpu when sharlayan scans memory.
+                    var timeNow = Clock.Time.Now;
+                    if (coolDown + BmpPigeonhole.Instance.SeerGameScanCooldown > timeNow)
+                        continue;
+
+                    coolDown = timeNow;
+
+                    var game = new Game(process);
+                    if (!game.Initialize())
                     {
-                        _games.TryRemove(game.Pid, out _);
-                        game?.Dispose();
+                        game.Dispose();
                     }
-
-                    foreach (var process in processes)
+                    else
                     {
-                        if (token.IsCancellationRequested)
-                            break;
-
-                        // Add new games.
-                        if (process is null || _games.ContainsKey(process.Id) || process.HasExited ||
-                            !process.Responding)
-                            continue;
-
-                        // Adding a game spikes the cpu when sharlayan scans memory.
-                        var timeNow = Clock.Time.Now;
-                        if (coolDown + BmpPigeonhole.Instance.SeerGameScanCooldown > timeNow)
-                            continue;
-
-                        coolDown = timeNow;
-
-                        var game = new Game(process);
-                        if (!game.Initialize())
-                        {
+                        if (!_games.TryAdd(process.Id, game))
                             game.Dispose();
-                        }
-                        else
-                        {
-                            if (!_games.TryAdd(process.Id, game))
-                                game.Dispose();
-                        }
                     }
                 }
-                catch (Exception ex)
-                {
-                    PublishEvent(new SeerExceptionEvent(ex));
-                }
-
-                await Task.Delay(1, token).ContinueWith(static tsk => { }, token);
             }
-        }
+            catch (Exception ex)
+            {
+                PublishEvent(new SeerExceptionEvent(ex));
+            }
 
-        private void StopProcessWatcher()
-        {
-            _watcherTokenSource.Cancel();
+            await Task.Delay(1, token).ContinueWith(static tsk => { }, token);
         }
+    }
+
+    private void StopProcessWatcher()
+    {
+        _watcherTokenSource.Cancel();
     }
 }

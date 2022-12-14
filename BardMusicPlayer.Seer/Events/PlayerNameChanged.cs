@@ -1,19 +1,17 @@
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
 
+public sealed class PlayerNameChanged : SeerEvent
 {
-    public sealed class PlayerNameChanged : SeerEvent
+    internal PlayerNameChanged(EventSource readerBackendType, string playerName) : base(readerBackendType)
     {
-        internal PlayerNameChanged(EventSource readerBackendType, string playerName) : base(readerBackendType)
-        {
-            EventType = GetType();
-            PlayerName = playerName;
-        }
+        EventType = GetType();
+        PlayerName = playerName;
+    }
 
-        public string PlayerName { get; }
+    public string PlayerName { get; }
 
-        public override bool IsValid()
-        {
-            return !string.IsNullOrEmpty(PlayerName);
-        }
+    public override bool IsValid()
+    {
+        return !string.IsNullOrEmpty(PlayerName);
     }
 }

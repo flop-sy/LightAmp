@@ -1,14 +1,13 @@
-namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core.Enums
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core.Enums;
+
+internal class Performance
 {
-    internal class Performance
+    public enum Status : byte
     {
-        public enum Status : byte
-        {
-            Closed,
-            Loading,
-            Opened,
-            SwitchingNote,
-            HoldingNote
-        }
+        Closed,
+        Loading,
+        Opened,
+        SwitchingNote,
+        HoldingNote
     }
 }

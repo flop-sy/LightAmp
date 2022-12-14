@@ -6,73 +6,72 @@ using BardMusicPlayer.Seer.Reader.Backend.DatFile.Utilities;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
+namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects;
+
+internal sealed class Keybind : IDisposable
 {
-    internal sealed class Keybind : IDisposable
+    public int MainKey1 { get; set; }
+
+    public int ModKey1 { get; set; }
+
+    public int MainKey2 { get; set; }
+
+    public int ModKey2 { get; set; }
+
+    public void Dispose()
     {
-        public int MainKey1 { get; set; }
+    }
 
-        public int ModKey1 { get; set; }
+    public Keys GetKey()
+    {
+        return GetKey1() != Keys.None ? GetKey1() : GetKey2();
+    }
 
-        public int MainKey2 { get; set; }
+    public Keys GetKey1()
+    {
+        return GetMain(MainKey1) | GetMod(ModKey1);
+    }
 
-        public int ModKey2 { get; set; }
+    public Keys GetKey2()
+    {
+        return GetMain(MainKey2) | GetMod(ModKey2);
+    }
 
-        public void Dispose()
-        {
-        }
+    private static Keys GetMain(int key)
+    {
+        if (key < 130)
+            return (Keys)key;
+        if (KeyDictionary.MainKeyMap.ContainsKey(key))
+            return (Keys)KeyDictionary.MainKeyMap[key];
 
-        public Keys GetKey()
-        {
-            return GetKey1() != Keys.None ? GetKey1() : GetKey2();
-        }
+        return Keys.None;
+    }
 
-        public Keys GetKey1()
-        {
-            return GetMain(MainKey1) | GetMod(ModKey1);
-        }
+    private static Keys GetMod(int mod)
+    {
+        var modKeys = Keys.None;
+        if ((mod & 1) != 0) modKeys |= Keys.Shift;
 
-        public Keys GetKey2()
-        {
-            return GetMain(MainKey2) | GetMod(ModKey2);
-        }
+        if ((mod & 2) != 0) modKeys |= Keys.Control;
 
-        private static Keys GetMain(int key)
-        {
-            if (key < 130)
-                return (Keys)key;
-            if (KeyDictionary.MainKeyMap.ContainsKey(key))
-                return (Keys)KeyDictionary.MainKeyMap[key];
+        if ((mod & 4) != 0) modKeys |= Keys.Alt;
 
-            return Keys.None;
-        }
+        return modKeys;
+    }
 
-        private static Keys GetMod(int mod)
-        {
-            var modKeys = Keys.None;
-            if ((mod & 1) != 0) modKeys |= Keys.Shift;
+    public override string ToString()
+    {
+        var key = GetKey();
+        if (key == Keys.None) return string.Empty;
 
-            if ((mod & 2) != 0) modKeys |= Keys.Control;
+        var str = key.ToString();
+        if (KeyDictionary.OemKeyFix.ContainsKey(str)) str = KeyDictionary.OemKeyFix[str];
 
-            if ((mod & 4) != 0) modKeys |= Keys.Alt;
+        return str;
+    }
 
-            return modKeys;
-        }
-
-        public override string ToString()
-        {
-            var key = GetKey();
-            if (key == Keys.None) return string.Empty;
-
-            var str = key.ToString();
-            if (KeyDictionary.OemKeyFix.ContainsKey(str)) str = KeyDictionary.OemKeyFix[str];
-
-            return str;
-        }
-
-        ~Keybind()
-        {
-            Dispose();
-        }
+    ~Keybind()
+    {
+        Dispose();
     }
 }

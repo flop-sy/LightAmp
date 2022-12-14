@@ -5,27 +5,26 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Core.Interfaces;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
+
+public sealed class ChatLog : SeerEvent
 {
-    public sealed class ChatLog : SeerEvent
+    internal ChatLog(EventSource readerBackendType, Game game, IChatLogItem item) : base(readerBackendType)
     {
-        internal ChatLog(EventSource readerBackendType, Game game, IChatLogItem item) : base(readerBackendType)
-        {
-            EventType = GetType();
-            ChatLogGame = game;
-            ChatLogTimeStamp = item.TimeStamp;
-            ChatLogCode = item.Code;
-            ChatLogLine = item.Line;
-        }
+        EventType = GetType();
+        ChatLogGame = game;
+        ChatLogTimeStamp = item.TimeStamp;
+        ChatLogCode = item.Code;
+        ChatLogLine = item.Line;
+    }
 
-        public Game ChatLogGame { get; }
-        public DateTime ChatLogTimeStamp { get; }
-        public string ChatLogCode { get; }
-        public string ChatLogLine { get; }
+    public Game ChatLogGame { get; }
+    public DateTime ChatLogTimeStamp { get; }
+    public string ChatLogCode { get; }
+    public string ChatLogLine { get; }
 
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

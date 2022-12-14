@@ -4,52 +4,51 @@ using System;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects
+namespace BardMusicPlayer.Seer.Reader.Backend.DatFile.Objects;
+
+internal sealed class HotbarSlot : IDisposable
 {
-    internal sealed class HotbarSlot : IDisposable
+    private byte _hotbar;
+    private byte _slot;
+
+    public byte Hotbar
     {
-        private byte _hotbar;
-        private byte _slot;
+        get => _hotbar;
+        set => _hotbar = Convert.ToByte(value + 1);
+    }
 
-        public byte Hotbar
+    public byte Slot
+    {
+        get
         {
-            get => _hotbar;
-            set => _hotbar = Convert.ToByte(value + 1);
+            var ss = _slot % 10;
+            if (_slot > 10) ss += _slot / 10 * 10 - 1;
+
+            return Convert.ToByte(ss);
         }
+        set => _slot = Convert.ToByte(value + 1);
+    }
 
-        public byte Slot
-        {
-            get
-            {
-                var ss = _slot % 10;
-                if (_slot > 10) ss += _slot / 10 * 10 - 1;
+    public byte Action { get; set; } // Higher level? 0D for 60-70 spells
+    public byte Flag { get; set; }
+    public byte Unk1 { get; set; }
+    public byte Unk2 { get; set; }
+    public byte Job { get; set; }
+    public byte Type { get; set; }
 
-                return Convert.ToByte(ss);
-            }
-            set => _slot = Convert.ToByte(value + 1);
-        }
+    public bool IsBard => Job == 0x17;
 
-        public byte Action { get; set; } // Higher level? 0D for 60-70 spells
-        public byte Flag { get; set; }
-        public byte Unk1 { get; set; }
-        public byte Unk2 { get; set; }
-        public byte Job { get; set; }
-        public byte Type { get; set; }
+    public void Dispose()
+    {
+    }
 
-        public bool IsBard => Job == 0x17;
+    public override string ToString()
+    {
+        return $"HOTBAR_{Hotbar}_{Slot:X}";
+    }
 
-        public void Dispose()
-        {
-        }
-
-        public override string ToString()
-        {
-            return $"HOTBAR_{Hotbar}_{Slot:X}";
-        }
-
-        ~HotbarSlot()
-        {
-            Dispose();
-        }
+    ~HotbarSlot()
+    {
+        Dispose();
     }
 }

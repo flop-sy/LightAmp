@@ -6,49 +6,48 @@ using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan
+namespace BardMusicPlayer.Seer.Reader.Backend.Sharlayan;
+
+internal sealed class ChatLogReader
 {
-    internal sealed class ChatLogReader
+    private const int BUFFER_SIZE = 4000;
+    private readonly MemoryHandler _memoryHandler;
+    public readonly List<int> Indexes = new();
+    public ChatLogPointers ChatLogPointers;
+    public int PreviousArrayIndex;
+    public int PreviousOffset;
+
+    public ChatLogReader(MemoryHandler memoryHandler)
     {
-        private const int BUFFER_SIZE = 4000;
-        private readonly MemoryHandler _memoryHandler;
-        public readonly List<int> Indexes = new();
-        public ChatLogPointers ChatLogPointers;
-        public int PreviousArrayIndex;
-        public int PreviousOffset;
+        _memoryHandler = memoryHandler;
+    }
 
-        public ChatLogReader(MemoryHandler memoryHandler)
+    public void EnsureArrayIndexes()
+    {
+        Indexes.Clear();
+
+        var indexes = _memoryHandler.GetByteArray(new IntPtr(ChatLogPointers.OffsetArrayStart), BUFFER_SIZE);
+
+        for (var i = 0; i < BUFFER_SIZE; i += 4) Indexes.Add(BitConverter.ToInt32(indexes, i));
+    }
+
+    public IEnumerable<List<byte>> ResolveEntries(int offset, int length)
+    {
+        var entries = new List<List<byte>>();
+        for (var i = offset; i < length; i++)
         {
-            _memoryHandler = memoryHandler;
+            EnsureArrayIndexes();
+            var currentOffset = Indexes[i];
+            entries.Add(ResolveEntry(PreviousOffset, currentOffset));
+            PreviousOffset = currentOffset;
         }
 
-        public void EnsureArrayIndexes()
-        {
-            Indexes.Clear();
+        return entries;
+    }
 
-            var indexes = _memoryHandler.GetByteArray(new IntPtr(ChatLogPointers.OffsetArrayStart), BUFFER_SIZE);
-
-            for (var i = 0; i < BUFFER_SIZE; i += 4) Indexes.Add(BitConverter.ToInt32(indexes, i));
-        }
-
-        public IEnumerable<List<byte>> ResolveEntries(int offset, int length)
-        {
-            var entries = new List<List<byte>>();
-            for (var i = offset; i < length; i++)
-            {
-                EnsureArrayIndexes();
-                var currentOffset = Indexes[i];
-                entries.Add(ResolveEntry(PreviousOffset, currentOffset));
-                PreviousOffset = currentOffset;
-            }
-
-            return entries;
-        }
-
-        private List<byte> ResolveEntry(int offset, int length)
-        {
-            return new List<byte>(_memoryHandler.GetByteArray(new IntPtr(ChatLogPointers.LogStart + offset),
-                length - offset));
-        }
+    private List<byte> ResolveEntry(int offset, int length)
+    {
+        return new List<byte>(_memoryHandler.GetByteArray(new IntPtr(ChatLogPointers.LogStart + offset),
+            length - offset));
     }
 }

@@ -1,16 +1,14 @@
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
 
+public sealed class EnsembleRequested : SeerEvent
 {
-    public sealed class EnsembleRequested : SeerEvent
+    internal EnsembleRequested(EventSource readerBackendType) : base(readerBackendType, 100)
     {
-        internal EnsembleRequested(EventSource readerBackendType) : base(readerBackendType, 100)
-        {
-            EventType = GetType();
-        }
+        EventType = GetType();
+    }
 
-        public override bool IsValid()
-        {
-            return true;
-        }
+    public override bool IsValid()
+    {
+        return true;
     }
 }

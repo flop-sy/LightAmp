@@ -4,21 +4,20 @@ using System.Text.RegularExpressions;
 
 #endregion
 
-namespace BardMusicPlayer.Seer.Events
+namespace BardMusicPlayer.Seer.Events;
+
+public sealed class HomeWorldChanged : SeerEvent
 {
-    public sealed class HomeWorldChanged : SeerEvent
+    internal HomeWorldChanged(EventSource readerBackendType, string homeWorld) : base(readerBackendType)
     {
-        internal HomeWorldChanged(EventSource readerBackendType, string homeWorld) : base(readerBackendType)
-        {
-            EventType = GetType();
-            HomeWorld = homeWorld;
-        }
+        EventType = GetType();
+        HomeWorld = homeWorld;
+    }
 
-        public string HomeWorld { get; }
+    public string HomeWorld { get; }
 
-        public override bool IsValid()
-        {
-            return !string.IsNullOrEmpty(HomeWorld) && Regex.IsMatch(HomeWorld, @"^[a-zA-Z]+$");
-        }
+    public override bool IsValid()
+    {
+        return !string.IsNullOrEmpty(HomeWorld) && Regex.IsMatch(HomeWorld, @"^[a-zA-Z]+$");
     }
 }
