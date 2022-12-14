@@ -4,12 +4,11 @@ using BardMusicPlayer.Quotidian;
 
 #endregion
 
-namespace BardMusicPlayer.Transmogrify
+namespace BardMusicPlayer.Transmogrify;
+
+public sealed class BmpTransmogrifyException : BmpException
 {
-    public sealed class BmpTransmogrifyException : BmpException
+    public BmpTransmogrifyException(string message) : base(message)
     {
-        public BmpTransmogrifyException(string message) : base(message)
-        {
-        }
     }
 }

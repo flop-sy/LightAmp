@@ -10,49 +10,48 @@ using Melanchall.DryWetMidi.Interaction;
 
 #endregion
 
-namespace BardMusicPlayer.Transmogrify.Processor
+namespace BardMusicPlayer.Transmogrify.Processor;
+
+internal sealed class LyricProcessor : BaseProcessor
 {
-    internal sealed class LyricProcessor : BaseProcessor
+    internal LyricProcessor(LyricProcessorConfig processorConfig, BmpSong song) : base(song)
     {
-        internal LyricProcessor(LyricProcessorConfig processorConfig, BmpSong song) : base(song)
+        ProcessorConfig = processorConfig;
+    }
+
+    public LyricProcessorConfig ProcessorConfig { get; set; }
+
+    public override Task<List<TrackChunk>> Process()
+    {
+        var trackChunk = new List<TrackChunk> { Song.TrackContainers[ProcessorConfig.Track].SourceTrackChunk }
+            .Concat(ProcessorConfig.IncludedTracks.Select(track => Song.TrackContainers[track].SourceTrackChunk))
+            .Merge();
+
+        var lyricEvents = new List<TimedEvent>();
+
+        var lyricLineCount = 0;
+
+        var tempoMap = Song.SourceTempoMap.Clone();
+
+        foreach (var midiEvent in trackChunk.GetTimedEvents()
+                     .Where(static e => e.Event.EventType == MidiEventType.Lyric))
         {
-            ProcessorConfig = processorConfig;
+            lyricLineCount++;
+            midiEvent.Time = midiEvent.TimeAs<MetricTimeSpan>(tempoMap).TotalMicroseconds / 1000 + 120000;
+            lyricEvents.Add(midiEvent);
         }
 
-        public LyricProcessorConfig ProcessorConfig { get; set; }
+        var trackChunks = new List<TrackChunk>();
 
-        public override Task<List<TrackChunk>> Process()
+        for (var i = 0; i < ProcessorConfig.PlayerCount; i++)
         {
-            var trackChunk = new List<TrackChunk> { Song.TrackContainers[ProcessorConfig.Track].SourceTrackChunk }
-                .Concat(ProcessorConfig.IncludedTracks.Select(track => Song.TrackContainers[track].SourceTrackChunk))
-                .Merge();
-
-            var lyricEvents = new List<TimedEvent>();
-
-            var lyricLineCount = 0;
-
-            var tempoMap = Song.SourceTempoMap.Clone();
-
-            foreach (var midiEvent in trackChunk.GetTimedEvents()
-                         .Where(static e => e.Event.EventType == MidiEventType.Lyric))
-            {
-                lyricLineCount++;
-                midiEvent.Time = midiEvent.TimeAs<MetricTimeSpan>(tempoMap).TotalMicroseconds / 1000 + 120000;
-                lyricEvents.Add(midiEvent);
-            }
-
-            var trackChunks = new List<TrackChunk>();
-
-            for (var i = 0; i < ProcessorConfig.PlayerCount; i++)
-            {
-                trackChunk = new TrackChunk();
-                trackChunk.AddObjects(lyricEvents);
-                trackChunk.AddObjects(new List<ITimedObject>
-                    { new TimedEvent(new SequenceTrackNameEvent("lyric:" + lyricLineCount)) });
-                trackChunks.Add(trackChunk);
-            }
-
-            return Task.FromResult(trackChunks);
+            trackChunk = new TrackChunk();
+            trackChunk.AddObjects(lyricEvents);
+            trackChunk.AddObjects(new List<ITimedObject>
+                { new TimedEvent(new SequenceTrackNameEvent("lyric:" + lyricLineCount)) });
+            trackChunks.Add(trackChunk);
         }
+
+        return Task.FromResult(trackChunks);
     }
 }

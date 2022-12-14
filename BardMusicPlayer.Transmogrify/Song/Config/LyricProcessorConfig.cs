@@ -5,17 +5,16 @@ using BardMusicPlayer.Transmogrify.Song.Config.Interfaces;
 
 #endregion
 
-namespace BardMusicPlayer.Transmogrify.Song.Config
+namespace BardMusicPlayer.Transmogrify.Song.Config;
+
+public sealed class LyricProcessorConfig : IProcessorConfig
 {
-    public sealed class LyricProcessorConfig : IProcessorConfig
-    {
-        /// <inheritdoc />
-        public int Track { get; set; }
+    /// <inheritdoc />
+    public int Track { get; set; }
 
-        /// <inheritdoc />
-        public List<long> IncludedTracks { get; set; } = new();
+    /// <inheritdoc />
+    public List<long> IncludedTracks { get; set; } = new();
 
-        /// <inheritdoc />
-        public int PlayerCount { get; set; } = 1;
-    }
+    /// <inheritdoc />
+    public int PlayerCount { get; set; } = 1;
 }

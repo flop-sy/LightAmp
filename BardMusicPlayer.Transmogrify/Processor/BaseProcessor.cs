@@ -8,27 +8,26 @@ using Melanchall.DryWetMidi.Core;
 
 #endregion
 
-namespace BardMusicPlayer.Transmogrify.Processor
+namespace BardMusicPlayer.Transmogrify.Processor;
+
+internal abstract class BaseProcessor : IDisposable
 {
-    internal abstract class BaseProcessor : IDisposable
+    protected BaseProcessor(BmpSong song)
     {
-        protected BaseProcessor(BmpSong song)
-        {
-            Song = song;
-        }
+        Song = song;
+    }
 
-        protected BmpSong Song { get; set; }
+    protected BmpSong Song { get; set; }
 
-        public virtual void Dispose()
-        {
-            GC.SuppressFinalize(this);
-        }
+    public virtual void Dispose()
+    {
+        GC.SuppressFinalize(this);
+    }
 
-        public abstract Task<List<TrackChunk>> Process();
+    public abstract Task<List<TrackChunk>> Process();
 
-        ~BaseProcessor()
-        {
-            Dispose();
-        }
+    ~BaseProcessor()
+    {
+        Dispose();
     }
 }
