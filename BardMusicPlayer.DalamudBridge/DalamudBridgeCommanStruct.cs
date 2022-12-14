@@ -7,15 +7,14 @@ using BardMusicPlayer.Seer;
 #endregion
 
 
-namespace BardMusicPlayer.DalamudBridge
+namespace BardMusicPlayer.DalamudBridge;
+
+public struct DalamudBridgeCommandStruct
 {
-    public struct DalamudBridgeCommandStruct
-    {
-        public MessageType messageType;
-        public ChatMessageChannelType chatType;
-        public Game game;
-        public int IntData;
-        public bool BoolData;
-        public string TextData;
-    }
+    public MessageType messageType;
+    public ChatMessageChannelType chatType;
+    public Game game;
+    public int IntData;
+    public bool BoolData;
+    public string TextData;
 }

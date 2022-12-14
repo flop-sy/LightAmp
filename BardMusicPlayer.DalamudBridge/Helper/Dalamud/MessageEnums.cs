@@ -1,13 +1,12 @@
-﻿namespace BardMusicPlayer.DalamudBridge.Helper.Dalamud
+﻿namespace BardMusicPlayer.DalamudBridge.Helper.Dalamud;
+
+public enum MessageType
 {
-    public enum MessageType
-    {
-        None,
-        Handshake,
-        Chat,
-        Instrument,
-        AcceptReply,
-        SetGfx,
-        StartEnsemble
-    }
+    None,
+    Handshake,
+    Chat,
+    Instrument,
+    AcceptReply,
+    SetGfx,
+    StartEnsemble
 }

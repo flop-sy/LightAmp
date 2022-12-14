@@ -6,71 +6,70 @@ using BardMusicPlayer.Seer;
 
 #endregion
 
-namespace BardMusicPlayer.DalamudBridge
+namespace BardMusicPlayer.DalamudBridge;
+
+public sealed partial class DalamudBridge
 {
-    public sealed partial class DalamudBridge
+    private static readonly Lazy<DalamudBridge> LazyInstance = new(static () => new DalamudBridge());
+
+    internal DalamudServer DalamudServer;
+
+    private DalamudBridge()
     {
-        private static readonly Lazy<DalamudBridge> LazyInstance = new(static () => new DalamudBridge());
+    }
 
-        internal DalamudServer DalamudServer;
+    /// <summary>
+    /// </summary>
+    public bool Started { get; private set; }
 
-        private DalamudBridge()
-        {
-        }
+    public static DalamudBridge Instance => LazyInstance.Value;
 
-        /// <summary>
-        /// </summary>
-        public bool Started { get; private set; }
+    /// <summary>
+    ///     Start Grunt.
+    /// </summary>
+    public void Start()
+    {
+        if (Started)
+            return;
 
-        public static DalamudBridge Instance => LazyInstance.Value;
+        if (!BmpSeer.Instance.Started)
+            throw new DalamudBridgeException("DalamudBridge requires Seer to be running.");
 
-        /// <summary>
-        ///     Start Grunt.
-        /// </summary>
-        public void Start()
-        {
-            if (Started)
-                return;
+        DalamudServer = new DalamudServer();
+        StartEventsHandler();
+        Started = true;
+    }
 
-            if (!BmpSeer.Instance.Started)
-                throw new DalamudBridgeException("DalamudBridge requires Seer to be running.");
+    /// <summary>
+    ///     Stop Grunt.
+    /// </summary>
+    public void Stop()
+    {
+        if (!Started) return;
 
-            DalamudServer = new DalamudServer();
-            StartEventsHandler();
-            Started = true;
-        }
-
-        /// <summary>
-        ///     Stop Grunt.
-        /// </summary>
-        public void Stop()
-        {
-            if (!Started) return;
-
-            StopEventsHandler();
-            DalamudServer?.Dispose();
-            DalamudServer = null;
-            Started = false;
-        }
+        StopEventsHandler();
+        DalamudServer?.Dispose();
+        DalamudServer = null;
+        Started = false;
+    }
 
 
-        public void ActionToQueue(DalamudBridgeCommandStruct data)
-        {
-            if (!Started) return;
+    public void ActionToQueue(DalamudBridgeCommandStruct data)
+    {
+        if (!Started) return;
 
-            PublishEvent(data);
-        }
+        PublishEvent(data);
+    }
 
 
-        ~DalamudBridge()
-        {
-            Dispose();
-        }
+    ~DalamudBridge()
+    {
+        Dispose();
+    }
 
-        public void Dispose()
-        {
-            Stop();
-            GC.SuppressFinalize(this);
-        }
+    public void Dispose()
+    {
+        Stop();
+        GC.SuppressFinalize(this);
     }
 }
