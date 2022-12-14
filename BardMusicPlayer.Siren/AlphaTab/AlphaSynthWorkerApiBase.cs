@@ -7,202 +7,201 @@ using BardMusicPlayer.Siren.AlphaTab.Util;
 
 #endregion
 
-namespace BardMusicPlayer.Siren.AlphaTab
+namespace BardMusicPlayer.Siren.AlphaTab;
+
+internal abstract class AlphaSynthWorkerApiBase : IAlphaSynth
 {
-    internal abstract class AlphaSynthWorkerApiBase : IAlphaSynth
+    private readonly ISynthOutput _output;
+    private LogLevel _logLevel;
+
+    protected AlphaSynth Player;
+
+    protected AlphaSynthWorkerApiBase(ISynthOutput output, LogLevel logLevel)
     {
-        private readonly ISynthOutput _output;
-        private LogLevel _logLevel;
+        _output = output;
+        _logLevel = logLevel;
+    }
 
-        protected AlphaSynth Player;
+    public abstract void Destroy();
 
-        protected AlphaSynthWorkerApiBase(ISynthOutput output, LogLevel logLevel)
+    public bool IsReady => Player is { IsReady: true };
+    public bool IsReadyForPlayback => Player is { IsReadyForPlayback: true };
+
+    public PlayerState State => Player?.State ?? PlayerState.Paused;
+
+    public LogLevel LogLevel
+    {
+        get => _logLevel;
+        set
         {
-            _output = output;
-            _logLevel = logLevel;
+            _logLevel = value;
+            DispatchOnWorkerThread(() => { Player.LogLevel = value; });
         }
+    }
 
-        public abstract void Destroy();
+    public float MasterVolume
+    {
+        get => Player.MasterVolume;
+        set => DispatchOnWorkerThread(() => { Player.MasterVolume = value; });
+    }
 
-        public bool IsReady => Player is { IsReady: true };
-        public bool IsReadyForPlayback => Player is { IsReadyForPlayback: true };
+    public double PlaybackSpeed
+    {
+        get => Player.PlaybackSpeed;
+        set => DispatchOnWorkerThread(() => { Player.PlaybackSpeed = value; });
+    }
 
-        public PlayerState State => Player?.State ?? PlayerState.Paused;
+    public int TickPosition
+    {
+        get => Player.TickPosition;
+        set => DispatchOnWorkerThread(() => { Player.TickPosition = value; });
+    }
 
-        public LogLevel LogLevel
-        {
-            get => _logLevel;
-            set
-            {
-                _logLevel = value;
-                DispatchOnWorkerThread(() => { Player.LogLevel = value; });
-            }
-        }
+    public double TimePosition
+    {
+        get => Player.TimePosition;
+        set => DispatchOnWorkerThread(() => { Player.TimePosition = value; });
+    }
 
-        public float MasterVolume
-        {
-            get => Player.MasterVolume;
-            set => DispatchOnWorkerThread(() => { Player.MasterVolume = value; });
-        }
+    public PlaybackRange PlaybackRange
+    {
+        get => Player.PlaybackRange;
+        set => DispatchOnWorkerThread(() => { Player.PlaybackRange = value; });
+    }
 
-        public double PlaybackSpeed
-        {
-            get => Player.PlaybackSpeed;
-            set => DispatchOnWorkerThread(() => { Player.PlaybackSpeed = value; });
-        }
+    public bool IsLooping
+    {
+        get => Player.IsLooping;
+        set => DispatchOnWorkerThread(() => { Player.IsLooping = value; });
+    }
 
-        public int TickPosition
-        {
-            get => Player.TickPosition;
-            set => DispatchOnWorkerThread(() => { Player.TickPosition = value; });
-        }
+    public bool Play()
+    {
+        if (State == PlayerState.Playing || !IsReadyForPlayback) return false;
 
-        public double TimePosition
-        {
-            get => Player.TimePosition;
-            set => DispatchOnWorkerThread(() => { Player.TimePosition = value; });
-        }
+        DispatchOnWorkerThread(() => { Player.Play(); });
+        return true;
+    }
 
-        public PlaybackRange PlaybackRange
-        {
-            get => Player.PlaybackRange;
-            set => DispatchOnWorkerThread(() => { Player.PlaybackRange = value; });
-        }
+    public void Pause()
+    {
+        DispatchOnWorkerThread(() => { Player.Pause(); });
+    }
 
-        public bool IsLooping
-        {
-            get => Player.IsLooping;
-            set => DispatchOnWorkerThread(() => { Player.IsLooping = value; });
-        }
+    public void PlayPause()
+    {
+        DispatchOnWorkerThread(() => { Player.PlayPause(); });
+    }
 
-        public bool Play()
-        {
-            if (State == PlayerState.Playing || !IsReadyForPlayback) return false;
+    public void Stop()
+    {
+        DispatchOnWorkerThread(() => { Player.Stop(); });
+    }
 
-            DispatchOnWorkerThread(() => { Player.Play(); });
-            return true;
-        }
+    public void LoadSoundFont(byte[] data, bool append)
+    {
+        DispatchOnWorkerThread(() => { Player.LoadSoundFont(data, append); });
+    }
 
-        public void Pause()
-        {
-            DispatchOnWorkerThread(() => { Player.Pause(); });
-        }
+    public void LoadMidiFile(MidiFile midi)
+    {
+        DispatchOnWorkerThread(() => { Player.LoadMidiFile(midi); });
+    }
 
-        public void PlayPause()
-        {
-            DispatchOnWorkerThread(() => { Player.PlayPause(); });
-        }
+    public void SetChannelMute(int channel, bool mute)
+    {
+        DispatchOnWorkerThread(() => { Player.SetChannelMute(channel, mute); });
+    }
 
-        public void Stop()
-        {
-            DispatchOnWorkerThread(() => { Player.Stop(); });
-        }
+    public void ResetChannelStates()
+    {
+        DispatchOnWorkerThread(() => { Player.ResetChannelStates(); });
+    }
 
-        public void LoadSoundFont(byte[] data, bool append)
-        {
-            DispatchOnWorkerThread(() => { Player.LoadSoundFont(data, append); });
-        }
+    public void SetChannelSolo(int channel, bool solo)
+    {
+        DispatchOnWorkerThread(() => { Player.SetChannelSolo(channel, solo); });
+    }
 
-        public void LoadMidiFile(MidiFile midi)
-        {
-            DispatchOnWorkerThread(() => { Player.LoadMidiFile(midi); });
-        }
+    public void SetChannelVolume(int channel, float volume)
+    {
+        DispatchOnWorkerThread(() => { Player.SetChannelVolume(channel, volume); });
+    }
 
-        public void SetChannelMute(int channel, bool mute)
-        {
-            DispatchOnWorkerThread(() => { Player.SetChannelMute(channel, mute); });
-        }
+    public void SetChannelProgram(int channel, byte program)
+    {
+        DispatchOnWorkerThread(() => { Player.SetChannelProgram(channel, program); });
+    }
 
-        public void ResetChannelStates()
-        {
-            DispatchOnWorkerThread(() => { Player.ResetChannelStates(); });
-        }
+    public event Action Ready;
+    public event Action ReadyForPlayback;
+    public event Action Finished;
+    public event Action SoundFontLoaded;
+    public event Action<Exception> SoundFontLoadFailed;
+    public event Action MidiLoaded;
+    public event Action<Exception> MidiLoadFailed;
+    public event Action<PlayerStateChangedEventArgs> StateChanged;
+    public event Action<PositionChangedEventArgs> PositionChanged;
+    protected abstract void DispatchOnUiThread(Action action);
+    protected abstract void DispatchOnWorkerThread(Action action);
 
-        public void SetChannelSolo(int channel, bool solo)
-        {
-            DispatchOnWorkerThread(() => { Player.SetChannelSolo(channel, solo); });
-        }
+    protected void Initialize()
+    {
+        Player = new AlphaSynth(_output);
+        Player.PositionChanged += OnPositionChanged;
+        Player.StateChanged += OnStateChanged;
+        Player.Finished += OnFinished;
+        Player.SoundFontLoaded += OnSoundFontLoaded;
+        Player.SoundFontLoadFailed += OnSoundFontLoadFailed;
+        Player.MidiLoaded += OnMidiLoaded;
+        Player.MidiLoadFailed += OnMidiLoadFailed;
+        Player.ReadyForPlayback += OnReadyForPlayback;
 
-        public void SetChannelVolume(int channel, float volume)
-        {
-            DispatchOnWorkerThread(() => { Player.SetChannelVolume(channel, volume); });
-        }
+        DispatchOnUiThread(OnReady);
+    }
 
-        public void SetChannelProgram(int channel, byte program)
-        {
-            DispatchOnWorkerThread(() => { Player.SetChannelProgram(channel, program); });
-        }
+    protected virtual void OnReady()
+    {
+        DispatchOnUiThread(() => Ready?.Invoke());
+    }
 
-        public event Action Ready;
-        public event Action ReadyForPlayback;
-        public event Action Finished;
-        public event Action SoundFontLoaded;
-        public event Action<Exception> SoundFontLoadFailed;
-        public event Action MidiLoaded;
-        public event Action<Exception> MidiLoadFailed;
-        public event Action<PlayerStateChangedEventArgs> StateChanged;
-        public event Action<PositionChangedEventArgs> PositionChanged;
-        protected abstract void DispatchOnUiThread(Action action);
-        protected abstract void DispatchOnWorkerThread(Action action);
+    protected virtual void OnReadyForPlayback()
+    {
+        DispatchOnUiThread(() => ReadyForPlayback?.Invoke());
+    }
 
-        protected void Initialize()
-        {
-            Player = new AlphaSynth(_output);
-            Player.PositionChanged += OnPositionChanged;
-            Player.StateChanged += OnStateChanged;
-            Player.Finished += OnFinished;
-            Player.SoundFontLoaded += OnSoundFontLoaded;
-            Player.SoundFontLoadFailed += OnSoundFontLoadFailed;
-            Player.MidiLoaded += OnMidiLoaded;
-            Player.MidiLoadFailed += OnMidiLoadFailed;
-            Player.ReadyForPlayback += OnReadyForPlayback;
+    protected virtual void OnFinished()
+    {
+        DispatchOnUiThread(() => Finished?.Invoke());
+    }
 
-            DispatchOnUiThread(OnReady);
-        }
+    protected virtual void OnSoundFontLoaded()
+    {
+        DispatchOnUiThread(() => SoundFontLoaded?.Invoke());
+    }
 
-        protected virtual void OnReady()
-        {
-            DispatchOnUiThread(() => Ready?.Invoke());
-        }
+    protected virtual void OnSoundFontLoadFailed(Exception e)
+    {
+        DispatchOnUiThread(() => SoundFontLoadFailed?.Invoke(e));
+    }
 
-        protected virtual void OnReadyForPlayback()
-        {
-            DispatchOnUiThread(() => ReadyForPlayback?.Invoke());
-        }
+    protected virtual void OnMidiLoaded()
+    {
+        DispatchOnUiThread(() => MidiLoaded?.Invoke());
+    }
 
-        protected virtual void OnFinished()
-        {
-            DispatchOnUiThread(() => Finished?.Invoke());
-        }
+    protected virtual void OnMidiLoadFailed(Exception e)
+    {
+        DispatchOnUiThread(() => MidiLoadFailed?.Invoke(e));
+    }
 
-        protected virtual void OnSoundFontLoaded()
-        {
-            DispatchOnUiThread(() => SoundFontLoaded?.Invoke());
-        }
+    protected virtual void OnStateChanged(PlayerStateChangedEventArgs obj)
+    {
+        DispatchOnUiThread(() => StateChanged?.Invoke(obj));
+    }
 
-        protected virtual void OnSoundFontLoadFailed(Exception e)
-        {
-            DispatchOnUiThread(() => SoundFontLoadFailed?.Invoke(e));
-        }
-
-        protected virtual void OnMidiLoaded()
-        {
-            DispatchOnUiThread(() => MidiLoaded?.Invoke());
-        }
-
-        protected virtual void OnMidiLoadFailed(Exception e)
-        {
-            DispatchOnUiThread(() => MidiLoadFailed?.Invoke(e));
-        }
-
-        protected virtual void OnStateChanged(PlayerStateChangedEventArgs obj)
-        {
-            DispatchOnUiThread(() => StateChanged?.Invoke(obj));
-        }
-
-        protected virtual void OnPositionChanged(PositionChangedEventArgs obj)
-        {
-            DispatchOnUiThread(() => PositionChanged?.Invoke(obj));
-        }
+    protected virtual void OnPositionChanged(PositionChangedEventArgs obj)
+    {
+        DispatchOnUiThread(() => PositionChanged?.Invoke(obj));
     }
 }

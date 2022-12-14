@@ -1,23 +1,22 @@
-namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
+namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis;
+
+/// <summary>
+///     Supported output modes by the render methods
+/// </summary>
+internal enum OutputMode
 {
     /// <summary>
-    ///     Supported output modes by the render methods
+    ///     Two channels with single left/right samples one after another
     /// </summary>
-    internal enum OutputMode
-    {
-        /// <summary>
-        ///     Two channels with single left/right samples one after another
-        /// </summary>
-        StereoInterleaved,
+    StereoInterleaved,
 
-        /// <summary>
-        ///     Two channels with all samples for the left channel first then right
-        /// </summary>
-        StereoUnweaved,
+    /// <summary>
+    ///     Two channels with all samples for the left channel first then right
+    /// </summary>
+    StereoUnweaved,
 
-        /// <summary>
-        ///     A single channel (stereo instruments are mixed into center)
-        /// </summary>
-        Mono
-    }
+    /// <summary>
+    ///     A single channel (stereo instruments are mixed into center)
+    /// </summary>
+    Mono
 }

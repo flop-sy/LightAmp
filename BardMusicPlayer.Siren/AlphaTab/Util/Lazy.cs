@@ -4,30 +4,29 @@ using System;
 
 #endregion
 
-namespace BardMusicPlayer.Siren.AlphaTab.Util
+namespace BardMusicPlayer.Siren.AlphaTab.Util;
+
+internal sealed class Lazy<T>
 {
-    internal sealed class Lazy<T>
+    private readonly Func<T> _factory;
+    private bool _created;
+    private T _value;
+
+    public Lazy(Func<T> factory)
     {
-        private readonly Func<T> _factory;
-        private bool _created;
-        private T _value;
+        _factory = factory;
+    }
 
-        public Lazy(Func<T> factory)
+    public T Value
+    {
+        get
         {
-            _factory = factory;
-        }
+            if (_created) return _value;
 
-        public T Value
-        {
-            get
-            {
-                if (_created) return _value;
+            _value = _factory();
+            _created = true;
 
-                _value = _factory();
-                _created = true;
-
-                return _value;
-            }
+            return _value;
         }
     }
 }

@@ -1,23 +1,22 @@
-﻿namespace BardMusicPlayer.Siren.AlphaTab.Model
+﻿namespace BardMusicPlayer.Siren.AlphaTab.Model;
+
+/// <summary>
+///     Lists all Crescendo and Decrescendo types.
+/// </summary>
+internal enum CrescendoType
 {
     /// <summary>
-    ///     Lists all Crescendo and Decrescendo types.
+    ///     No crescendo applied.
     /// </summary>
-    internal enum CrescendoType
-    {
-        /// <summary>
-        ///     No crescendo applied.
-        /// </summary>
-        None,
+    None,
 
-        /// <summary>
-        ///     Normal crescendo applied.
-        /// </summary>
-        Crescendo,
+    /// <summary>
+    ///     Normal crescendo applied.
+    /// </summary>
+    Crescendo,
 
-        /// <summary>
-        ///     Normal decrescendo applied.
-        /// </summary>
-        Decrescendo
-    }
+    /// <summary>
+    ///     Normal decrescendo applied.
+    /// </summary>
+    Decrescendo
 }

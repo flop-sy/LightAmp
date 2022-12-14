@@ -1,33 +1,32 @@
-namespace BardMusicPlayer.Siren.AlphaTab.Model
+namespace BardMusicPlayer.Siren.AlphaTab.Model;
+
+/// <summary>
+///     This public enumeration lists all supported Clefs.
+/// </summary>
+internal enum Clef
 {
     /// <summary>
-    ///     This public enumeration lists all supported Clefs.
+    ///     Neutral clef.
     /// </summary>
-    internal enum Clef
-    {
-        /// <summary>
-        ///     Neutral clef.
-        /// </summary>
-        Neutral,
+    Neutral,
 
-        /// <summary>
-        ///     C3 clef
-        /// </summary>
-        C3,
+    /// <summary>
+    ///     C3 clef
+    /// </summary>
+    C3,
 
-        /// <summary>
-        ///     C4 clef
-        /// </summary>
-        C4,
+    /// <summary>
+    ///     C4 clef
+    /// </summary>
+    C4,
 
-        /// <summary>
-        ///     F4 clef
-        /// </summary>
-        F4,
+    /// <summary>
+    ///     F4 clef
+    /// </summary>
+    F4,
 
-        /// <summary>
-        ///     G2 clef
-        /// </summary>
-        G2
-    }
+    /// <summary>
+    ///     G2 clef
+    /// </summary>
+    G2
 }

@@ -1,23 +1,22 @@
-namespace BardMusicPlayer.Siren.AlphaTab.Model
+namespace BardMusicPlayer.Siren.AlphaTab.Model;
+
+/// <summary>
+///     This public enum lists all vibrato types that can be performed.
+/// </summary>
+internal enum VibratoType
 {
     /// <summary>
-    ///     This public enum lists all vibrato types that can be performed.
+    ///     No vibrato.
     /// </summary>
-    internal enum VibratoType
-    {
-        /// <summary>
-        ///     No vibrato.
-        /// </summary>
-        None,
+    None,
 
-        /// <summary>
-        ///     A slight vibrato.
-        /// </summary>
-        Slight,
+    /// <summary>
+    ///     A slight vibrato.
+    /// </summary>
+    Slight,
 
-        /// <summary>
-        ///     A wide vibrato.
-        /// </summary>
-        Wide
-    }
+    /// <summary>
+    ///     A wide vibrato.
+    /// </summary>
+    Wide
 }

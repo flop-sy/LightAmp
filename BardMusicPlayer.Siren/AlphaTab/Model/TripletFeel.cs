@@ -1,44 +1,43 @@
-namespace BardMusicPlayer.Siren.AlphaTab.Model
+namespace BardMusicPlayer.Siren.AlphaTab.Model;
+
+/// <summary>
+///     This public enumeration lists all feels of triplets.
+/// </summary>
+internal enum TripletFeel
 {
     /// <summary>
-    ///     This public enumeration lists all feels of triplets.
+    ///     No triplet feel
     /// </summary>
-    internal enum TripletFeel
-    {
-        /// <summary>
-        ///     No triplet feel
-        /// </summary>
-        NoTripletFeel,
+    NoTripletFeel,
 
-        /// <summary>
-        ///     Triplet 16th
-        /// </summary>
-        Triplet16th,
+    /// <summary>
+    ///     Triplet 16th
+    /// </summary>
+    Triplet16th,
 
-        /// <summary>
-        ///     Triplet 8th
-        /// </summary>
-        Triplet8th,
+    /// <summary>
+    ///     Triplet 8th
+    /// </summary>
+    Triplet8th,
 
-        /// <summary>
-        ///     Dotted 16th
-        /// </summary>
-        Dotted16th,
+    /// <summary>
+    ///     Dotted 16th
+    /// </summary>
+    Dotted16th,
 
-        /// <summary>
-        ///     Dotted 8th
-        /// </summary>
-        Dotted8th,
+    /// <summary>
+    ///     Dotted 8th
+    /// </summary>
+    Dotted8th,
 
-        /// <summary>
-        ///     Scottish 16th
-        /// </summary>
-        Scottish16th,
+    /// <summary>
+    ///     Scottish 16th
+    /// </summary>
+    Scottish16th,
 
-        /// <summary>
-        ///     Scottish 8th
-        /// </summary>
-        Scottish8th
-    }
-    // ReSharper restore InconsistentNaming
+    /// <summary>
+    ///     Scottish 8th
+    /// </summary>
+    Scottish8th
 }
+// ReSharper restore InconsistentNaming

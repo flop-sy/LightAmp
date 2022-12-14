@@ -4,100 +4,99 @@ using System;
 
 #endregion
 
-namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds
+namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Ds;
+
+/// <summary>
+///     Represents a fixed size circular sample buffer that can be written to and read from.
+/// </summary>
+internal sealed class CircularSampleBuffer
 {
+    private float[] _buffer;
+    private int _readPosition;
+    private int _writePosition;
+
     /// <summary>
-    ///     Represents a fixed size circular sample buffer that can be written to and read from.
+    ///     Initializes a new instance of the <see cref="CircularSampleBuffer" /> class.
     /// </summary>
-    internal sealed class CircularSampleBuffer
+    /// <param name="size">The size.</param>
+    public CircularSampleBuffer(int size)
     {
-        private float[] _buffer;
-        private int _readPosition;
-        private int _writePosition;
+        _buffer = new float[size];
+        _writePosition = 0;
+        _readPosition = 0;
+        Count = 0;
+    }
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="CircularSampleBuffer" /> class.
-        /// </summary>
-        /// <param name="size">The size.</param>
-        public CircularSampleBuffer(int size)
+    /// <summary>
+    ///     Gets the number of samples written to the buffer.
+    /// </summary>
+    public int Count { get; private set; }
+
+    /// <summary>
+    ///     Clears all samples written to this buffer.
+    /// </summary>
+    public void Clear()
+    {
+        _readPosition = 0;
+        _writePosition = 0;
+        Count = 0;
+        _buffer = new float[_buffer.Length];
+    }
+
+    /// <summary>
+    ///     Writes the given samples to this buffer.
+    /// </summary>
+    /// <param name="data">The sample array to read from. </param>
+    /// <param name="offset"></param>
+    /// <param name="count"></param>
+    /// <returns></returns>
+    public int Write(float[] data, int offset, int count)
+    {
+        var samplesWritten = 0;
+        if (count > _buffer.Length - Count) count = _buffer.Length - Count;
+
+        var writeToEnd = Math.Min(_buffer.Length - _writePosition, count);
+        Platform.ArrayCopy(data, offset, _buffer, _writePosition, writeToEnd);
+        _writePosition += writeToEnd;
+        _writePosition %= _buffer.Length;
+        samplesWritten += writeToEnd;
+        if (samplesWritten < count)
         {
-            _buffer = new float[size];
-            _writePosition = 0;
-            _readPosition = 0;
-            Count = 0;
+            Platform.ArrayCopy(data, offset + samplesWritten, _buffer, _writePosition, count - samplesWritten);
+            _writePosition += count - samplesWritten;
+            samplesWritten = count;
         }
 
-        /// <summary>
-        ///     Gets the number of samples written to the buffer.
-        /// </summary>
-        public int Count { get; private set; }
+        Count += samplesWritten;
+        return samplesWritten;
+    }
 
-        /// <summary>
-        ///     Clears all samples written to this buffer.
-        /// </summary>
-        public void Clear()
+    /// <summary>
+    ///     Reads the requested amount of samples from the buffer.
+    /// </summary>
+    /// <param name="data">The sample array to store the read elements.</param>
+    /// <param name="offset">The offset within the destination buffer to put the items at.</param>
+    /// <param name="count">The number of items to read from this buffer.</param>
+    /// <returns>The number of items actually read from the buffer.</returns>
+    public int Read(float[] data, int offset, int count)
+    {
+        if (count > Count) count = Count;
+
+        var samplesRead = 0;
+        var readToEnd = Math.Min(_buffer.Length - _readPosition, count);
+        Platform.ArrayCopy(_buffer, _readPosition, data, offset, readToEnd);
+        samplesRead += readToEnd;
+        _readPosition += readToEnd;
+        _readPosition %= _buffer.Length;
+
+        if (samplesRead < count)
         {
-            _readPosition = 0;
-            _writePosition = 0;
-            Count = 0;
-            _buffer = new float[_buffer.Length];
+            Platform.ArrayCopy(_buffer, _readPosition, data, offset + samplesRead, count - samplesRead);
+            _readPosition += count - samplesRead;
+            samplesRead = count;
         }
 
-        /// <summary>
-        ///     Writes the given samples to this buffer.
-        /// </summary>
-        /// <param name="data">The sample array to read from. </param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
-        public int Write(float[] data, int offset, int count)
-        {
-            var samplesWritten = 0;
-            if (count > _buffer.Length - Count) count = _buffer.Length - Count;
-
-            var writeToEnd = Math.Min(_buffer.Length - _writePosition, count);
-            Platform.ArrayCopy(data, offset, _buffer, _writePosition, writeToEnd);
-            _writePosition += writeToEnd;
-            _writePosition %= _buffer.Length;
-            samplesWritten += writeToEnd;
-            if (samplesWritten < count)
-            {
-                Platform.ArrayCopy(data, offset + samplesWritten, _buffer, _writePosition, count - samplesWritten);
-                _writePosition += count - samplesWritten;
-                samplesWritten = count;
-            }
-
-            Count += samplesWritten;
-            return samplesWritten;
-        }
-
-        /// <summary>
-        ///     Reads the requested amount of samples from the buffer.
-        /// </summary>
-        /// <param name="data">The sample array to store the read elements.</param>
-        /// <param name="offset">The offset within the destination buffer to put the items at.</param>
-        /// <param name="count">The number of items to read from this buffer.</param>
-        /// <returns>The number of items actually read from the buffer.</returns>
-        public int Read(float[] data, int offset, int count)
-        {
-            if (count > Count) count = Count;
-
-            var samplesRead = 0;
-            var readToEnd = Math.Min(_buffer.Length - _readPosition, count);
-            Platform.ArrayCopy(_buffer, _readPosition, data, offset, readToEnd);
-            samplesRead += readToEnd;
-            _readPosition += readToEnd;
-            _readPosition %= _buffer.Length;
-
-            if (samplesRead < count)
-            {
-                Platform.ArrayCopy(_buffer, _readPosition, data, offset + samplesRead, count - samplesRead);
-                _readPosition += count - samplesRead;
-                samplesRead = count;
-            }
-
-            Count -= samplesRead;
-            return samplesRead;
-        }
+        Count -= samplesRead;
+        return samplesRead;
     }
 }

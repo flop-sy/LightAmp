@@ -1,23 +1,22 @@
-namespace BardMusicPlayer.Siren.AlphaTab.Model
+namespace BardMusicPlayer.Siren.AlphaTab.Model;
+
+/// <summary>
+///     Lists the different bend styles
+/// </summary>
+internal enum BendStyle
 {
     /// <summary>
-    ///     Lists the different bend styles
+    ///     The bends are as described by the bend points
     /// </summary>
-    internal enum BendStyle
-    {
-        /// <summary>
-        ///     The bends are as described by the bend points
-        /// </summary>
-        Default,
+    Default,
 
-        /// <summary>
-        ///     The bends are gradual over the beat duration.
-        /// </summary>
-        Gradual,
+    /// <summary>
+    ///     The bends are gradual over the beat duration.
+    /// </summary>
+    Gradual,
 
-        /// <summary>
-        ///     The bends are done fast before the next note.
-        /// </summary>
-        Fast
-    }
+    /// <summary>
+    ///     The bends are done fast before the next note.
+    /// </summary>
+    Fast
 }

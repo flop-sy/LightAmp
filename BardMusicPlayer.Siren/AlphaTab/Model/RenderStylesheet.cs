@@ -1,27 +1,26 @@
-namespace BardMusicPlayer.Siren.AlphaTab.Model
+namespace BardMusicPlayer.Siren.AlphaTab.Model;
+
+/// <summary>
+///     This class represents the rendering stylesheet.
+///     It contains settings which control the display of the score when rendered.
+/// </summary>
+internal sealed class RenderStylesheet
 {
     /// <summary>
-    ///     This class represents the rendering stylesheet.
-    ///     It contains settings which control the display of the score when rendered.
+    ///     Initializes a new instance of the <see cref="RenderStylesheet" /> class.
     /// </summary>
-    internal sealed class RenderStylesheet
+    public RenderStylesheet()
     {
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="RenderStylesheet" /> class.
-        /// </summary>
-        public RenderStylesheet()
-        {
-            HideDynamics = false;
-        }
+        HideDynamics = false;
+    }
 
-        /// <summary>
-        ///     Gets or sets whether dynamics are hidden.
-        /// </summary>
-        public bool HideDynamics { get; set; }
+    /// <summary>
+    ///     Gets or sets whether dynamics are hidden.
+    /// </summary>
+    public bool HideDynamics { get; set; }
 
-        internal static void CopyTo(RenderStylesheet src, RenderStylesheet dst)
-        {
-            dst.HideDynamics = src.HideDynamics;
-        }
+    internal static void CopyTo(RenderStylesheet src, RenderStylesheet dst)
+    {
+        dst.HideDynamics = src.HideDynamics;
     }
 }

@@ -1,14 +1,13 @@
-namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis
+namespace BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Synthesis;
+
+internal enum VoiceEnvelopeSegment
 {
-    internal enum VoiceEnvelopeSegment
-    {
-        None,
-        Delay,
-        Attack,
-        Hold,
-        Decay,
-        Sustain,
-        Release,
-        Done
-    }
+    None,
+    Delay,
+    Attack,
+    Hold,
+    Decay,
+    Sustain,
+    Release,
+    Done
 }
