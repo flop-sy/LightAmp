@@ -15,178 +15,178 @@ using BardMusicPlayer.Seer;
 
 #endregion
 
-namespace BardMusicPlayer.Script
+namespace BardMusicPlayer.Script;
+
+public sealed class BmpScript
 {
-    public sealed class BmpScript
+    private static readonly Lazy<BmpScript> LazyInstance = new(static () => new BmpScript());
+    private Interpreter basic;
+
+    private Thread thread;
+
+    private BmpScript()
     {
-        private static readonly Lazy<BmpScript> LazyInstance = new(static () => new BmpScript());
-        private Interpreter basic;
+    }
 
-        private Thread thread;
+    /// <summary>
+    /// </summary>
+    public bool Started { get; private set; }
 
-        private BmpScript()
+    public static BmpScript Instance => LazyInstance.Value;
+
+    private string selectedBardName { get; set; } = "";
+    private List<string> unselected_bards { get; set; }
+
+    public event EventHandler<bool> OnRunningStateChanged;
+
+    #region accessors
+
+    public void StopExecution()
+    {
+        if (thread == null)
+            return;
+        if (basic == null)
+            return;
+
+        basic.StopExec();
+
+        if (thread.ThreadState == ThreadState.Running)
+            thread.Abort();
+    }
+
+    #endregion
+
+    public void LoadAndRun(string basicfile)
+    {
+        Task.Run(() =>
         {
-        }
+            thread = Thread.CurrentThread;
+            OnRunningStateChanged?.Invoke(this, true);
 
-        /// <summary>
-        /// </summary>
-        public bool Started { get; private set; }
-
-        public static BmpScript Instance => LazyInstance.Value;
-
-        private string selectedBardName { get; set; } = "";
-        private List<string> unselected_bards { get; set; }
-
-        public event EventHandler<bool> OnRunningStateChanged;
-
-        #region accessors
-
-        public void StopExecution()
-        {
-            if (thread == null)
-                return;
-            if (basic == null)
-                return;
-
-            basic.StopExec();
-
-            if (thread.ThreadState == ThreadState.Running)
-                thread.Abort();
-        }
-
-        #endregion
-
-        public void LoadAndRun(string basicfile)
-        {
-            Task.Run(() =>
+            unselected_bards = new List<string>();
+            basic = new Interpreter(File.ReadAllText(basicfile));
+            basic.printHandler += Print;
+            basic.tapKeyHandler += TapKey;
+            basic.selectedBardHandler += SetSelectedBard;
+            basic.selectedBardAsStringHandler += SetSelectedBardName;
+            basic.unselectBardHandler += UnSelectBardName;
+            try
             {
-                thread = Thread.CurrentThread;
-                OnRunningStateChanged?.Invoke(this, true);
-
-                unselected_bards = new List<string>();
-                basic = new Interpreter(File.ReadAllText(basicfile));
-                basic.printHandler += Print;
-                basic.tapKeyHandler += TapKey;
-                basic.selectedBardHandler += SetSelectedBard;
-                basic.selectedBardAsStringHandler += SetSelectedBardName;
-                basic.unselectBardHandler += UnSelectBardName;
-                try
-                {
-                    basic.Exec();
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("Error");
-                }
-                OnRunningStateChanged?.Invoke(this, false);
-
-                unselected_bards = null;
-                basic.printHandler -= Print;
-                basic.tapKeyHandler -= TapKey;
-                basic.selectedBardHandler -= SetSelectedBard;
-                basic.selectedBardAsStringHandler -= SetSelectedBardName;
-                basic.unselectBardHandler -= UnSelectBardName;
-                basic = null;
-            });
-        }
-
-        /// <summary>
-        ///     Start Script.
-        /// </summary>
-        public void Start()
-        {
-            if (Started) return;
-
-            if (!BmpPigeonhole.Initialized)
-                throw new BmpScriptException("Script requires Pigeonhole to be initialized.");
-            if (!BmpSeer.Instance.Started) throw new BmpScriptException("Script requires Seer to be running.");
-
-            Started = true;
-        }
-
-        /// <summary>
-        ///     Stop Script.
-        /// </summary>
-        public void Stop()
-        {
-            if (!Started) return;
-
-            Started = false;
-        }
-
-        ~BmpScript()
-        {
-            Dispose();
-        }
-
-        public void Dispose()
-        {
-            Stop();
-            GC.SuppressFinalize(this);
-        }
-
-        #region Routine Handlers
-
-        public void SetSelectedBard(int num)
-        {
-            if (num == 0)
+                basic.Exec();
+            }
+            catch (Exception)
             {
-                selectedBardName = "all";
-                return;
+                Console.WriteLine("Error");
             }
 
-            var plist = BmpMaestro.Instance.GetAllPerformers();
-            var performers = plist as Performer[] ?? plist.ToArray();
-            if (!performers.Any())
-            {
-                selectedBardName = "";
-                return;
-            }
+            OnRunningStateChanged?.Invoke(this, false);
 
-            var performer = performers.ElementAt(num - 1);
-            selectedBardName = performer != null ? performer.game.PlayerName : "";
+            unselected_bards = null;
+            basic.printHandler -= Print;
+            basic.tapKeyHandler -= TapKey;
+            basic.selectedBardHandler -= SetSelectedBard;
+            basic.selectedBardAsStringHandler -= SetSelectedBardName;
+            basic.unselectBardHandler -= UnSelectBardName;
+            basic = null;
+        });
+    }
+
+    /// <summary>
+    ///     Start Script.
+    /// </summary>
+    public void Start()
+    {
+        if (Started) return;
+
+        if (!BmpPigeonhole.Initialized)
+            throw new BmpScriptException("Script requires Pigeonhole to be initialized.");
+        if (!BmpSeer.Instance.Started) throw new BmpScriptException("Script requires Seer to be running.");
+
+        Started = true;
+    }
+
+    /// <summary>
+    ///     Stop Script.
+    /// </summary>
+    public void Stop()
+    {
+        if (!Started) return;
+
+        Started = false;
+    }
+
+    ~BmpScript()
+    {
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        Stop();
+        GC.SuppressFinalize(this);
+    }
+
+    #region Routine Handlers
+
+    public void SetSelectedBard(int num)
+    {
+        if (num == 0)
+        {
+            selectedBardName = "all";
+            return;
         }
 
-        public void SetSelectedBardName(string name)
+        var plist = BmpMaestro.Instance.GetAllPerformers();
+        var performers = plist as Performer[] ?? plist.ToArray();
+        if (!performers.Any())
         {
-            selectedBardName = name;
+            selectedBardName = "";
+            return;
         }
 
-        public void UnSelectBardName(string name)
+        var performer = performers.ElementAt(num - 1);
+        selectedBardName = performer != null ? performer.game.PlayerName : "";
+    }
+
+    public void SetSelectedBardName(string name)
+    {
+        selectedBardName = name;
+    }
+
+    public void UnSelectBardName(string name)
+    {
+        if (name.ToLower().Equals(""))
         {
-            if (name.ToLower().Equals(""))
+            unselected_bards.Clear();
+        }
+        else
+        {
+            if (name.Contains(","))
             {
-                unselected_bards.Clear();
+                var names = name.Split(',');
+                Parallel.ForEach(names, n =>
+                {
+                    var cname = n.Trim();
+                    if (cname != "")
+                        unselected_bards.Add(cname);
+                });
             }
             else
             {
-                if (name.Contains(","))
-                {
-                    var names = name.Split(',');
-                    Parallel.ForEach(names, n =>
-                    {
-                        var cname = n.Trim();
-                        if (cname != "")
-                            unselected_bards.Add(cname);
-                    });
-                }
-                else
-                {
-                    unselected_bards.Add(name);
-                }
+                unselected_bards.Add(name);
             }
         }
-
-        public void Print(ChatMessageChannelType type, string text)
-        {
-            BmpMaestro.Instance.SendText(selectedBardName, type, text, unselected_bards);
-        }
-
-        public void TapKey(string modifier, string character)
-        {
-            BmpMaestro.Instance.TapKey(selectedBardName, modifier, character, unselected_bards);
-        }
-
-        #endregion
     }
+
+    public void Print(ChatMessageChannelType type, string text)
+    {
+        BmpMaestro.Instance.SendText(selectedBardName, type, text, unselected_bards);
+    }
+
+    public void TapKey(string modifier, string character)
+    {
+        BmpMaestro.Instance.TapKey(selectedBardName, modifier, character, unselected_bards);
+    }
+
+    #endregion
 }

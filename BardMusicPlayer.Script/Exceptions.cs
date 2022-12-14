@@ -4,16 +4,15 @@ using BardMusicPlayer.Quotidian;
 
 #endregion
 
-namespace BardMusicPlayer.Script
-{
-    public sealed class BmpScriptException : BmpException
-    {
-        internal BmpScriptException()
-        {
-        }
+namespace BardMusicPlayer.Script;
 
-        internal BmpScriptException(string message) : base(message)
-        {
-        }
+public sealed class BmpScriptException : BmpException
+{
+    internal BmpScriptException()
+    {
+    }
+
+    internal BmpScriptException(string message) : base(message)
+    {
     }
 }
