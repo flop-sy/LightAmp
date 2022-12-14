@@ -1,7 +1,6 @@
-﻿namespace BardMusicPlayer.Pigeonhole.JsonSettings
+﻿namespace BardMusicPlayer.Pigeonhole.JsonSettings;
+
+public interface ISavable
 {
-    public interface ISavable
-    {
-        void Save();
-    }
+    void Save();
 }
