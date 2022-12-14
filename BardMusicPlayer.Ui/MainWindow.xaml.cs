@@ -31,8 +31,8 @@ public sealed partial class MainWindow
         DataContext = new Classic_MainView();
         AllowsTransparency = false;
         WindowStyle = WindowStyle.SingleBorderWindow;
-        Height = 520;
-        Width = 830;
+        Height = 665;
+        Width = 855;
         ResizeMode = ResizeMode.CanResizeWithGrip;
     }
 
