@@ -4,87 +4,86 @@ using System;
 
 #endregion
 
-namespace Sanford.Threading
+namespace Sanford.Threading;
+
+public sealed partial class DelegateQueue
 {
-    public sealed partial class DelegateQueue
+    private enum NotificationType
     {
-        private enum NotificationType
+        None,
+        BeginInvokeCompleted,
+        PostCompleted
+    }
+
+    /// <summary>
+    ///     Implements the IAsyncResult interface for the DelegateQueue class.
+    /// </summary>
+    private sealed class DelegateQueueAsyncResult : AsyncResult
+    {
+        // The delegate to be invoked.
+
+        // Args to be passed to the delegate.
+        private readonly object[] args;
+
+        // The object returned from the delegate.
+
+        // Represents a possible exception thrown by invoking the method.
+
+        public DelegateQueueAsyncResult(
+            object owner,
+            Delegate method,
+            object[] args,
+            bool synchronously,
+            NotificationType notificationType)
+            : base(owner, null, null)
         {
-            None,
-            BeginInvokeCompleted,
-            PostCompleted
+            Method = method;
+            this.args = args;
+            NotificationType = notificationType;
         }
 
-        /// <summary>
-        ///     Implements the IAsyncResult interface for the DelegateQueue class.
-        /// </summary>
-        private sealed class DelegateQueueAsyncResult : AsyncResult
+        public DelegateQueueAsyncResult(
+            object owner,
+            AsyncCallback callback,
+            object state,
+            Delegate method,
+            object[] args,
+            bool synchronously,
+            NotificationType notificationType)
+            : base(owner, callback, state)
         {
-            // The delegate to be invoked.
+            Method = method;
+            this.args = args;
+            NotificationType = notificationType;
+        }
 
-            // Args to be passed to the delegate.
-            private readonly object[] args;
+        public object ReturnValue { get; private set; }
 
-            // The object returned from the delegate.
+        public Exception Error { get; private set; }
 
-            // Represents a possible exception thrown by invoking the method.
+        public Delegate Method { get; }
 
-            public DelegateQueueAsyncResult(
-                object owner,
-                Delegate method,
-                object[] args,
-                bool synchronously,
-                NotificationType notificationType)
-                : base(owner, null, null)
+        public NotificationType NotificationType { get; }
+
+        public void Invoke()
+        {
+            try
             {
-                Method = method;
-                this.args = args;
-                NotificationType = notificationType;
+                ReturnValue = Method.DynamicInvoke(args);
             }
-
-            public DelegateQueueAsyncResult(
-                object owner,
-                AsyncCallback callback,
-                object state,
-                Delegate method,
-                object[] args,
-                bool synchronously,
-                NotificationType notificationType)
-                : base(owner, callback, state)
+            catch (Exception ex)
             {
-                Method = method;
-                this.args = args;
-                NotificationType = notificationType;
+                Error = ex;
             }
-
-            public object ReturnValue { get; private set; }
-
-            public Exception Error { get; private set; }
-
-            public Delegate Method { get; }
-
-            public NotificationType NotificationType { get; }
-
-            public void Invoke()
+            finally
             {
-                try
-                {
-                    ReturnValue = Method.DynamicInvoke(args);
-                }
-                catch (Exception ex)
-                {
-                    Error = ex;
-                }
-                finally
-                {
-                    Signal();
-                }
+                Signal();
             }
+        }
 
-            public object[] GetArgs()
-            {
-                return args;
-            }
+        public object[] GetArgs()
+        {
+            return args;
         }
     }
 }

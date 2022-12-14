@@ -4,15 +4,14 @@ using System;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
-{
-    public sealed class InvalidShortMessageEventArgs : EventArgs
-    {
-        public InvalidShortMessageEventArgs(int message)
-        {
-            Message = message;
-        }
+namespace Sanford.Multimedia.Midi;
 
-        public int Message { get; }
+public sealed class InvalidShortMessageEventArgs : EventArgs
+{
+    public InvalidShortMessageEventArgs(int message)
+    {
+        Message = message;
     }
+
+    public int Message { get; }
 }

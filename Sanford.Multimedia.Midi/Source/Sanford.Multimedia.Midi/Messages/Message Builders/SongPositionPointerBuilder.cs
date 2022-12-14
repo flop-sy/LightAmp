@@ -4,212 +4,211 @@ using System;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
+namespace Sanford.Multimedia.Midi;
+
+/// <summary>
+///     Provides functionality for building song position pointer messages.
+/// </summary>
+public class SongPositionPointerBuilder : IMessageBuilder
 {
+    #region IMessageBuilder Members
+
     /// <summary>
-    ///     Provides functionality for building song position pointer messages.
+    ///     Builds a song position pointer message.
     /// </summary>
-    public class SongPositionPointerBuilder : IMessageBuilder
+    public void Build()
     {
-        #region IMessageBuilder Members
+        builder.Build();
+    }
 
-        /// <summary>
-        ///     Builds a song position pointer message.
-        /// </summary>
-        public void Build()
+    #endregion
+
+    #region SongPositionPointerBuilder Members
+
+    #region Constants
+
+    // The number of ticks per 16th note.
+    private const int TicksPer16thNote = 6;
+
+    // Used for packing and unpacking the song position.
+    private const int Shift = 7;
+
+    // Used for packing and unpacking the song position.
+    private const int Mask = 127;
+
+    #endregion
+
+    #region Fields
+
+    // The scale used for converting from the song position to the position
+    // in ticks.
+    private int tickScale;
+
+    // Pulses per quarter note resolution.
+    private int ppqn;
+
+    // Used for building the SysCommonMessage to represent the song
+    // position pointer.
+    private readonly SysCommonMessageBuilder builder;
+
+    #endregion
+
+    #region Construction
+
+    /// <summary>
+    ///     Initializes a new instance of the SongPositionPointerBuilder class.
+    /// </summary>
+    public SongPositionPointerBuilder()
+    {
+        builder = new SysCommonMessageBuilder
         {
-            builder.Build();
-        }
+            Type = SysCommonType.SongPositionPointer
+        };
 
-        #endregion
+        Ppqn = PpqnClock.PpqnMinValue;
+    }
 
-        #region SongPositionPointerBuilder Members
-
-        #region Constants
-
-        // The number of ticks per 16th note.
-        private const int TicksPer16thNote = 6;
-
-        // Used for packing and unpacking the song position.
-        private const int Shift = 7;
-
-        // Used for packing and unpacking the song position.
-        private const int Mask = 127;
-
-        #endregion
-
-        #region Fields
-
-        // The scale used for converting from the song position to the position
-        // in ticks.
-        private int tickScale;
-
-        // Pulses per quarter note resolution.
-        private int ppqn;
-
-        // Used for building the SysCommonMessage to represent the song
-        // position pointer.
-        private readonly SysCommonMessageBuilder builder;
-
-        #endregion
-
-        #region Construction
-
-        /// <summary>
-        ///     Initializes a new instance of the SongPositionPointerBuilder class.
-        /// </summary>
-        public SongPositionPointerBuilder()
+    /// <summary>
+    ///     Initializes a new instance of the SongPositionPointerBuilder class
+    ///     with the specified song position pointer message.
+    /// </summary>
+    /// <param name="message">
+    ///     The song position pointer message to use for initializing the
+    ///     SongPositionPointerBuilder.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     If message is not a song position pointer message.
+    /// </exception>
+    public SongPositionPointerBuilder(SysCommonMessage message)
+    {
+        builder = new SysCommonMessageBuilder
         {
-            builder = new SysCommonMessageBuilder
-            {
-                Type = SysCommonType.SongPositionPointer
-            };
+            Type = SysCommonType.SongPositionPointer
+        };
 
-            Ppqn = PpqnClock.PpqnMinValue;
-        }
+        Initialize(message);
 
-        /// <summary>
-        ///     Initializes a new instance of the SongPositionPointerBuilder class
-        ///     with the specified song position pointer message.
-        /// </summary>
-        /// <param name="message">
-        ///     The song position pointer message to use for initializing the
-        ///     SongPositionPointerBuilder.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        ///     If message is not a song position pointer message.
-        /// </exception>
-        public SongPositionPointerBuilder(SysCommonMessage message)
-        {
-            builder = new SysCommonMessageBuilder
-            {
-                Type = SysCommonType.SongPositionPointer
-            };
+        Ppqn = PpqnClock.PpqnMinValue;
+    }
 
-            Initialize(message);
+    #endregion
 
-            Ppqn = PpqnClock.PpqnMinValue;
-        }
+    #region Methods
+
+    /// <summary>
+    ///     Initializes the SongPositionPointerBuilder with the specified
+    ///     SysCommonMessage.
+    /// </summary>
+    /// <param name="message">
+    ///     The SysCommonMessage to use to initialize the
+    ///     SongPositionPointerBuilder.
+    /// </param>
+    /// <exception cref="ArgumentException">
+    ///     If the SysCommonMessage is not a song position pointer message.
+    /// </exception>
+    public void Initialize(SysCommonMessage message)
+    {
+        #region Require
+
+        if (message == null) throw new ArgumentNullException(nameof(message));
+
+        if (message.SysCommonType != SysCommonType.SongPositionPointer)
+            throw new ArgumentException(
+                "Message is not a song position pointer message.");
 
         #endregion
 
-        #region Methods
+        builder.Initialize(message);
+    }
 
-        /// <summary>
-        ///     Initializes the SongPositionPointerBuilder with the specified
-        ///     SysCommonMessage.
-        /// </summary>
-        /// <param name="message">
-        ///     The SysCommonMessage to use to initialize the
-        ///     SongPositionPointerBuilder.
-        /// </param>
-        /// <exception cref="ArgumentException">
-        ///     If the SysCommonMessage is not a song position pointer message.
-        /// </exception>
-        public void Initialize(SysCommonMessage message)
+    #endregion
+
+    #region Properties
+
+    /// <summary>
+    ///     Gets or sets the sequence position in ticks.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Value is set to less than zero.
+    /// </exception>
+    /// <remarks>
+    ///     Note: the position in ticks value is converted to the song position
+    ///     pointer value. Since the song position pointer has a lower
+    ///     resolution than the position in ticks, there is a probable loss of
+    ///     resolution when setting the position in ticks value.
+    /// </remarks>
+    public int PositionInTicks
+    {
+        get { return SongPosition * tickScale * TicksPer16thNote; }
+        set
         {
             #region Require
 
-            if (message == null) throw new ArgumentNullException(nameof(message));
-
-            if (message.SysCommonType != SysCommonType.SongPositionPointer)
-                throw new ArgumentException(
-                    "Message is not a song position pointer message.");
+            if (value < 0)
+                throw new ArgumentOutOfRangeException("PositionInTicks", value,
+                    "Position in ticks out of range.");
 
             #endregion
 
-            builder.Initialize(message);
+            SongPosition = value / (tickScale * TicksPer16thNote);
         }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        ///     Gets or sets the sequence position in ticks.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///     Value is set to less than zero.
-        /// </exception>
-        /// <remarks>
-        ///     Note: the position in ticks value is converted to the song position
-        ///     pointer value. Since the song position pointer has a lower
-        ///     resolution than the position in ticks, there is a probable loss of
-        ///     resolution when setting the position in ticks value.
-        /// </remarks>
-        public int PositionInTicks
-        {
-            get { return SongPosition * tickScale * TicksPer16thNote; }
-            set
-            {
-                #region Require
-
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException("PositionInTicks", value,
-                        "Position in ticks out of range.");
-
-                #endregion
-
-                SongPosition = value / (tickScale * TicksPer16thNote);
-            }
-        }
-
-        /// <summary>
-        ///     Gets or sets the PulsesPerQuarterNote object.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///     Value is not a multiple of 24.
-        /// </exception>
-        public int Ppqn
-        {
-            get { return ppqn; }
-            set
-            {
-                #region Require
-
-                if (value < PpqnClock.PpqnMinValue)
-                    throw new ArgumentOutOfRangeException("Ppqn", value,
-                        "Pulses per quarter note is smaller than 24.");
-
-                #endregion
-
-                ppqn = value;
-
-                tickScale = ppqn / PpqnClock.PpqnMinValue;
-            }
-        }
-
-        /// <summary>
-        ///     Gets or sets the song position.
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///     Value is set to less than zero.
-        /// </exception>
-        public int SongPosition
-        {
-            get { return (builder.Data2 << Shift) | builder.Data1; }
-            set
-            {
-                #region Require
-
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException("SongPosition", value,
-                        "Song position pointer out of range.");
-
-                #endregion
-
-                builder.Data1 = value & Mask;
-                builder.Data2 = value >> Shift;
-            }
-        }
-
-        /// <summary>
-        ///     Gets the built song position pointer message.
-        /// </summary>
-        public SysCommonMessage Result => builder.Result;
-
-        #endregion
-
-        #endregion
     }
+
+    /// <summary>
+    ///     Gets or sets the PulsesPerQuarterNote object.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Value is not a multiple of 24.
+    /// </exception>
+    public int Ppqn
+    {
+        get { return ppqn; }
+        set
+        {
+            #region Require
+
+            if (value < PpqnClock.PpqnMinValue)
+                throw new ArgumentOutOfRangeException("Ppqn", value,
+                    "Pulses per quarter note is smaller than 24.");
+
+            #endregion
+
+            ppqn = value;
+
+            tickScale = ppqn / PpqnClock.PpqnMinValue;
+        }
+    }
+
+    /// <summary>
+    ///     Gets or sets the song position.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Value is set to less than zero.
+    /// </exception>
+    public int SongPosition
+    {
+        get { return (builder.Data2 << Shift) | builder.Data1; }
+        set
+        {
+            #region Require
+
+            if (value < 0)
+                throw new ArgumentOutOfRangeException("SongPosition", value,
+                    "Song position pointer out of range.");
+
+            #endregion
+
+            builder.Data1 = value & Mask;
+            builder.Data2 = value >> Shift;
+        }
+    }
+
+    /// <summary>
+    ///     Gets the built song position pointer message.
+    /// </summary>
+    public SysCommonMessage Result => builder.Result;
+
+    #endregion
+
+    #endregion
 }

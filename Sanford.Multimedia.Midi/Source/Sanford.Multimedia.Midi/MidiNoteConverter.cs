@@ -1,142 +1,112 @@
-#region License
-
-/* Copyright (c) 2006 Leslie Sanford
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy 
- * of this software and associated documentation files (the "Software"), to 
- * deal in the Software without restriction, including without limitation the 
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
- * sell copies of the Software, and to permit persons to whom the Software is 
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in 
- * all copies or substantial portions of the Software. 
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
- * THE SOFTWARE.
- */
-
-#endregion
-
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
+#region
 
 using System;
 
-namespace Sanford.Multimedia.Midi
+#endregion
+
+namespace Sanford.Multimedia.Midi;
+
+/// <summary>
+///     Converts a MIDI note number to its corresponding frequency.
+/// </summary>
+public static class MidiNoteConverter
 {
     /// <summary>
-    /// Converts a MIDI note number to its corresponding frequency.
+    ///     The minimum value a note ID can have.
     /// </summary>
-    public static class MidiNoteConverter
+    public const int NoteIDMinValue = 0;
+
+    /// <summary>
+    ///     The maximum value a note ID can have.
+    /// </summary>
+    public const int NoteIDMaxValue = 127;
+
+    // Table for holding frequency values.
+    private static readonly double[] NoteToFrequencyTable = new double[NoteIDMaxValue + 1];
+
+    static MidiNoteConverter()
     {
-        /// <summary>
-        /// The minimum value a note ID can have.
-        /// </summary>
-        public const int NoteIDMinValue = 0;
+        // The number of notes per octave.
+        const int notesPerOctave = 12;
 
-        /// <summary>
-        /// The maximum value a note ID can have.
-        /// </summary>
-        public const int NoteIDMaxValue = 127;
+        // Reference frequency used for calculations.
+        const double referenceFrequency = 440;
 
-        // Table for holding frequency values.
-        private static readonly double[] NoteToFrequencyTable = new double[NoteIDMaxValue + 1];
+        // The note ID of the reference frequency.
+        const int referenceNoteID = 69;
 
-        static MidiNoteConverter()
+        // Fill table with the frequencies of all MIDI notes.
+        for (var i = 0; i < NoteToFrequencyTable.Length; i++)
         {
-            // The number of notes per octave.
-            const int notesPerOctave = 12;
+            var exponent = (double)(i - referenceNoteID) / notesPerOctave;
 
-            // Reference frequency used for calculations.
-            const double referenceFrequency = 440;
+            NoteToFrequencyTable[i] = referenceFrequency * Math.Pow(2.0, exponent);
+        }
+    }
 
-            // The note ID of the reference frequency.
-            const int referenceNoteID = 69;
+    // Prevents instances of this class from being created - no need for
+    // an instance to be created since this class only has static methods.
 
-            // Fill table with the frequencies of all MIDI notes.
-            for (var i = 0; i < NoteToFrequencyTable.Length; i++)
-            {
-                var exponent = (double)(i - referenceNoteID) / notesPerOctave;
+    /// <summary>
+    ///     Converts the specified note to a frequency.
+    /// </summary>
+    /// <param name="noteID">
+    ///     The ID of the note to convert.
+    /// </param>
+    /// <returns>
+    ///     The frequency of the specified note.
+    /// </returns>
+    public static double NoteToFrequency(int noteID)
+    {
+        #region Require
 
-                NoteToFrequencyTable[i] = referenceFrequency * Math.Pow(2.0, exponent);
-            }
+        if (noteID < NoteIDMinValue || noteID > NoteIDMaxValue)
+            throw new ArgumentOutOfRangeException("Note ID out of range.");
+
+        #endregion
+
+        return NoteToFrequencyTable[noteID];
+    }
+
+    /// <summary>
+    ///     Converts the specified frequency to a note.
+    /// </summary>
+    /// <param name="frequency">
+    ///     The frequency to convert.
+    /// </param>
+    /// <returns>
+    ///     The ID of the note closest to the specified frequency.
+    /// </returns>
+    public static int FrequencyToNote(double frequency)
+    {
+        var noteID = 0;
+        var found = false;
+
+        // Search for the note with a frequency near the specified frequency.
+        for (var i = 0; i < NoteIDMaxValue && !found; i++)
+        {
+            noteID = i;
+
+            // If the specified frequency is less than the frequency of
+            // the next note.
+            if (frequency < NoteToFrequency(noteID + 1))
+                // Indicate that the note ID for the specified frequency
+                // has been found.
+                found = true;
         }
 
-        // Prevents instances of this class from being created - no need for
-        // an instance to be created since this class only has static methods.
+        // If the note is not the first or last note, narrow the results.
+        if (noteID <= 0 || noteID >= NoteIDMaxValue) return noteID;
+        // Get the frequency of the previous note.
+        var previousFrequncy = NoteToFrequency(noteID - 1);
+        // Get the frequency of the next note.
+        var nextFrequency = NoteToFrequency(noteID + 1);
 
-        /// <summary>
-        /// Converts the specified note to a frequency.
-        /// </summary>
-        /// <param name="noteID">
-        /// The ID of the note to convert.
-        /// </param>
-        /// <returns>
-        /// The frequency of the specified note.
-        /// </returns>
-        public static double NoteToFrequency(int noteID)
-        {
-            #region Require
+        // If the next note is closer in frequency than the previous note.
+        if (nextFrequency - frequency < frequency - previousFrequncy)
+            // Move to the next note.
+            noteID++;
 
-            if (noteID < NoteIDMinValue || noteID > NoteIDMaxValue) throw new ArgumentOutOfRangeException("Note ID out of range.");
-
-            #endregion
-
-            return NoteToFrequencyTable[noteID];
-        }
-
-        /// <summary>
-        /// Converts the specified frequency to a note.
-        /// </summary>
-        /// <param name="frequency">
-        /// The frequency to convert.
-        /// </param>
-        /// <returns>
-        /// The ID of the note closest to the specified frequency.
-        /// </returns>
-        public static int FrequencyToNote(double frequency)
-        {
-            var noteID = 0;
-            var found = false;
-
-            // Search for the note with a frequency near the specified frequency.
-            for (var i = 0; i < NoteIDMaxValue && !found; i++)
-            {
-                noteID = i;
-
-                // If the specified frequency is less than the frequency of
-                // the next note.
-                if (frequency < NoteToFrequency(noteID + 1))
-                    // Indicate that the note ID for the specified frequency
-                    // has been found.
-                    found = true;
-            }
-
-            // If the note is not the first or last note, narrow the results.
-            if (noteID <= 0 || noteID >= NoteIDMaxValue) return noteID;
-            // Get the frequency of the previous note.
-            var previousFrequncy = NoteToFrequency(noteID - 1);
-            // Get the frequency of the next note.
-            var nextFrequency = NoteToFrequency(noteID + 1);
-
-            // If the next note is closer in frequency than the previous note.
-            if (nextFrequency - frequency < frequency - previousFrequncy)
-                // Move to the next note.
-                noteID++;
-
-            return noteID;
-        }
+        return noteID;
     }
 }

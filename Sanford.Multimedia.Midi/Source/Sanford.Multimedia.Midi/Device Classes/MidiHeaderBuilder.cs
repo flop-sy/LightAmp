@@ -6,182 +6,181 @@ using System.Runtime.InteropServices;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
+namespace Sanford.Multimedia.Midi;
+
+/// <summary>
+///     Builds a pointer to a MidiHeader structure.
+/// </summary>
+internal sealed class MidiHeaderBuilder
 {
+    // The length of the system exclusive buffer.
+    private int bufferLength;
+
+    // Indicates whether the pointer to the MidiHeader has been built.
+    private bool built;
+
+    // The system exclusive data.
+    private byte[] data;
+
+    // The built pointer to the MidiHeader.
+
     /// <summary>
-    ///     Builds a pointer to a MidiHeader structure.
+    ///     Initializes a new instance of the MidiHeaderBuilder.
     /// </summary>
-    internal sealed class MidiHeaderBuilder
+    public MidiHeaderBuilder()
     {
-        // The length of the system exclusive buffer.
-        private int bufferLength;
-
-        // Indicates whether the pointer to the MidiHeader has been built.
-        private bool built;
-
-        // The system exclusive data.
-        private byte[] data;
-
-        // The built pointer to the MidiHeader.
-
-        /// <summary>
-        ///     Initializes a new instance of the MidiHeaderBuilder.
-        /// </summary>
-        public MidiHeaderBuilder()
-        {
-            BufferLength = 1;
-        }
-
-        #region Methods
-
-        /// <summary>
-        ///     Builds the pointer to the MidiHeader structure.
-        /// </summary>
-        public void Build()
-        {
-            var header = new MidiHeader
-            {
-                // Initialize the MidiHeader.
-                bufferLength = BufferLength,
-                bytesRecorded = BufferLength,
-                data = Marshal.AllocHGlobal(BufferLength),
-                flags = 0
-            };
-
-            // Write data to the MidiHeader.
-            for (var i = 0; i < BufferLength; i++) Marshal.WriteByte(header.data, i, data[i]);
-
-            try
-            {
-                Result = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(MidiHeader)));
-            }
-            catch (Exception)
-            {
-                Marshal.FreeHGlobal(header.data);
-
-                throw;
-            }
-
-            try
-            {
-                Marshal.StructureToPtr(header, Result, false);
-            }
-            catch (Exception)
-            {
-                Marshal.FreeHGlobal(header.data);
-                Marshal.FreeHGlobal(Result);
-
-                throw;
-            }
-
-            built = true;
-        }
-
-        /// <summary>
-        ///     Initializes the MidiHeaderBuilder with the specified SysExMessage.
-        /// </summary>
-        /// <param name="message">
-        ///     The SysExMessage to use for initializing the MidiHeaderBuilder.
-        /// </param>
-        public void InitializeBuffer(SysExMessage message)
-        {
-            // If this is a start system exclusive message.
-            if (message.SysExType == SysExType.Start)
-            {
-                BufferLength = message.Length;
-
-                // Copy entire message.
-                for (var i = 0; i < BufferLength; i++) data[i] = message[i];
-            }
-            // Else this is a continuation message.
-            else
-            {
-                BufferLength = message.Length - 1;
-
-                // Copy all but the first byte of message.
-                for (var i = 0; i < BufferLength; i++) data[i] = message[i + 1];
-            }
-        }
-
-        public void InitializeBuffer(ICollection events)
-        {
-            #region Require
-
-            if (events == null) throw new ArgumentNullException(nameof(events));
-
-            if (events.Count % 4 != 0) throw new ArgumentException("Stream events not word aligned.");
-
-            #endregion
-
-            #region Guard
-
-            if (events.Count == 0) return;
-
-            #endregion
-
-            BufferLength = events.Count;
-
-            events.CopyTo(data, 0);
-        }
-
-        /// <summary>
-        ///     Releases the resources associated with the built MidiHeader pointer.
-        /// </summary>
-        public void Destroy()
-        {
-            #region Require
-
-            if (!built) throw new InvalidOperationException("Cannot destroy MidiHeader");
-
-            #endregion
-
-            Destroy(Result);
-        }
-
-        /// <summary>
-        ///     Releases the resources associated with the specified MidiHeader pointer.
-        /// </summary>
-        /// <param name="headerPtr">
-        ///     The MidiHeader pointer.
-        /// </param>
-        public static void Destroy(IntPtr headerPtr)
-        {
-            var header = (MidiHeader)Marshal.PtrToStructure(headerPtr, typeof(MidiHeader));
-
-            Marshal.FreeHGlobal(header.data);
-            Marshal.FreeHGlobal(headerPtr);
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        ///     The length of the system exclusive buffer.
-        /// </summary>
-        public int BufferLength
-        {
-            get { return bufferLength; }
-            set
-            {
-                #region Require
-
-                if (value <= 0)
-                    throw new ArgumentOutOfRangeException("BufferLength", value,
-                        "MIDI header buffer length out of range.");
-
-                #endregion
-
-                bufferLength = value;
-                data = new byte[value];
-            }
-        }
-
-        /// <summary>
-        ///     Gets the pointer to the MidiHeader.
-        /// </summary>
-        public IntPtr Result { get; private set; }
-
-        #endregion
+        BufferLength = 1;
     }
+
+    #region Methods
+
+    /// <summary>
+    ///     Builds the pointer to the MidiHeader structure.
+    /// </summary>
+    public void Build()
+    {
+        var header = new MidiHeader
+        {
+            // Initialize the MidiHeader.
+            bufferLength = BufferLength,
+            bytesRecorded = BufferLength,
+            data = Marshal.AllocHGlobal(BufferLength),
+            flags = 0
+        };
+
+        // Write data to the MidiHeader.
+        for (var i = 0; i < BufferLength; i++) Marshal.WriteByte(header.data, i, data[i]);
+
+        try
+        {
+            Result = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(MidiHeader)));
+        }
+        catch (Exception)
+        {
+            Marshal.FreeHGlobal(header.data);
+
+            throw;
+        }
+
+        try
+        {
+            Marshal.StructureToPtr(header, Result, false);
+        }
+        catch (Exception)
+        {
+            Marshal.FreeHGlobal(header.data);
+            Marshal.FreeHGlobal(Result);
+
+            throw;
+        }
+
+        built = true;
+    }
+
+    /// <summary>
+    ///     Initializes the MidiHeaderBuilder with the specified SysExMessage.
+    /// </summary>
+    /// <param name="message">
+    ///     The SysExMessage to use for initializing the MidiHeaderBuilder.
+    /// </param>
+    public void InitializeBuffer(SysExMessage message)
+    {
+        // If this is a start system exclusive message.
+        if (message.SysExType == SysExType.Start)
+        {
+            BufferLength = message.Length;
+
+            // Copy entire message.
+            for (var i = 0; i < BufferLength; i++) data[i] = message[i];
+        }
+        // Else this is a continuation message.
+        else
+        {
+            BufferLength = message.Length - 1;
+
+            // Copy all but the first byte of message.
+            for (var i = 0; i < BufferLength; i++) data[i] = message[i + 1];
+        }
+    }
+
+    public void InitializeBuffer(ICollection events)
+    {
+        #region Require
+
+        if (events == null) throw new ArgumentNullException(nameof(events));
+
+        if (events.Count % 4 != 0) throw new ArgumentException("Stream events not word aligned.");
+
+        #endregion
+
+        #region Guard
+
+        if (events.Count == 0) return;
+
+        #endregion
+
+        BufferLength = events.Count;
+
+        events.CopyTo(data, 0);
+    }
+
+    /// <summary>
+    ///     Releases the resources associated with the built MidiHeader pointer.
+    /// </summary>
+    public void Destroy()
+    {
+        #region Require
+
+        if (!built) throw new InvalidOperationException("Cannot destroy MidiHeader");
+
+        #endregion
+
+        Destroy(Result);
+    }
+
+    /// <summary>
+    ///     Releases the resources associated with the specified MidiHeader pointer.
+    /// </summary>
+    /// <param name="headerPtr">
+    ///     The MidiHeader pointer.
+    /// </param>
+    public static void Destroy(IntPtr headerPtr)
+    {
+        var header = (MidiHeader)Marshal.PtrToStructure(headerPtr, typeof(MidiHeader));
+
+        Marshal.FreeHGlobal(header.data);
+        Marshal.FreeHGlobal(headerPtr);
+    }
+
+    #endregion
+
+    #region Properties
+
+    /// <summary>
+    ///     The length of the system exclusive buffer.
+    /// </summary>
+    public int BufferLength
+    {
+        get { return bufferLength; }
+        set
+        {
+            #region Require
+
+            if (value <= 0)
+                throw new ArgumentOutOfRangeException("BufferLength", value,
+                    "MIDI header buffer length out of range.");
+
+            #endregion
+
+            bufferLength = value;
+            data = new byte[value];
+        }
+    }
+
+    /// <summary>
+    ///     Gets the pointer to the MidiHeader.
+    /// </summary>
+    public IntPtr Result { get; private set; }
+
+    #endregion
 }

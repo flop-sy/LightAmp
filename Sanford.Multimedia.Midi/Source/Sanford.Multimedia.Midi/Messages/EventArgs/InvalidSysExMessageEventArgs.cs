@@ -5,17 +5,16 @@ using System.Collections;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
+namespace Sanford.Multimedia.Midi;
+
+public sealed class InvalidSysExMessageEventArgs : EventArgs
 {
-    public sealed class InvalidSysExMessageEventArgs : EventArgs
+    private readonly byte[] messageData;
+
+    public InvalidSysExMessageEventArgs(byte[] messageData)
     {
-        private readonly byte[] messageData;
-
-        public InvalidSysExMessageEventArgs(byte[] messageData)
-        {
-            this.messageData = messageData;
-        }
-
-        public ICollection MessageData => messageData;
+        this.messageData = messageData;
     }
+
+    public ICollection MessageData => messageData;
 }

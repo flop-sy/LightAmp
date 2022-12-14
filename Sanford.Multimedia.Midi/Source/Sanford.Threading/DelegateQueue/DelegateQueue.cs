@@ -8,721 +8,720 @@ using Sanford.Collections.Generic;
 
 #endregion
 
-namespace Sanford.Threading
+namespace Sanford.Threading;
+
+/// <summary>
+///     Represents an asynchronous queue of delegates.
+/// </summary>
+public sealed partial class DelegateQueue : SynchronizationContext, IComponent, ISynchronizeInvoke
 {
+    #region IDisposable Members
+
     /// <summary>
-    ///     Represents an asynchronous queue of delegates.
+    ///     Disposes of the DelegateQueue.
     /// </summary>
-    public sealed partial class DelegateQueue : SynchronizationContext, IComponent, ISynchronizeInvoke
+    public void Dispose()
     {
-        #region IDisposable Members
+        #region Guards
 
-        /// <summary>
-        ///     Disposes of the DelegateQueue.
-        /// </summary>
-        public void Dispose()
-        {
-            #region Guards
-
-            if (disposed) return;
-
-            #endregion
-
-            Dispose(true);
-
-            OnDisposed(EventArgs.Empty);
-        }
+        if (disposed) return;
 
         #endregion
 
-        #region DelegateQueue Members
+        Dispose(true);
 
-        #region Fields
+        OnDisposed(EventArgs.Empty);
+    }
 
-        // The thread for processing delegates.
-        private Thread delegateThread;
+    #endregion
 
-        // The deque for holding delegates.
-        private readonly Deque<DelegateQueueAsyncResult> delegateDeque = new Deque<DelegateQueueAsyncResult>();
+    #region DelegateQueue Members
 
-        // The object to use for locking.
-        private readonly object lockObject = new object();
+    #region Fields
 
-        // The synchronization context in which this DelegateQueue was created.
-        private readonly SynchronizationContext context;
+    // The thread for processing delegates.
+    private Thread delegateThread;
 
-        // Inidicates whether the delegate queue has been disposed.
-        private volatile bool disposed;
+    // The deque for holding delegates.
+    private readonly Deque<DelegateQueueAsyncResult> delegateDeque = new();
 
-        // Thread ID counter for all DelegateQueues.
-        private static volatile uint threadID;
+    // The object to use for locking.
+    private readonly object lockObject = new();
+
+    // The synchronization context in which this DelegateQueue was created.
+    private readonly SynchronizationContext context;
+
+    // Inidicates whether the delegate queue has been disposed.
+    private volatile bool disposed;
+
+    // Thread ID counter for all DelegateQueues.
+    private static volatile uint threadID;
+
+    #endregion
+
+    #region Events
+
+    /// <summary>
+    ///     Occurs after a method has been invoked as a result of a call to
+    ///     the BeginInvoke or BeginInvokePriority methods.
+    /// </summary>
+    public event EventHandler<InvokeCompletedEventArgs> InvokeCompleted;
+
+    /// <summary>
+    ///     Occurs after a method has been invoked as a result of a call to
+    ///     the Post and PostPriority methods.
+    /// </summary>
+    public event EventHandler<PostCompletedEventArgs> PostCompleted;
+
+    #endregion
+
+    #region Construction
+
+    /// <summary>
+    ///     Initializes a new instance of the DelegateQueue class.
+    /// </summary>
+    public DelegateQueue()
+    {
+        InitializeDelegateQueue();
+
+        context = Current ?? new SynchronizationContext();
+    }
+
+    /// <summary>
+    ///     Initializes a new instance of the DelegateQueue class with the specified IContainer object.
+    /// </summary>
+    /// <param name="container">
+    ///     The IContainer to which the DelegateQueue will add itself.
+    /// </param>
+    public DelegateQueue(IContainer container)
+    {
+        ///
+        /// Required for Windows.Forms Class Composition Designer support
+        ///
+        container.Add(this);
+
+        InitializeDelegateQueue();
+    }
+
+    ~DelegateQueue()
+    {
+        Dispose(false);
+    }
+
+    // Initializes the DelegateQueue.
+    private void InitializeDelegateQueue()
+    {
+        // Create thread for processing delegates.
+        delegateThread = new Thread(DelegateProcedure);
+
+        lock (lockObject)
+        {
+            // Increment to next thread ID.
+            threadID++;
+
+            // Create name for thread.
+            delegateThread.Name = "Delegate Queue Thread: " + threadID;
+
+            // Start thread.
+            delegateThread.Start();
+
+            Debug.WriteLine(delegateThread.Name + " Started.");
+
+            // Wait for signal from thread that it is running.
+            Monitor.Wait(lockObject);
+        }
+    }
+
+    #endregion
+
+    #region Methods
+
+    private void Dispose(bool disposing)
+    {
+        if (!disposing) return;
+
+        lock (lockObject)
+        {
+            disposed = true;
+
+            Monitor.Pulse(lockObject);
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    /// <summary>
+    ///     Executes the delegate on the main thread that this object executes on.
+    /// </summary>
+    /// <param name="method">
+    ///     A Delegate to a method that takes parameters of the same number and
+    ///     type that are contained in args.
+    /// </param>
+    /// <param name="args">
+    ///     An array of type Object to pass as arguments to the given method.
+    /// </param>
+    /// <returns>
+    ///     An IAsyncResult interface that represents the asynchronous operation
+    ///     started by calling this method.
+    /// </returns>
+    /// <remarks>
+    ///     The delegate is placed at the beginning of the queue. Its invocation
+    ///     takes priority over delegates already in the queue.
+    /// </remarks>
+    public IAsyncResult BeginInvokePriority(Delegate method, params object[] args)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (method == null) throw new ArgumentNullException();
 
         #endregion
 
-        #region Events
+        DelegateQueueAsyncResult result;
 
-        /// <summary>
-        ///     Occurs after a method has been invoked as a result of a call to
-        ///     the BeginInvoke or BeginInvokePriority methods.
-        /// </summary>
-        public event EventHandler<InvokeCompletedEventArgs> InvokeCompleted;
-
-        /// <summary>
-        ///     Occurs after a method has been invoked as a result of a call to
-        ///     the Post and PostPriority methods.
-        /// </summary>
-        public event EventHandler<PostCompletedEventArgs> PostCompleted;
-
-        #endregion
-
-        #region Construction
-
-        /// <summary>
-        ///     Initializes a new instance of the DelegateQueue class.
-        /// </summary>
-        public DelegateQueue()
+        // If BeginInvokePriority was called from a different thread than the one
+        // in which the DelegateQueue is running.
+        if (InvokeRequired)
         {
-            InitializeDelegateQueue();
-
-            context = Current ?? new SynchronizationContext();
-        }
-
-        /// <summary>
-        ///     Initializes a new instance of the DelegateQueue class with the specified IContainer object.
-        /// </summary>
-        /// <param name="container">
-        ///     The IContainer to which the DelegateQueue will add itself.
-        /// </param>
-        public DelegateQueue(IContainer container)
-        {
-            ///
-            /// Required for Windows.Forms Class Composition Designer support
-            ///
-            container.Add(this);
-
-            InitializeDelegateQueue();
-        }
-
-        ~DelegateQueue()
-        {
-            Dispose(false);
-        }
-
-        // Initializes the DelegateQueue.
-        private void InitializeDelegateQueue()
-        {
-            // Create thread for processing delegates.
-            delegateThread = new Thread(DelegateProcedure);
+            result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.BeginInvokeCompleted);
 
             lock (lockObject)
             {
-                // Increment to next thread ID.
-                threadID++;
-
-                // Create name for thread.
-                delegateThread.Name = "Delegate Queue Thread: " + threadID;
-
-                // Start thread.
-                delegateThread.Start();
-
-                Debug.WriteLine(delegateThread.Name + " Started.");
-
-                // Wait for signal from thread that it is running.
-                Monitor.Wait(lockObject);
-            }
-        }
-
-        #endregion
-
-        #region Methods
-
-        private void Dispose(bool disposing)
-        {
-            if (!disposing) return;
-
-            lock (lockObject)
-            {
-                disposed = true;
-
-                Monitor.Pulse(lockObject);
-
-                GC.SuppressFinalize(this);
-            }
-        }
-
-        /// <summary>
-        ///     Executes the delegate on the main thread that this object executes on.
-        /// </summary>
-        /// <param name="method">
-        ///     A Delegate to a method that takes parameters of the same number and
-        ///     type that are contained in args.
-        /// </param>
-        /// <param name="args">
-        ///     An array of type Object to pass as arguments to the given method.
-        /// </param>
-        /// <returns>
-        ///     An IAsyncResult interface that represents the asynchronous operation
-        ///     started by calling this method.
-        /// </returns>
-        /// <remarks>
-        ///     The delegate is placed at the beginning of the queue. Its invocation
-        ///     takes priority over delegates already in the queue.
-        /// </remarks>
-        public IAsyncResult BeginInvokePriority(Delegate method, params object[] args)
-        {
-            #region Require
-
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (method == null) throw new ArgumentNullException();
-
-            #endregion
-
-            DelegateQueueAsyncResult result;
-
-            // If BeginInvokePriority was called from a different thread than the one
-            // in which the DelegateQueue is running.
-            if (InvokeRequired)
-            {
-                result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.BeginInvokeCompleted);
-
-                lock (lockObject)
-                {
-                    // Put the method at the front of the queue.
-                    delegateDeque.PushFront(result);
-
-                    Monitor.Pulse(lockObject);
-                }
-            }
-            // Else BeginInvokePriority was called from the same thread in which the
-            // DelegateQueue is running.
-            else
-            {
-                result = new DelegateQueueAsyncResult(this, method, args, true, NotificationType.None);
-
-                // The method is invoked here instead of placing it in the
-                // queue. The reason for this is that if EndInvoke is called
-                // from the same thread in which the DelegateQueue is running and
-                // the method has not been invoked, deadlock will occur.
-                result.Invoke();
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        ///     Executes the delegate on the main thread that this object executes on.
-        /// </summary>
-        /// <param name="method">
-        ///     A Delegate to a method that takes parameters of the same number and
-        ///     type that are contained in args.
-        /// </param>
-        /// <param name="args">
-        ///     An array of type Object to pass as arguments to the given method.
-        /// </param>
-        /// <returns>
-        ///     An IAsyncResult interface that represents the asynchronous operation
-        ///     started by calling this method.
-        /// </returns>
-        /// <remarks>
-        ///     <para>
-        ///         The delegate is placed at the beginning of the queue. Its invocation
-        ///         takes priority over delegates already in the queue.
-        ///     </para>
-        ///     <para>
-        ///         Unlike BeginInvoke, this method operates synchronously, that is, it
-        ///         waits until the process completes before returning. Exceptions raised
-        ///         during the call are propagated back to the caller.
-        ///     </para>
-        /// </remarks>
-        public object InvokePriority(Delegate method, params object[] args)
-        {
-            #region Require
-
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (method == null) throw new ArgumentNullException();
-
-            #endregion
-
-            object returnValue;
-
-            // If InvokePriority was called from a different thread than the one
-            // in which the DelegateQueue is running.
-            if (InvokeRequired)
-            {
-                var result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.None);
-
-                lock (lockObject)
-                {
-                    // Put the method at the back of the queue.
-                    delegateDeque.PushFront(result);
-
-                    Monitor.Pulse(lockObject);
-                }
-
-                // Wait for the result of the method invocation.
-                returnValue = EndInvoke(result);
-            }
-            // Else InvokePriority was called from the same thread in which the
-            // DelegateQueue is running.
-            else
-            {
-                // Invoke the method here rather than placing it in the queue.
-                returnValue = method.DynamicInvoke(args);
-            }
-
-            return returnValue;
-        }
-
-        /// <summary>
-        ///     Executes the delegate on the main thread that this object executes on.
-        /// </summary>
-        /// <param name="callback">
-        ///     An optional asynchronous callback, to be called when the method is invoked.
-        /// </param>
-        /// <param name="state">
-        ///     A user-provided object that distinguishes this particular asynchronous invoke request from other requests.
-        /// </param>
-        /// <param name="method">
-        ///     A Delegate to a method that takes parameters of the same number and
-        ///     type that are contained in args.
-        /// </param>
-        /// <param name="args">
-        ///     An array of type Object to pass as arguments to the given method.
-        /// </param>
-        /// <returns>
-        ///     An IAsyncResult interface that represents the asynchronous operation
-        ///     started by calling this method.
-        /// </returns>
-        public IAsyncResult BeginInvoke(AsyncCallback callback, object state, Delegate method, params object[] args)
-        {
-            #region Require
-
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (method == null) throw new ArgumentNullException();
-
-            #endregion
-
-            DelegateQueueAsyncResult result;
-
-            if (InvokeRequired)
-            {
-                result = new DelegateQueueAsyncResult(this, callback, state, method, args, false,
-                    NotificationType.BeginInvokeCompleted);
-
-                lock (lockObject)
-                {
-                    delegateDeque.PushBack(result);
-
-                    Monitor.Pulse(lockObject);
-                }
-            }
-            else
-            {
-                result = new DelegateQueueAsyncResult(this, callback, state, method, args, false,
-                    NotificationType.None);
-
-                result.Invoke();
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        ///     Dispatches an asynchronous message to this synchronization context.
-        /// </summary>
-        /// <param name="d">
-        ///     The SendOrPostCallback delegate to call.
-        /// </param>
-        /// <param name="state">
-        ///     The object passed to the delegate.
-        /// </param>
-        /// <remarks>
-        ///     The Post method starts an asynchronous request to post a message.
-        /// </remarks>
-        public void PostPriority(SendOrPostCallback d, object state)
-        {
-            #region Require
-
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (d == null) throw new ArgumentNullException();
-
-            #endregion
-
-            lock (lockObject)
-            {
-                var result =
-                    new DelegateQueueAsyncResult(this, d, new[] { state }, false, NotificationType.PostCompleted);
-
                 // Put the method at the front of the queue.
                 delegateDeque.PushFront(result);
 
                 Monitor.Pulse(lockObject);
             }
         }
-
-        /// <summary>
-        ///     Dispatches an synchronous message to this synchronization context.
-        /// </summary>
-        /// <param name="d">
-        ///     The SendOrPostCallback delegate to call.
-        /// </param>
-        /// <param name="state">
-        ///     The object passed to the delegate.
-        /// </param>
-        public void SendPriority(SendOrPostCallback d, object state)
+        // Else BeginInvokePriority was called from the same thread in which the
+        // DelegateQueue is running.
+        else
         {
-            InvokePriority(d, state);
+            result = new DelegateQueueAsyncResult(this, method, args, true, NotificationType.None);
+
+            // The method is invoked here instead of placing it in the
+            // queue. The reason for this is that if EndInvoke is called
+            // from the same thread in which the DelegateQueue is running and
+            // the method has not been invoked, deadlock will occur.
+            result.Invoke();
         }
 
-        // Processes and invokes delegates.
-        private void DelegateProcedure()
+        return result;
+    }
+
+    /// <summary>
+    ///     Executes the delegate on the main thread that this object executes on.
+    /// </summary>
+    /// <param name="method">
+    ///     A Delegate to a method that takes parameters of the same number and
+    ///     type that are contained in args.
+    /// </param>
+    /// <param name="args">
+    ///     An array of type Object to pass as arguments to the given method.
+    /// </param>
+    /// <returns>
+    ///     An IAsyncResult interface that represents the asynchronous operation
+    ///     started by calling this method.
+    /// </returns>
+    /// <remarks>
+    ///     <para>
+    ///         The delegate is placed at the beginning of the queue. Its invocation
+    ///         takes priority over delegates already in the queue.
+    ///     </para>
+    ///     <para>
+    ///         Unlike BeginInvoke, this method operates synchronously, that is, it
+    ///         waits until the process completes before returning. Exceptions raised
+    ///         during the call are propagated back to the caller.
+    ///     </para>
+    /// </remarks>
+    public object InvokePriority(Delegate method, params object[] args)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (method == null) throw new ArgumentNullException();
+
+        #endregion
+
+        object returnValue;
+
+        // If InvokePriority was called from a different thread than the one
+        // in which the DelegateQueue is running.
+        if (InvokeRequired)
         {
+            var result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.None);
+
             lock (lockObject)
             {
-                // Signal the constructor that the thread is now running.
+                // Put the method at the back of the queue.
+                delegateDeque.PushFront(result);
+
                 Monitor.Pulse(lockObject);
             }
 
-            // Set this DelegateQueue as the SynchronizationContext for this thread.
-            SetSynchronizationContext(this);
+            // Wait for the result of the method invocation.
+            returnValue = EndInvoke(result);
+        }
+        // Else InvokePriority was called from the same thread in which the
+        // DelegateQueue is running.
+        else
+        {
+            // Invoke the method here rather than placing it in the queue.
+            returnValue = method.DynamicInvoke(args);
+        }
 
-            // While the DelegateQueue has not been disposed.
-            while (true)
+        return returnValue;
+    }
+
+    /// <summary>
+    ///     Executes the delegate on the main thread that this object executes on.
+    /// </summary>
+    /// <param name="callback">
+    ///     An optional asynchronous callback, to be called when the method is invoked.
+    /// </param>
+    /// <param name="state">
+    ///     A user-provided object that distinguishes this particular asynchronous invoke request from other requests.
+    /// </param>
+    /// <param name="method">
+    ///     A Delegate to a method that takes parameters of the same number and
+    ///     type that are contained in args.
+    /// </param>
+    /// <param name="args">
+    ///     An array of type Object to pass as arguments to the given method.
+    /// </param>
+    /// <returns>
+    ///     An IAsyncResult interface that represents the asynchronous operation
+    ///     started by calling this method.
+    /// </returns>
+    public IAsyncResult BeginInvoke(AsyncCallback callback, object state, Delegate method, params object[] args)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (method == null) throw new ArgumentNullException();
+
+        #endregion
+
+        DelegateQueueAsyncResult result;
+
+        if (InvokeRequired)
+        {
+            result = new DelegateQueueAsyncResult(this, callback, state, method, args, false,
+                NotificationType.BeginInvokeCompleted);
+
+            lock (lockObject)
             {
-                // Critical section.
-                DelegateQueueAsyncResult result;
-                lock (lockObject)
+                delegateDeque.PushBack(result);
+
+                Monitor.Pulse(lockObject);
+            }
+        }
+        else
+        {
+            result = new DelegateQueueAsyncResult(this, callback, state, method, args, false,
+                NotificationType.None);
+
+            result.Invoke();
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    ///     Dispatches an asynchronous message to this synchronization context.
+    /// </summary>
+    /// <param name="d">
+    ///     The SendOrPostCallback delegate to call.
+    /// </param>
+    /// <param name="state">
+    ///     The object passed to the delegate.
+    /// </param>
+    /// <remarks>
+    ///     The Post method starts an asynchronous request to post a message.
+    /// </remarks>
+    public void PostPriority(SendOrPostCallback d, object state)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (d == null) throw new ArgumentNullException();
+
+        #endregion
+
+        lock (lockObject)
+        {
+            var result =
+                new DelegateQueueAsyncResult(this, d, new[] { state }, false, NotificationType.PostCompleted);
+
+            // Put the method at the front of the queue.
+            delegateDeque.PushFront(result);
+
+            Monitor.Pulse(lockObject);
+        }
+    }
+
+    /// <summary>
+    ///     Dispatches an synchronous message to this synchronization context.
+    /// </summary>
+    /// <param name="d">
+    ///     The SendOrPostCallback delegate to call.
+    /// </param>
+    /// <param name="state">
+    ///     The object passed to the delegate.
+    /// </param>
+    public void SendPriority(SendOrPostCallback d, object state)
+    {
+        InvokePriority(d, state);
+    }
+
+    // Processes and invokes delegates.
+    private void DelegateProcedure()
+    {
+        lock (lockObject)
+        {
+            // Signal the constructor that the thread is now running.
+            Monitor.Pulse(lockObject);
+        }
+
+        // Set this DelegateQueue as the SynchronizationContext for this thread.
+        SetSynchronizationContext(this);
+
+        // While the DelegateQueue has not been disposed.
+        while (true)
+        {
+            // Critical section.
+            DelegateQueueAsyncResult result;
+            lock (lockObject)
+            {
+                // If the DelegateQueue has been disposed, break out of loop; we're done.
+                if (disposed) break;
+
+                // If there are delegates waiting to be invoked.
+                if (delegateDeque.Count > 0)
                 {
+                    result = delegateDeque.PopFront();
+                }
+                // Else there are no delegates waiting to be invoked.
+                else
+                {
+                    // Wait for next delegate.
+                    _ = Monitor.Wait(lockObject);
+
                     // If the DelegateQueue has been disposed, break out of loop; we're done.
                     if (disposed) break;
 
-                    // If there are delegates waiting to be invoked.
-                    if (delegateDeque.Count > 0)
-                    {
-                        result = delegateDeque.PopFront();
-                    }
-                    // Else there are no delegates waiting to be invoked.
-                    else
-                    {
-                        // Wait for next delegate.
-                        _ = Monitor.Wait(lockObject);
+                    Debug.Assert(delegateDeque.Count > 0);
 
-                        // If the DelegateQueue has been disposed, break out of loop; we're done.
-                        if (disposed) break;
-
-                        Debug.Assert(delegateDeque.Count > 0);
-
-                        result = delegateDeque.PopFront();
-                    }
-                }
-
-                Debug.Assert(result != null);
-
-                // Invoke the delegate.
-                result.Invoke();
-
-                switch (result.NotificationType)
-                {
-                    case NotificationType.BeginInvokeCompleted:
-                    {
-                        var e = new InvokeCompletedEventArgs(
-                            result.Method,
-                            result.GetArgs(),
-                            result.ReturnValue,
-                            result.Error);
-
-                        OnInvokeCompleted(e);
-                        break;
-                    }
-                    case NotificationType.PostCompleted:
-                    {
-                        var args = result.GetArgs();
-
-                        Debug.Assert(args.Length == 1);
-                        Debug.Assert(result.Method is SendOrPostCallback);
-
-                        var e = new PostCompletedEventArgs(
-                            (SendOrPostCallback)result.Method,
-                            result.Error,
-                            args[0]);
-
-                        OnPostCompleted(e);
-                        break;
-                    }
-                    default:
-                        Debug.Assert(result.NotificationType == NotificationType.None);
-                        break;
+                    result = delegateDeque.PopFront();
                 }
             }
 
-            Debug.WriteLine(delegateThread.Name + " Finished");
+            Debug.Assert(result != null);
+
+            // Invoke the delegate.
+            result.Invoke();
+
+            switch (result.NotificationType)
+            {
+                case NotificationType.BeginInvokeCompleted:
+                {
+                    var e = new InvokeCompletedEventArgs(
+                        result.Method,
+                        result.GetArgs(),
+                        result.ReturnValue,
+                        result.Error);
+
+                    OnInvokeCompleted(e);
+                    break;
+                }
+                case NotificationType.PostCompleted:
+                {
+                    var args = result.GetArgs();
+
+                    Debug.Assert(args.Length == 1);
+                    Debug.Assert(result.Method is SendOrPostCallback);
+
+                    var e = new PostCompletedEventArgs(
+                        (SendOrPostCallback)result.Method,
+                        result.Error,
+                        args[0]);
+
+                    OnPostCompleted(e);
+                    break;
+                }
+                default:
+                    Debug.Assert(result.NotificationType == NotificationType.None);
+                    break;
+            }
         }
 
-        // Raises the InvokeCompleted event.
-        private void OnInvokeCompleted(InvokeCompletedEventArgs e)
-        {
-            var handler = InvokeCompleted;
+        Debug.WriteLine(delegateThread.Name + " Finished");
+    }
 
-            if (handler != null)
-                context.Post(delegate { handler(this, e); }, null);
-        }
+    // Raises the InvokeCompleted event.
+    private void OnInvokeCompleted(InvokeCompletedEventArgs e)
+    {
+        var handler = InvokeCompleted;
 
-        // Raises the PostCompleted event.
-        private void OnPostCompleted(PostCompletedEventArgs e)
-        {
-            var handler = PostCompleted;
+        if (handler != null)
+            context.Post(delegate { handler(this, e); }, null);
+    }
 
-            if (handler != null)
-                context.Post(delegate { handler(this, e); }, null);
-        }
+    // Raises the PostCompleted event.
+    private void OnPostCompleted(PostCompletedEventArgs e)
+    {
+        var handler = PostCompleted;
 
-        // Raises the Disposed event.
-        private void OnDisposed(EventArgs e)
-        {
-            var handler = Disposed;
+        if (handler != null)
+            context.Post(delegate { handler(this, e); }, null);
+    }
 
-            if (handler != null)
-                context.Post(delegate { handler(this, e); }, null);
-        }
+    // Raises the Disposed event.
+    private void OnDisposed(EventArgs e)
+    {
+        var handler = Disposed;
+
+        if (handler != null)
+            context.Post(delegate { handler(this, e); }, null);
+    }
+
+    #endregion
+
+    #endregion
+
+    #region SynchronizationContext Overrides
+
+    /// <summary>
+    ///     Dispatches a synchronous message to this synchronization context.
+    /// </summary>
+    /// <param name="d">
+    ///     The SendOrPostCallback delegate to call.
+    /// </param>
+    /// <param name="state">
+    ///     The object passed to the delegate.
+    /// </param>
+    /// <remarks>
+    ///     The Send method starts an synchronous request to send a message.
+    /// </remarks>
+    public override void Send(SendOrPostCallback d, object state)
+    {
+        Invoke(d, state);
+    }
+
+    /// <summary>
+    ///     Dispatches an asynchronous message to this synchronization context.
+    /// </summary>
+    /// <param name="d">
+    ///     The SendOrPostCallback delegate to call.
+    /// </param>
+    /// <param name="state">
+    ///     The object passed to the delegate.
+    /// </param>
+    /// <remarks>
+    ///     The Post method starts an asynchronous request to post a message.
+    /// </remarks>
+    public override void Post(SendOrPostCallback d, object state)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (d == null) throw new ArgumentNullException();
 
         #endregion
 
+        lock (lockObject)
+        {
+            delegateDeque.PushBack(new DelegateQueueAsyncResult(this, d, new[] { state }, false,
+                NotificationType.PostCompleted));
+
+            Monitor.Pulse(lockObject);
+        }
+    }
+
+    #endregion
+
+    #region IComponent Members
+
+    /// <summary>
+    ///     Represents the method that handles the Disposed delegate of a DelegateQueue.
+    /// </summary>
+    public event EventHandler Disposed;
+
+    /// <summary>
+    ///     Gets or sets the ISite associated with the DelegateQueue.
+    /// </summary>
+    public ISite Site { get; set; }
+
+    #endregion
+
+    #region ISynchronizeInvoke Members
+
+    /// <summary>
+    ///     Executes the delegate on the main thread that this DelegateQueue executes on.
+    /// </summary>
+    /// <param name="method">
+    ///     A Delegate to a method that takes parameters of the same number and type that
+    ///     are contained in args.
+    /// </param>
+    /// <param name="args">
+    ///     An array of type Object to pass as arguments to the given method. This can be
+    ///     a null reference (Nothing in Visual Basic) if no arguments are needed.
+    /// </param>
+    /// <returns>
+    ///     An IAsyncResult interface that represents the asynchronous operation started
+    ///     by calling this method.
+    /// </returns>
+    /// <remarks>
+    ///     <para>
+    ///         The delegate is called asynchronously, and this method returns immediately.
+    ///         You can call this method from any thread. If you need the return value from a process
+    ///         started with this method, call EndInvoke to get the value.
+    ///     </para>
+    ///     <para>If you need to call the delegate synchronously, use the Invoke method instead.</para>
+    /// </remarks>
+    public IAsyncResult BeginInvoke(Delegate method, params object[] args)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (method == null) throw new ArgumentNullException();
+
         #endregion
 
-        #region SynchronizationContext Overrides
+        DelegateQueueAsyncResult result;
 
-        /// <summary>
-        ///     Dispatches a synchronous message to this synchronization context.
-        /// </summary>
-        /// <param name="d">
-        ///     The SendOrPostCallback delegate to call.
-        /// </param>
-        /// <param name="state">
-        ///     The object passed to the delegate.
-        /// </param>
-        /// <remarks>
-        ///     The Send method starts an synchronous request to send a message.
-        /// </remarks>
-        public override void Send(SendOrPostCallback d, object state)
+        if (InvokeRequired)
         {
-            Invoke(d, state);
-        }
-
-        /// <summary>
-        ///     Dispatches an asynchronous message to this synchronization context.
-        /// </summary>
-        /// <param name="d">
-        ///     The SendOrPostCallback delegate to call.
-        /// </param>
-        /// <param name="state">
-        ///     The object passed to the delegate.
-        /// </param>
-        /// <remarks>
-        ///     The Post method starts an asynchronous request to post a message.
-        /// </remarks>
-        public override void Post(SendOrPostCallback d, object state)
-        {
-            #region Require
-
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (d == null) throw new ArgumentNullException();
-
-            #endregion
+            result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.BeginInvokeCompleted);
 
             lock (lockObject)
             {
-                delegateDeque.PushBack(new DelegateQueueAsyncResult(this, d, new[] { state }, false,
-                    NotificationType.PostCompleted));
+                delegateDeque.PushBack(result);
 
                 Monitor.Pulse(lockObject);
             }
         }
-
-        #endregion
-
-        #region IComponent Members
-
-        /// <summary>
-        ///     Represents the method that handles the Disposed delegate of a DelegateQueue.
-        /// </summary>
-        public event EventHandler Disposed;
-
-        /// <summary>
-        ///     Gets or sets the ISite associated with the DelegateQueue.
-        /// </summary>
-        public ISite Site { get; set; }
-
-        #endregion
-
-        #region ISynchronizeInvoke Members
-
-        /// <summary>
-        ///     Executes the delegate on the main thread that this DelegateQueue executes on.
-        /// </summary>
-        /// <param name="method">
-        ///     A Delegate to a method that takes parameters of the same number and type that
-        ///     are contained in args.
-        /// </param>
-        /// <param name="args">
-        ///     An array of type Object to pass as arguments to the given method. This can be
-        ///     a null reference (Nothing in Visual Basic) if no arguments are needed.
-        /// </param>
-        /// <returns>
-        ///     An IAsyncResult interface that represents the asynchronous operation started
-        ///     by calling this method.
-        /// </returns>
-        /// <remarks>
-        ///     <para>
-        ///         The delegate is called asynchronously, and this method returns immediately.
-        ///         You can call this method from any thread. If you need the return value from a process
-        ///         started with this method, call EndInvoke to get the value.
-        ///     </para>
-        ///     <para>If you need to call the delegate synchronously, use the Invoke method instead.</para>
-        /// </remarks>
-        public IAsyncResult BeginInvoke(Delegate method, params object[] args)
+        else
         {
-            #region Require
+            result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.None);
 
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (method == null) throw new ArgumentNullException();
-
-            #endregion
-
-            DelegateQueueAsyncResult result;
-
-            if (InvokeRequired)
-            {
-                result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.BeginInvokeCompleted);
-
-                lock (lockObject)
-                {
-                    delegateDeque.PushBack(result);
-
-                    Monitor.Pulse(lockObject);
-                }
-            }
-            else
-            {
-                result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.None);
-
-                result.Invoke();
-            }
-
-            return result;
+            result.Invoke();
         }
 
-        /// <summary>
-        ///     Waits until the process started by calling BeginInvoke completes, and then returns
-        ///     the value generated by the process.
-        /// </summary>
-        /// <param name="result">
-        ///     An IAsyncResult interface that represents the asynchronous operation started
-        ///     by calling BeginInvoke.
-        /// </param>
-        /// <returns>
-        ///     An Object that represents the return value generated by the asynchronous operation.
-        /// </returns>
-        /// <remarks>
-        ///     This method gets the return value of the asynchronous operation represented by the
-        ///     IAsyncResult passed by this interface. If the asynchronous operation has not completed, this method will wait until
-        ///     the result is available.
-        /// </remarks>
-        public object EndInvoke(IAsyncResult result)
-        {
-            #region Require
-
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (!(result is DelegateQueueAsyncResult asyncResult)) throw new ArgumentException();
-
-            if (asyncResult.Owner != this) throw new ArgumentException();
-
-            #endregion
-
-            result.AsyncWaitHandle.WaitOne();
-
-            if (asyncResult.Error != null) throw asyncResult.Error;
-
-            return asyncResult.ReturnValue;
-        }
-
-        /// <summary>
-        ///     Executes the delegate on the main thread that this DelegateQueue executes on.
-        /// </summary>
-        /// <param name="method">
-        ///     A Delegate that contains a method to call, in the context of the thread for the DelegateQueue.
-        /// </param>
-        /// <param name="args">
-        ///     An array of type Object that represents the arguments to pass to the given method.
-        /// </param>
-        /// <returns>
-        ///     An Object that represents the return value from the delegate being invoked, or a
-        ///     null reference (Nothing in Visual Basic) if the delegate has no return value.
-        /// </returns>
-        /// <remarks>
-        ///     <para>
-        ///         Unlike BeginInvoke, this method operates synchronously, that is, it waits until
-        ///         the process completes before returning. Exceptions raised during the call are propagated
-        ///         back to the caller.
-        ///     </para>
-        ///     <para>
-        ///         Use this method when calling a method from a different thread to marshal the call
-        ///         to the proper thread.
-        ///     </para>
-        /// </remarks>
-        public object Invoke(Delegate method, params object[] args)
-        {
-            #region Require
-
-            if (disposed) throw new ObjectDisposedException("DelegateQueue");
-
-            if (method == null) throw new ArgumentNullException();
-
-            #endregion
-
-            object returnValue;
-
-            if (InvokeRequired)
-            {
-                var result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.None);
-
-                lock (lockObject)
-                {
-                    delegateDeque.PushBack(result);
-
-                    Monitor.Pulse(lockObject);
-                }
-
-                returnValue = EndInvoke(result);
-            }
-            else
-            {
-                // Invoke the method here rather than placing it in the queue.
-                returnValue = method.DynamicInvoke(args);
-            }
-
-            return returnValue;
-        }
-
-        /// <summary>
-        ///     Gets a value indicating whether the caller must call Invoke.
-        /// </summary>
-        /// <value>
-        ///     <b>true</b> if the caller must call Invoke; otherwise, <b>false</b>.
-        /// </value>
-        /// <remarks>
-        ///     This property determines whether the caller must call Invoke when making
-        ///     method calls to this DelegateQueue. If you are calling a method from a different
-        ///     thread, you must use the Invoke method to marshal the call to the proper thread.
-        /// </remarks>
-        public bool InvokeRequired => Thread.CurrentThread.ManagedThreadId != delegateThread.ManagedThreadId;
-
-        #endregion
+        return result;
     }
+
+    /// <summary>
+    ///     Waits until the process started by calling BeginInvoke completes, and then returns
+    ///     the value generated by the process.
+    /// </summary>
+    /// <param name="result">
+    ///     An IAsyncResult interface that represents the asynchronous operation started
+    ///     by calling BeginInvoke.
+    /// </param>
+    /// <returns>
+    ///     An Object that represents the return value generated by the asynchronous operation.
+    /// </returns>
+    /// <remarks>
+    ///     This method gets the return value of the asynchronous operation represented by the
+    ///     IAsyncResult passed by this interface. If the asynchronous operation has not completed, this method will wait until
+    ///     the result is available.
+    /// </remarks>
+    public object EndInvoke(IAsyncResult result)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (!(result is DelegateQueueAsyncResult asyncResult)) throw new ArgumentException();
+
+        if (asyncResult.Owner != this) throw new ArgumentException();
+
+        #endregion
+
+        result.AsyncWaitHandle.WaitOne();
+
+        if (asyncResult.Error != null) throw asyncResult.Error;
+
+        return asyncResult.ReturnValue;
+    }
+
+    /// <summary>
+    ///     Executes the delegate on the main thread that this DelegateQueue executes on.
+    /// </summary>
+    /// <param name="method">
+    ///     A Delegate that contains a method to call, in the context of the thread for the DelegateQueue.
+    /// </param>
+    /// <param name="args">
+    ///     An array of type Object that represents the arguments to pass to the given method.
+    /// </param>
+    /// <returns>
+    ///     An Object that represents the return value from the delegate being invoked, or a
+    ///     null reference (Nothing in Visual Basic) if the delegate has no return value.
+    /// </returns>
+    /// <remarks>
+    ///     <para>
+    ///         Unlike BeginInvoke, this method operates synchronously, that is, it waits until
+    ///         the process completes before returning. Exceptions raised during the call are propagated
+    ///         back to the caller.
+    ///     </para>
+    ///     <para>
+    ///         Use this method when calling a method from a different thread to marshal the call
+    ///         to the proper thread.
+    ///     </para>
+    /// </remarks>
+    public object Invoke(Delegate method, params object[] args)
+    {
+        #region Require
+
+        if (disposed) throw new ObjectDisposedException("DelegateQueue");
+
+        if (method == null) throw new ArgumentNullException();
+
+        #endregion
+
+        object returnValue;
+
+        if (InvokeRequired)
+        {
+            var result = new DelegateQueueAsyncResult(this, method, args, false, NotificationType.None);
+
+            lock (lockObject)
+            {
+                delegateDeque.PushBack(result);
+
+                Monitor.Pulse(lockObject);
+            }
+
+            returnValue = EndInvoke(result);
+        }
+        else
+        {
+            // Invoke the method here rather than placing it in the queue.
+            returnValue = method.DynamicInvoke(args);
+        }
+
+        return returnValue;
+    }
+
+    /// <summary>
+    ///     Gets a value indicating whether the caller must call Invoke.
+    /// </summary>
+    /// <value>
+    ///     <b>true</b> if the caller must call Invoke; otherwise, <b>false</b>.
+    /// </value>
+    /// <remarks>
+    ///     This property determines whether the caller must call Invoke when making
+    ///     method calls to this DelegateQueue. If you are calling a method from a different
+    ///     thread, you must use the Invoke method to marshal the call to the proper thread.
+    /// </remarks>
+    public bool InvokeRequired => Thread.CurrentThread.ManagedThreadId != delegateThread.ManagedThreadId;
+
+    #endregion
 }

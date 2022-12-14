@@ -4,27 +4,26 @@ using System;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
+namespace Sanford.Multimedia.Midi;
+
+public sealed partial class InputDevice
 {
-    public sealed partial class InputDevice
+    public override IntPtr Handle { get; }
+
+    public int SysExBufferSize
     {
-        public override IntPtr Handle { get; }
-
-        public int SysExBufferSize
+        get { return sysExBufferSize; }
+        set
         {
-            get { return sysExBufferSize; }
-            set
-            {
-                #region Require
+            #region Require
 
-                if (value < 1) throw new ArgumentOutOfRangeException();
+            if (value < 1) throw new ArgumentOutOfRangeException();
 
-                #endregion
+            #endregion
 
-                sysExBufferSize = value;
-            }
+            sysExBufferSize = value;
         }
-
-        public static int DeviceCount => midiInGetNumDevs();
     }
+
+    public static int DeviceCount => midiInGetNumDevs();
 }

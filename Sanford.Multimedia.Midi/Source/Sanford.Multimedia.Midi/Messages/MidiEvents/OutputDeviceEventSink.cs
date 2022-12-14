@@ -4,110 +4,109 @@ using System;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
+namespace Sanford.Multimedia.Midi;
+
+/// <summary>
+///     Event sink that sends midi messages to an output device
+/// </summary>
+public class OutputDeviceEventSink : IDisposable
 {
-    /// <summary>
-    ///     Event sink that sends midi messages to an output device
-    /// </summary>
-    public class OutputDeviceEventSink : IDisposable
+    private readonly MidiEvents FEventSource;
+    private readonly OutputDevice FOutDevice;
+
+    public OutputDeviceEventSink(OutputDevice outDevice, MidiEvents eventSource)
     {
-        private readonly MidiEvents FEventSource;
-        private readonly OutputDevice FOutDevice;
+        FOutDevice = outDevice;
+        FEventSource = eventSource;
 
-        public OutputDeviceEventSink(OutputDevice outDevice, MidiEvents eventSource)
+        RegisterEvents();
+    }
+
+    public int DeviceID
+    {
+        get
         {
-            FOutDevice = outDevice;
-            FEventSource = eventSource;
+            if (FOutDevice != null) return FOutDevice.DeviceID;
 
-            RegisterEvents();
+            return -1;
         }
+    }
 
-        public int DeviceID
+    /// <summary>
+    ///     Disposes the underying output device and removes the events from the source
+    /// </summary>
+    public void Dispose()
+    {
+        UnRegisterEvents();
+        FOutDevice.Dispose();
+    }
+
+    private void RegisterEvents()
+    {
+        FEventSource.MessageReceived += FEventSource_MessageReceived;
+        FEventSource.ShortMessageReceived += EventSource_RawMessageReceived;
+        FEventSource.ChannelMessageReceived += EventSource_ChannelMessageReceived;
+        FEventSource.SysCommonMessageReceived += EventSource_SysCommonMessageReceived;
+        FEventSource.SysExMessageReceived += EventSource_SysExMessageReceived;
+        FEventSource.SysRealtimeMessageReceived += EventSource_SysRealtimeMessageReceived;
+    }
+
+
+    private void UnRegisterEvents()
+    {
+        FEventSource.MessageReceived -= FEventSource_MessageReceived;
+        FEventSource.ShortMessageReceived -= EventSource_RawMessageReceived;
+        FEventSource.ChannelMessageReceived -= EventSource_ChannelMessageReceived;
+        FEventSource.SysCommonMessageReceived -= EventSource_SysCommonMessageReceived;
+        FEventSource.SysExMessageReceived -= EventSource_SysExMessageReceived;
+        FEventSource.SysRealtimeMessageReceived -= EventSource_SysRealtimeMessageReceived;
+    }
+
+    private void FEventSource_MessageReceived(IMidiMessage message)
+    {
+        switch (message)
         {
-            get
-            {
-                if (FOutDevice != null) return FOutDevice.DeviceID;
-
-                return -1;
-            }
+            case ShortMessage shortMessage:
+                FOutDevice.SendShort(shortMessage.Message);
+                return;
+            case SysExMessage sysExMessage:
+                FOutDevice.Send(sysExMessage);
+                break;
         }
-
-        /// <summary>
-        ///     Disposes the underying output device and removes the events from the source
-        /// </summary>
-        public void Dispose()
-        {
-            UnRegisterEvents();
-            FOutDevice.Dispose();
-        }
-
-        private void RegisterEvents()
-        {
-            FEventSource.MessageReceived += FEventSource_MessageReceived;
-            FEventSource.ShortMessageReceived += EventSource_RawMessageReceived;
-            FEventSource.ChannelMessageReceived += EventSource_ChannelMessageReceived;
-            FEventSource.SysCommonMessageReceived += EventSource_SysCommonMessageReceived;
-            FEventSource.SysExMessageReceived += EventSource_SysExMessageReceived;
-            FEventSource.SysRealtimeMessageReceived += EventSource_SysRealtimeMessageReceived;
-        }
+    }
 
 
-        private void UnRegisterEvents()
-        {
-            FEventSource.MessageReceived -= FEventSource_MessageReceived;
-            FEventSource.ShortMessageReceived -= EventSource_RawMessageReceived;
-            FEventSource.ChannelMessageReceived -= EventSource_ChannelMessageReceived;
-            FEventSource.SysCommonMessageReceived -= EventSource_SysCommonMessageReceived;
-            FEventSource.SysExMessageReceived -= EventSource_SysExMessageReceived;
-            FEventSource.SysRealtimeMessageReceived -= EventSource_SysRealtimeMessageReceived;
-        }
+    private void EventSource_SysRealtimeMessageReceived(object sender, SysRealtimeMessageEventArgs e)
+    {
+        FOutDevice.Send(e.Message);
+    }
 
-        private void FEventSource_MessageReceived(IMidiMessage message)
-        {
-            switch (message)
-            {
-                case ShortMessage shortMessage:
-                    FOutDevice.SendShort(shortMessage.Message);
-                    return;
-                case SysExMessage sysExMessage:
-                    FOutDevice.Send(sysExMessage);
-                    break;
-            }
-        }
+    private void EventSource_SysExMessageReceived(object sender, SysExMessageEventArgs e)
+    {
+        FOutDevice.Send(e.Message);
+    }
 
+    private void EventSource_SysCommonMessageReceived(object sender, SysCommonMessageEventArgs e)
+    {
+        FOutDevice.Send(e.Message);
+    }
 
-        private void EventSource_SysRealtimeMessageReceived(object sender, SysRealtimeMessageEventArgs e)
-        {
-            FOutDevice.Send(e.Message);
-        }
+    private void EventSource_ChannelMessageReceived(object sender, ChannelMessageEventArgs e)
+    {
+        FOutDevice.Send(e.Message);
+    }
 
-        private void EventSource_SysExMessageReceived(object sender, SysExMessageEventArgs e)
-        {
-            FOutDevice.Send(e.Message);
-        }
+    private void EventSource_RawMessageReceived(object sender, ShortMessageEventArgs e)
+    {
+        FOutDevice.SendShort(e.Message.Message);
+    }
 
-        private void EventSource_SysCommonMessageReceived(object sender, SysCommonMessageEventArgs e)
-        {
-            FOutDevice.Send(e.Message);
-        }
+    public static OutputDeviceEventSink FromDeviceID(int deviceID, MidiEvents eventSource)
+    {
+        var deviceCount = OutputDeviceBase.DeviceCount;
+        if (deviceCount <= 0) return null;
 
-        private void EventSource_ChannelMessageReceived(object sender, ChannelMessageEventArgs e)
-        {
-            FOutDevice.Send(e.Message);
-        }
-
-        private void EventSource_RawMessageReceived(object sender, ShortMessageEventArgs e)
-        {
-            FOutDevice.SendShort(e.Message.Message);
-        }
-
-        public static OutputDeviceEventSink FromDeviceID(int deviceID, MidiEvents eventSource)
-        {
-            var deviceCount = OutputDeviceBase.DeviceCount;
-            if (deviceCount <= 0) return null;
-
-            deviceID %= deviceCount;
-            return new OutputDeviceEventSink(new OutputDevice(deviceID), eventSource);
-        }
+        deviceID %= deviceCount;
+        return new OutputDeviceEventSink(new OutputDevice(deviceID), eventSource);
     }
 }

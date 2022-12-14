@@ -5,15 +5,14 @@ using System.Collections;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
-{
-    public sealed class StoppedEventArgs : EventArgs
-    {
-        public StoppedEventArgs(ICollection messages)
-        {
-            Messages = messages;
-        }
+namespace Sanford.Multimedia.Midi;
 
-        public ICollection Messages { get; }
+public sealed class StoppedEventArgs : EventArgs
+{
+    public StoppedEventArgs(ICollection messages)
+    {
+        Messages = messages;
     }
+
+    public ICollection Messages { get; }
 }
