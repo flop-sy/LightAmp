@@ -7,73 +7,72 @@ using System.Windows.Controls;
 
 #endregion
 
-namespace BardMusicPlayer.Ui.Controls
+namespace BardMusicPlayer.Ui.Controls;
+
+/// <summary>
+///     Interaktionslogik für NumericUpDown.xaml
+/// </summary>
+public sealed partial class OctaveNumericUpDown
 {
-    /// <summary>
-    ///     Interaktionslogik für NumericUpDown.xaml
-    /// </summary>
-    public sealed partial class OctaveNumericUpDown
+    public static readonly DependencyProperty ValueProperty =
+        DependencyProperty.Register(nameof(Value), typeof(string), typeof(OctaveNumericUpDown),
+            new PropertyMetadata(OnValueChangedCallBack));
+
+
+    /* Track UP/Down */
+    private int _numValue;
+    public EventHandler<int> OnValueChanged;
+
+    public OctaveNumericUpDown()
     {
-        public static readonly DependencyProperty ValueProperty =
-            DependencyProperty.Register(nameof(Value), typeof(string), typeof(OctaveNumericUpDown),
-                new PropertyMetadata(OnValueChangedCallBack));
+        InitializeComponent();
+    }
 
+    public string Value
+    {
+        get => (string)GetValue(ValueProperty);
+        set => SetValue(ValueProperty, value);
+    }
 
-        /* Track UP/Down */
-        private int _numValue;
-        public EventHandler<int> OnValueChanged;
-
-        public OctaveNumericUpDown()
+    public int NumValue
+    {
+        get => _numValue;
+        set
         {
-            InitializeComponent();
+            _numValue = value;
+            Text.Text = "ø" + NumValue;
+            OnValueChanged?.Invoke(this, _numValue);
         }
+    }
 
-        public string Value
-        {
-            get => (string)GetValue(ValueProperty);
-            set => SetValue(ValueProperty, value);
-        }
+    private static void OnValueChangedCallBack(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        var c = sender as OctaveNumericUpDown;
+        c?.OnValueChangedC(c.Value);
+    }
 
-        public int NumValue
-        {
-            get => _numValue;
-            set
-            {
-                _numValue = value;
-                Text.Text = "ø" + NumValue;
-                OnValueChanged?.Invoke(this, _numValue);
-            }
-        }
+    private void OnValueChangedC(string c)
+    {
+        NumValue = Convert.ToInt32(c);
+    }
 
-        private static void OnValueChangedCallBack(DependencyObject sender, DependencyPropertyChangedEventArgs e)
-        {
-            var c = sender as OctaveNumericUpDown;
-            c?.OnValueChangedC(c.Value);
-        }
+    private void NumUp_Click(object sender, RoutedEventArgs e)
+    {
+        NumValue++;
+    }
 
-        private void OnValueChangedC(string c)
-        {
-            NumValue = Convert.ToInt32(c);
-        }
+    private void NumDown_Click(object sender, RoutedEventArgs e)
+    {
+        NumValue--;
+    }
 
-        private void NumUp_Click(object sender, RoutedEventArgs e)
-        {
-            NumValue++;
-        }
+    private void TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (Text == null)
+            return;
 
-        private void NumDown_Click(object sender, RoutedEventArgs e)
-        {
-            NumValue--;
-        }
-
-        private void TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (Text == null)
-                return;
-
-            var val = 0;
-            var str = Regex.Replace(Text.Text, @"[^\d|\.\-]", "");
-            if (int.TryParse(str, out val)) NumValue = val;
-        }
+        var val = 0;
+        var str = Regex.Replace(Text.Text, @"[^\d|\.\-]", "");
+        if (int.TryParse(str, out val)) NumValue = val;
     }
 }

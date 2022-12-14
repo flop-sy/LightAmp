@@ -13,153 +13,152 @@ using BardMusicPlayer.Ui.Globals.SkinContainer;
 
 #endregion
 
-namespace BardMusicPlayer.Ui.Skinned
+namespace BardMusicPlayer.Ui.Skinned;
+
+public sealed partial class Skinned_MainView
 {
-    public sealed partial class Skinned_MainView
+    /*void WriteTrackField(string data)
     {
-        /*void WriteTrackField(string data)
+        Bitmap bitmap = new Bitmap(50, 6);
+        var graphics = Graphics.FromImage(bitmap);
+        int index = 0;
+        foreach (var a in data)
         {
-            Bitmap bitmap = new Bitmap(50, 6);
-            var graphics = Graphics.FromImage(bitmap);
-            int index = 0;
-            foreach (var a in data)
-            {
-                graphics.DrawImage(SkinContainer.FONT[a], 5 * index, 0);
-                index++;
-            }
-            //TrackDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
-        }*/
+            graphics.DrawImage(SkinContainer.FONT[a], 5 * index, 0);
+            index++;
+        }
+        //TrackDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+    }*/
 
-        /// <summary>
-        ///     draws the bitmaptext from string into SmallOctaveDigit (the Octave field)
-        /// </summary>
-        /// <param name="data"></param>
-        private void WriteSmallOctaveDigitField(string data)
+    /// <summary>
+    ///     draws the bitmaptext from string into SmallOctaveDigit (the Octave field)
+    /// </summary>
+    /// <param name="data"></param>
+    private void WriteSmallOctaveDigitField(string data)
+    {
+        var bitmap = new Bitmap(30, 8);
+        var graphics = Graphics.FromImage(bitmap);
+        var index = 0;
+        foreach (var img in data.Select(static a =>
+                     SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
         {
-            var bitmap = new Bitmap(30, 8);
-            var graphics = Graphics.FromImage(bitmap);
-            var index = 0;
-            foreach (var img in data.Select(static a =>
-                         SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
-            {
-                graphics.DrawImage(img, 5 * index, 0);
-                index++;
-            }
-
-            SmallOctaveDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
-                IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
-            SmallOctaveDigit.Stretch = Stretch.UniformToFill;
+            graphics.DrawImage(img, 5 * index, 0);
+            index++;
         }
 
-        /// <summary>
-        ///     draws the bitmaptext from string into WriteSmallDigitField (the Track field)
-        /// </summary>
-        /// <param name="data"></param>
-        private void WriteSmallDigitField(string data)
+        SmallOctaveDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
+            IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+        SmallOctaveDigit.Stretch = Stretch.UniformToFill;
+    }
+
+    /// <summary>
+    ///     draws the bitmaptext from string into WriteSmallDigitField (the Track field)
+    /// </summary>
+    /// <param name="data"></param>
+    private void WriteSmallDigitField(string data)
+    {
+        data = data.Insert(0, "T");
+        data = data.Insert(1, ":");
+
+        var bitmap = new Bitmap(30, 8);
+        var graphics = Graphics.FromImage(bitmap);
+        var index = 0;
+        foreach (var img in data.Select(static a =>
+                     SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
         {
-            data = data.Insert(0, "T");
-            data = data.Insert(1, ":");
-
-            var bitmap = new Bitmap(30, 8);
-            var graphics = Graphics.FromImage(bitmap);
-            var index = 0;
-            foreach (var img in data.Select(static a =>
-                         SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
-            {
-                graphics.DrawImage(img, 5 * index, 0);
-                index++;
-            }
-
-            SmallTrackDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
-                IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
-            SmallTrackDigit.Stretch = Stretch.UniformToFill;
+            graphics.DrawImage(img, 5 * index, 0);
+            index++;
         }
 
-        /// <summary>
-        ///     draws the bitmaptext from string into InstrumentDigit
-        /// </summary>
-        /// <param name="data"></param>
-        private void WriteInstrumentDigitField(string data)
+        SmallTrackDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
+            IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+        SmallTrackDigit.Stretch = Stretch.UniformToFill;
+    }
+
+    /// <summary>
+    ///     draws the bitmaptext from string into InstrumentDigit
+    /// </summary>
+    /// <param name="data"></param>
+    private void WriteInstrumentDigitField(string data)
+    {
+        if (data == null)
+            return;
+
+        var bitmap = new Bitmap(110, 12);
+        var graphics = Graphics.FromImage(bitmap);
+        var index = 0;
+        foreach (var img in data.Select(static a =>
+                     SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
         {
-            if (data == null)
-                return;
-
-            var bitmap = new Bitmap(110, 12);
-            var graphics = Graphics.FromImage(bitmap);
-            var index = 0;
-            foreach (var img in data.Select(static a =>
-                         SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32]))
-            {
-                graphics.DrawImage(img, 5 * index, 0);
-                index++;
-            }
-
-            InstrumentDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
-                IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+            graphics.DrawImage(img, 5 * index, 0);
+            index++;
         }
 
+        InstrumentDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
+            IntPtr.Zero, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+    }
 
-        #region SongField & Scroller
 
-        private int scrollpos;
-        private bool scrolldir = true;
+    #region SongField & Scroller
 
-        private async Task UpdateScroller(CancellationToken stoppingToken, string data)
+    private int scrollpos;
+    private bool scrolldir = true;
+
+    private async Task UpdateScroller(CancellationToken stoppingToken, string data)
+    {
+        var songname = data;
+        scrollpos = 0;
+        scrolldir = true;
+        while (!stoppingToken.IsCancellationRequested)
         {
-            var songname = data;
-            scrollpos = 0;
-            scrolldir = true;
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                WriteSongField(songname);
-                await Task.Delay(500, stoppingToken);
-            }
+            WriteSongField(songname);
+            await Task.Delay(500, stoppingToken);
         }
+    }
 
-        /// <summary>
-        ///     draws the bitmaptext from string into SongDigit
-        /// </summary>
-        /// <param name="data"></param>
-        private void WriteSongField(string data)
+    /// <summary>
+    ///     draws the bitmaptext from string into SongDigit
+    /// </summary>
+    /// <param name="data"></param>
+    private void WriteSongField(string data)
+    {
+        var bitmap = new Bitmap(305, 12);
+        var graphics = Graphics.FromImage(bitmap);
+        for (var i = 0; i < 33; i++)
         {
-            var bitmap = new Bitmap(305, 12);
-            var graphics = Graphics.FromImage(bitmap);
-            for (var i = 0; i < 33; i++)
-            {
-                var a = ' ';
+            var a = ' ';
 
-                if (scrollpos == -1 && !scrolldir)
+            if (scrollpos == -1 && !scrolldir)
+            {
+                scrolldir = true;
+            }
+            else
+            {
+                if (i + scrollpos >= data.Length)
                 {
-                    scrolldir = true;
+                    scrolldir = false;
                 }
                 else
                 {
-                    if (i + scrollpos >= data.Length)
-                    {
-                        scrolldir = false;
-                    }
-                    else
-                    {
-                        if (scrollpos == -2) scrollpos = 0;
+                    if (scrollpos == -2) scrollpos = 0;
 
-                        a = data.ToArray()[i + scrollpos];
-                    }
+                    a = data.ToArray()[i + scrollpos];
                 }
-
-                var img = SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32];
-                graphics.DrawImage(img, 5 * i, 0);
             }
 
-            if (scrolldir)
-                scrollpos++;
-            else
-                scrollpos--;
-
-            SongDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero,
-                Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
-            SongDigit.Stretch = Stretch.UniformToFill;
+            var img = SkinContainer.FONT.ContainsKey(a) ? SkinContainer.FONT[a] : SkinContainer.FONT[32];
+            graphics.DrawImage(img, 5 * i, 0);
         }
 
-        #endregion
+        if (scrolldir)
+            scrollpos++;
+        else
+            scrollpos--;
+
+        SongDigit.Source = new ImageBrush(Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(), IntPtr.Zero,
+            Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())).ImageSource;
+        SongDigit.Stretch = Stretch.UniformToFill;
     }
+
+    #endregion
 }

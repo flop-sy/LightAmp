@@ -9,64 +9,63 @@ using Microsoft.Win32;
 
 #endregion
 
-namespace BardMusicPlayer.Ui.Classic
+namespace BardMusicPlayer.Ui.Classic;
+
+/// <summary>
+///     only here cuz someone would like to have it back
+/// </summary>
+public sealed partial class Classic_MainView
 {
-    /// <summary>
-    ///     only here cuz someone would like to have it back
-    /// </summary>
-    public sealed partial class Classic_MainView
+    private List<int> _notesCountForTracks = new();
+
+    private void UpdateStats(SongLoadedEvent e)
     {
-        private List<int> _notesCountForTracks = new();
+        Statistics_Total_Tracks_Label.Content = e.MaxTracks.ToString();
+        Statistics_Total_Note_Count_Label.Content = e.TotalNoteCount.ToString();
 
-        private void UpdateStats(SongLoadedEvent e)
+        _notesCountForTracks.Clear();
+        _notesCountForTracks = e.CurrentNoteCountForTracks;
+
+        if (NumValue >= _notesCountForTracks.Count)
         {
-            Statistics_Total_Tracks_Label.Content = e.MaxTracks.ToString();
-            Statistics_Total_Note_Count_Label.Content = e.TotalNoteCount.ToString();
-
-            _notesCountForTracks.Clear();
-            _notesCountForTracks = e.CurrentNoteCountForTracks;
-
-            if (NumValue >= _notesCountForTracks.Count)
-            {
-                Statistics_Track_Note_Count_Label.Content = "Invalid track";
-                return;
-            }
-
-            Statistics_Track_Note_Count_Label.Content = _notesCountForTracks[NumValue];
+            Statistics_Track_Note_Count_Label.Content = "Invalid track";
+            return;
         }
 
-        private void UpdateNoteCountForTrack()
+        Statistics_Track_Note_Count_Label.Content = _notesCountForTracks[NumValue];
+    }
+
+    private void UpdateNoteCountForTrack()
+    {
+        if (PlaybackFunctions.CurrentSong == null)
+            return;
+
+        if (NumValue >= _notesCountForTracks.Count)
         {
-            if (PlaybackFunctions.CurrentSong == null)
-                return;
-
-            if (NumValue >= _notesCountForTracks.Count)
-            {
-                Statistics_Track_Note_Count_Label.Content = "Invalid track";
-                return;
-            }
-
-            Statistics_Track_Note_Count_Label.Content = _notesCountForTracks[NumValue];
+            Statistics_Track_Note_Count_Label.Content = "Invalid track";
+            return;
         }
 
-        private void ExportAsMidi(object sender, RoutedEventArgs e)
+        Statistics_Track_Note_Count_Label.Content = _notesCountForTracks[NumValue];
+    }
+
+    private void ExportAsMidi(object sender, RoutedEventArgs e)
+    {
+        var song = PlaybackFunctions.CurrentSong;
+        Stream myStream;
+        var saveFileDialog = new SaveFileDialog
         {
-            var song = PlaybackFunctions.CurrentSong;
-            Stream myStream;
-            var saveFileDialog = new SaveFileDialog
-            {
-                Filter = "MIDI file (*.mid)|*.mid",
-                FilterIndex = 2,
-                RestoreDirectory = true,
-                OverwritePrompt = true
-            };
+            Filter = "MIDI file (*.mid)|*.mid",
+            FilterIndex = 2,
+            RestoreDirectory = true,
+            OverwritePrompt = true
+        };
 
-            if (saveFileDialog.ShowDialog() != true) return;
+        if (saveFileDialog.ShowDialog() != true) return;
 
-            if ((myStream = saveFileDialog.OpenFile()) == null) return;
+        if ((myStream = saveFileDialog.OpenFile()) == null) return;
 
-            song.GetExportMidi().WriteTo(myStream);
-            myStream.Close();
-        }
+        song.GetExportMidi().WriteTo(myStream);
+        myStream.Close();
     }
 }
