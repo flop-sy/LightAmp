@@ -7,59 +7,58 @@ using BardMusicPlayer.Seer;
 
 #endregion
 
-namespace BardMusicPlayer.Grunt
+namespace BardMusicPlayer.Grunt;
+
+public sealed class BmpGrunt
 {
-    public sealed class BmpGrunt
+    private static readonly Lazy<BmpGrunt> LazyInstance = new(static () => new BmpGrunt());
+
+    internal DalamudServer DalamudServer;
+
+    private BmpGrunt()
     {
-        private static readonly Lazy<BmpGrunt> LazyInstance = new(static () => new BmpGrunt());
+    }
 
-        internal DalamudServer DalamudServer;
+    /// <summary>
+    /// </summary>
+    public bool Started { get; private set; }
 
-        private BmpGrunt()
-        {
-        }
+    public static BmpGrunt Instance => LazyInstance.Value;
 
-        /// <summary>
-        /// </summary>
-        public bool Started { get; private set; }
+    /// <summary>
+    ///     Start Grunt.
+    /// </summary>
+    public void Start()
+    {
+        if (Started) return;
 
-        public static BmpGrunt Instance => LazyInstance.Value;
+        if (!BmpPigeonhole.Initialized) throw new BmpGruntException("Grunt requires Pigeonhole to be initialized.");
+        if (!BmpSeer.Instance.Started) throw new BmpGruntException("Grunt requires Seer to be running.");
 
-        /// <summary>
-        ///     Start Grunt.
-        /// </summary>
-        public void Start()
-        {
-            if (Started) return;
+        DalamudServer = new DalamudServer();
+        Started = true;
+    }
 
-            if (!BmpPigeonhole.Initialized) throw new BmpGruntException("Grunt requires Pigeonhole to be initialized.");
-            if (!BmpSeer.Instance.Started) throw new BmpGruntException("Grunt requires Seer to be running.");
+    /// <summary>
+    ///     Stop Grunt.
+    /// </summary>
+    public void Stop()
+    {
+        if (!Started) return;
 
-            DalamudServer = new DalamudServer();
-            Started = true;
-        }
+        DalamudServer?.Dispose();
+        DalamudServer = null;
+        Started = false;
+    }
 
-        /// <summary>
-        ///     Stop Grunt.
-        /// </summary>
-        public void Stop()
-        {
-            if (!Started) return;
+    ~BmpGrunt()
+    {
+        Dispose();
+    }
 
-            DalamudServer?.Dispose();
-            DalamudServer = null;
-            Started = false;
-        }
-
-        ~BmpGrunt()
-        {
-            Dispose();
-        }
-
-        public void Dispose()
-        {
-            Stop();
-            GC.SuppressFinalize(this);
-        }
+    public void Dispose()
+    {
+        Stop();
+        GC.SuppressFinalize(this);
     }
 }

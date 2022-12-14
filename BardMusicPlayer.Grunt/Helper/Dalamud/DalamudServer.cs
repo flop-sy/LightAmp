@@ -13,114 +13,113 @@ using H.Pipes.Args;
 
 #endregion
 
-namespace BardMusicPlayer.Grunt.Helper.Dalamud
+namespace BardMusicPlayer.Grunt.Helper.Dalamud;
+
+internal sealed class DalamudServer : IDisposable
 {
-    internal sealed class DalamudServer : IDisposable
+    private readonly ConcurrentDictionary<int, string> _clients;
+    private readonly PipeServer<string> _pipe;
+
+    /// <summary>
+    /// </summary>
+    internal DalamudServer()
     {
-        private readonly ConcurrentDictionary<int, string> _clients;
-        private readonly PipeServer<string> _pipe;
+        _clients = new ConcurrentDictionary<int, string>();
+        _pipe = new PipeServer<string>("BardMusicPlayer-Grunt-Dalamud");
+        _pipe.ClientConnected += OnConnected;
+        _pipe.ClientDisconnected += OnDisconnected;
+        _pipe.MessageReceived += OnMessage;
+        _pipe.AllowUsersReadWrite();
+        Start();
+    }
 
-        /// <summary>
-        /// </summary>
-        internal DalamudServer()
+    public void Dispose()
+    {
+        try
         {
-            _clients = new ConcurrentDictionary<int, string>();
-            _pipe = new PipeServer<string>("BardMusicPlayer-Grunt-Dalamud");
-            _pipe.ClientConnected += OnConnected;
-            _pipe.ClientDisconnected += OnDisconnected;
-            _pipe.MessageReceived += OnMessage;
-            _pipe.AllowUsersReadWrite();
-            Start();
+            Stop();
+            _pipe.MessageReceived -= OnMessage;
+            _pipe.ClientConnected -= OnDisconnected;
+            _pipe.ClientDisconnected -= OnConnected;
+            _pipe.DisposeAsync();
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Dalamud error: {ex.Message}");
         }
 
-        public void Dispose()
+        _clients.Clear();
+    }
+
+    internal async void Start()
+    {
+        if (_pipe.IsStarted) return;
+
+        await _pipe.StartAsync();
+    }
+
+    internal async void Stop()
+    {
+        if (!_pipe.IsStarted) return;
+
+        await _pipe.StopAsync();
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="pid"></param>
+    /// <returns></returns>
+    internal bool IsConnected(int pid)
+    {
+        return _clients.ContainsKey(pid) &&
+               _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected) is not null;
+    }
+
+    /// <summary>
+    /// </summary>
+    /// <param name="pid"></param>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    internal bool SendChat(int pid, string text)
+    {
+        if (!IsConnected(pid)) return false;
+
+        _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected)
+            ?.WriteAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes(text)));
+        return true;
+    }
+
+    private void OnMessage(object sender, ConnectionMessageEventArgs<string?> e)
+    {
+        if (string.IsNullOrEmpty(e.Message)) return;
+
+        var fields = e.Message?.Split(':') ?? Array.Empty<string>();
+
+        if (fields.Length != 3) return;
+
+        if (!int.TryParse(fields[0], out var pid)) return;
+
+        switch (fields[1])
         {
-            try
-            {
-                Stop();
-                _pipe.MessageReceived -= OnMessage;
-                _pipe.ClientConnected -= OnDisconnected;
-                _pipe.ClientDisconnected -= OnConnected;
-                _pipe.DisposeAsync();
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Dalamud error: {ex.Message}");
-            }
-
-            _clients.Clear();
+            case "scanned" when bool.Parse(fields[2]):
+                _clients[pid] = e.Connection.PipeName;
+                Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} sig scanned");
+                break;
+            case "chatted" when bool.Parse(fields[2]):
+                Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} chatted");
+                break;
         }
+    }
 
-        internal async void Start()
-        {
-            if (_pipe.IsStarted) return;
+    private void OnDisconnected(object sender, ConnectionEventArgs<string> e)
+    {
+        if (_clients.Values.Contains(e.Connection.PipeName))
+            _clients.TryRemove(_clients.FirstOrDefault(x => x.Value == e.Connection.PipeName).Key, out _);
+        Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} disconnected");
+    }
 
-            await _pipe.StartAsync();
-        }
-
-        internal async void Stop()
-        {
-            if (!_pipe.IsStarted) return;
-
-            await _pipe.StopAsync();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="pid"></param>
-        /// <returns></returns>
-        internal bool IsConnected(int pid)
-        {
-            return _clients.ContainsKey(pid) &&
-                   _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected) is not null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="pid"></param>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        internal bool SendChat(int pid, string text)
-        {
-            if (!IsConnected(pid)) return false;
-
-            _pipe.ConnectedClients.FirstOrDefault(x => x.PipeName == _clients[pid] && x.IsConnected)
-                ?.WriteAsync(Convert.ToBase64String(Encoding.UTF8.GetBytes(text)));
-            return true;
-        }
-
-        private void OnMessage(object sender, ConnectionMessageEventArgs<string?> e)
-        {
-            if (string.IsNullOrEmpty(e.Message)) return;
-
-            var fields = e.Message?.Split(':') ?? Array.Empty<string>();
-
-            if (fields.Length != 3) return;
-
-            if (!int.TryParse(fields[0], out var pid)) return;
-
-            switch (fields[1])
-            {
-                case "scanned" when bool.Parse(fields[2]):
-                    _clients[pid] = e.Connection.PipeName;
-                    Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} sig scanned");
-                    break;
-                case "chatted" when bool.Parse(fields[2]):
-                    Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} chatted");
-                    break;
-            }
-        }
-
-        private void OnDisconnected(object sender, ConnectionEventArgs<string> e)
-        {
-            if (_clients.Values.Contains(e.Connection.PipeName))
-                _clients.TryRemove(_clients.FirstOrDefault(x => x.Value == e.Connection.PipeName).Key, out _);
-            Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} disconnected");
-        }
-
-        private static void OnConnected(object sender, ConnectionEventArgs<string> e)
-        {
-            Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} connected");
-        }
+    private static void OnConnected(object sender, ConnectionEventArgs<string> e)
+    {
+        Debug.WriteLine($"Dalamud client Id {e.Connection.PipeName} connected");
     }
 }
