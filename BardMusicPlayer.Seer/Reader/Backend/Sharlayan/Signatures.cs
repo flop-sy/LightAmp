@@ -1,7 +1,5 @@
 #region
 
-#region
-
 using System.Collections.Generic;
 using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Models;
 using BardMusicPlayer.Seer.Reader.Backend.Sharlayan.Utilities;

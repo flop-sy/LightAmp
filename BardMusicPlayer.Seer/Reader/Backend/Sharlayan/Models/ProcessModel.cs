@@ -1,7 +1,5 @@
 #region
 
-#region
-
 using System.Diagnostics;
 
 #endregion

@@ -1,7 +1,5 @@
 ﻿#region
 
-#region
-
 using System;
 using System.Linq;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi;

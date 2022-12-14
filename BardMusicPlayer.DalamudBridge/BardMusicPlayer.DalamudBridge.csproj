@@ -4,7 +4,7 @@
         <TargetFramework>net481</TargetFramework>
         <SignAssembly>false</SignAssembly>
         <AssemblyOriginatorKeyFile>signature.snk</AssemblyOriginatorKeyFile>
-        <LangVersion>9</LangVersion>
+        <LangVersion>latest</LangVersion>
         <PackageProjectUrl>https://bardmusicplayer.com</PackageProjectUrl>
         <Version>2.0.0.0</Version>
         <Authors>MoogleTroupe</Authors>
@@ -18,16 +18,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="H.Formatters.Newtonsoft.Json" Version="12.0.42"/>
-        <PackageReference Include="H.Pipes" Version="2.0.42"/>
-        <PackageReference Include="H.Pipes.AccessControl" Version="2.0.42"/>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2"/>
+        <PackageReference Include="H.Formatters.Newtonsoft.Json" Version="12.0.42" />
+        <PackageReference Include="H.Pipes" Version="2.0.42" />
+        <PackageReference Include="H.Pipes.AccessControl" Version="2.0.42" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj"/>
-        <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj"/>
-        <ProjectReference Include="..\BardMusicPlayer.Seer\BardMusicPlayer.Seer.csproj"/>
+        <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj" />
+        <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj" />
+        <ProjectReference Include="..\BardMusicPlayer.Seer\BardMusicPlayer.Seer.csproj" />
     </ItemGroup>
 
 </Project>

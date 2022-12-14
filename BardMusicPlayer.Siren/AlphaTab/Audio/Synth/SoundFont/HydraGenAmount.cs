@@ -1,7 +1,5 @@
 ﻿#region
 
-#region
-
 using BardMusicPlayer.Siren.AlphaTab.IO;
 
 #endregion

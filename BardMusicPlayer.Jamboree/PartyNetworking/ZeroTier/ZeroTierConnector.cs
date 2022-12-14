@@ -2,6 +2,7 @@
 
 using System;
 using System.Globalization;
+using System.Net;
 using System.Threading.Tasks;
 using ZeroTier.Core;
 
@@ -67,10 +68,10 @@ namespace ZeroTier
             var addr = node.GetNetworkAddresses(networkId)[0];
             ipAddress = addr.ToString();
 #if DEBUG
-            foreach (IPAddress addr in node.GetNetworkAddresses(networkId))
-            {
-                Console.WriteLine(" - Address: " + addr);
-            }
+            // foreach (IPAddress addr in node.GetNetworkAddresses(networkId))
+            // {
+            //     Console.WriteLine(" - Address: " + addr);
+            // }
 
             Console.WriteLine("Num of routes             : " + node.GetNetworkRoutes(networkId).Count);
             foreach (RouteInfo route in node.GetNetworkRoutes(networkId))

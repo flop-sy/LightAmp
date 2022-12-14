@@ -51,15 +51,14 @@ namespace BardMusicPlayer.Transmogrify.Song.Importers.GuitarPro
 
                     break;
                 case 7:
-                    string archiveName = path;
-                    byte[] buffer = new byte[8200000];
-                    MemoryStream stream = new MemoryStream(buffer);
-                    using (var unzip = new Unzip(archiveName))
+                    var buffer = new byte[8200000];
+                    var stream = new MemoryStream(buffer);
+                    using (var unzip = new Unzip(path))
                     {
                         unzip.Extract("Content/score.gpif", stream);
                         stream.Position = 0;
                         var sr = new StreamReader(stream);
-                        string gp7xml = sr.ReadToEnd();
+                        var gp7xml = sr.ReadToEnd();
 
                         gpfile = new GP7File(gp7xml);
                         gpfile.readSong();

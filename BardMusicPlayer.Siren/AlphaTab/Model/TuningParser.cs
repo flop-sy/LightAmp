@@ -4,12 +4,6 @@ using System.Linq;
 
 #endregion
 
-#region
-
-using System.Linq;
-
-#endregion
-
 namespace BardMusicPlayer.Siren.AlphaTab.Model
 {
     internal sealed class TuningParseResult

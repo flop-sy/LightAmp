@@ -5,509 +5,495 @@ using System.Diagnostics;
 
 #endregion
 
-namespace Sanford.Multimedia.Midi
+namespace Sanford.Multimedia.Midi;
+
+/// <summary>
+///     Represents a collection of MidiEvents and a MIDI track within a
+///     Sequence.
+/// </summary>
+public sealed partial class Track
 {
-    /// <summary>
-    ///     Represents a collection of MidiEvents and a MIDI track within a
-    ///     Sequence.
-    /// </summary>
-    public sealed partial class Track
+    #region Track Members
+
+    #region Fields
+
+    // The number of MidiEvents in the Track. Will always be at least 1
+    // because the Track will always have an end of track message.
+
+    // The number of ticks to offset the end of track message.
+    private int endOfTrackOffset;
+
+    // The first MidiEvent in the Track.
+    private MidiEvent head;
+
+    // The last MidiEvent in the Track, not including the end of track
+    // message.
+    private MidiEvent tail;
+
+    // The end of track MIDI event.
+    private readonly MidiEvent endOfTrackMidiEvent;
+
+    #endregion
+
+    #region Construction
+
+    public Track()
     {
-        #region Track Members
+        endOfTrackMidiEvent = new MidiEvent(this, Length, MetaMessage.EndOfTrackMessage);
+    }
 
-        #region Fields
+    #endregion
 
-        // The number of MidiEvents in the Track. Will always be at least 1
-        // because the Track will always have an end of track message.
+    #region Methods
 
-        // The number of ticks to offset the end of track message.
-        private int endOfTrackOffset;
+    /// <summary>
+    ///     Inserts an IMidiMessage at the specified position in absolute ticks.
+    /// </summary>
+    /// <param name="position">
+    ///     The position in the Track in absolute ticks in which to insert the
+    ///     IMidiMessage.
+    /// </param>
+    /// <param name="message">
+    ///     The IMidiMessage to insert.
+    /// </param>
+    public void Insert(int position, IMidiMessage message)
+    {
+        #region Require
 
-        // The first MidiEvent in the Track.
-        private MidiEvent head;
-
-        // The last MidiEvent in the Track, not including the end of track
-        // message.
-        private MidiEvent tail;
-
-        // The end of track MIDI event.
-        private readonly MidiEvent endOfTrackMidiEvent;
-
-        #endregion
-
-        #region Construction
-
-        public Track()
-        {
-            endOfTrackMidiEvent = new MidiEvent(this, Length, MetaMessage.EndOfTrackMessage);
-        }
+        if (position < 0)
+            throw new ArgumentOutOfRangeException("position", position,
+                "IMidiMessage position out of range.");
+        if (message == null) throw new ArgumentNullException("message");
 
         #endregion
 
-        #region Methods
+        var newMidiEvent = new MidiEvent(this, position, message);
 
-        /// <summary>
-        ///     Inserts an IMidiMessage at the specified position in absolute ticks.
-        /// </summary>
-        /// <param name="position">
-        ///     The position in the Track in absolute ticks in which to insert the
-        ///     IMidiMessage.
-        /// </param>
-        /// <param name="message">
-        ///     The IMidiMessage to insert.
-        /// </param>
-        public void Insert(int position, IMidiMessage message)
+        if (head == null)
         {
-            #region Require
-
-            if (position < 0)
-                throw new ArgumentOutOfRangeException(nameof(position), position,
-                    "IMidiMessage position out of range.");
-
-            if (message == null) throw new ArgumentNullException(nameof(message));
-
-            #endregion
-
-            var newMidiEvent = new MidiEvent(this, position, message);
-
-            if (head == null)
-            {
-                head = newMidiEvent;
-                tail = newMidiEvent;
-            }
-            else if (position >= tail.AbsoluteTicks)
-            {
-                newMidiEvent.Previous = tail;
-                tail.Next = newMidiEvent;
-                tail = newMidiEvent;
-                endOfTrackMidiEvent.SetAbsoluteTicks(Length);
-                endOfTrackMidiEvent.Previous = tail;
-            }
-            else
-            {
-                var current = head;
-
-                while (current.AbsoluteTicks < position) current = current.Next;
-
-                newMidiEvent.Next = current;
-                newMidiEvent.Previous = current.Previous;
-
-                if (current.Previous != null)
-                    current.Previous.Next = newMidiEvent;
-                else
-                    head = newMidiEvent;
-
-                current.Previous = newMidiEvent;
-            }
-
-            Count++;
-
-            #region Invariant
-
-            AssertValid();
-
-            #endregion
+            head = newMidiEvent;
+            tail = newMidiEvent;
         }
-
-        /// <summary>
-        ///     Clears all of the MidiEvents, with the exception of the end of track
-        ///     message, from the Track.
-        /// </summary>
-        public void Clear()
+        else if (position >= tail.AbsoluteTicks)
         {
-            head = tail = null;
-
-            Count = 1;
-
-            #region Invariant
-
-            AssertValid();
-
-            #endregion
-        }
-
-        /// <summary>
-        ///     Merges the specified Track with the current Track.
-        /// </summary>
-        /// <param name="trk">
-        ///     The Track to merge with.
-        /// </param>
-        public void Merge(Track trk)
-        {
-            #region Require
-
-            if (trk == null) throw new ArgumentNullException(nameof(trk));
-
-            #endregion
-
-            #region Guard
-
-            if (trk == this) return;
-
-            if (trk.Count == 1) return;
-
-            #endregion
-
-#if(DEBUG)
-            int oldCount = Count;
-#endif
-
-            Count += trk.Count - 1;
-
-            var a = head;
-            var b = trk.head;
-            MidiEvent current = null;
-
-            Debug.Assert(b != null);
-
-            if (a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
-            {
-                current = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
-                a = a.Next;
-            }
-            else
-            {
-                current = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
-                b = b.Next;
-            }
-
-            head = current;
-
-            while (a != null && b != null)
-            {
-                while (a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
-                {
-                    current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage)
-                    {
-                        Previous = current
-                    };
-                    current = current.Next;
-                    a = a.Next;
-                }
-
-                if (a == null) continue;
-
-                while (b != null && b.AbsoluteTicks <= a.AbsoluteTicks)
-                {
-                    current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage)
-                    {
-                        Previous = current
-                    };
-                    current = current.Next;
-                    b = b.Next;
-                }
-            }
-
-            while (a != null)
-            {
-                current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage)
-                {
-                    Previous = current
-                };
-                current = current.Next;
-                a = a.Next;
-            }
-
-            while (b != null)
-            {
-                current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage)
-                {
-                    Previous = current
-                };
-                current = current.Next;
-                b = b.Next;
-            }
-
-            tail = current;
-
+            newMidiEvent.Previous = tail;
+            tail.Next = newMidiEvent;
+            tail = newMidiEvent;
             endOfTrackMidiEvent.SetAbsoluteTicks(Length);
             endOfTrackMidiEvent.Previous = tail;
-
-            #region Ensure
-
-#if(DEBUG)
-            Debug.Assert(count == oldCount + trk.Count - 1);
-#endif
-
-            #endregion
-
-            #region Invariant
-
-            AssertValid();
-
-            #endregion
         }
-
-        /// <summary>
-        ///     Removes the MidiEvent at the specified index.
-        /// </summary>
-        /// <param name="index">
-        ///     The index into the Track at which to remove the MidiEvent.
-        /// </param>
-        public void RemoveAt(int index)
+        else
         {
-            #region Require
+            var current = head;
 
-            if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Track index out of range.");
+            while (current.AbsoluteTicks < position) current = current.Next;
 
-            if (index == Count - 1) throw new ArgumentException("Cannot remove the end of track event.", nameof(index));
-
-            #endregion
-
-            var current = GetMidiEvent(index);
+            newMidiEvent.Next = current;
+            newMidiEvent.Previous = current.Previous;
 
             if (current.Previous != null)
-            {
-                current.Previous.Next = current.Next;
-            }
+                current.Previous.Next = newMidiEvent;
             else
-            {
-                Debug.Assert(current == head);
+                head = newMidiEvent;
 
-                head = head.Next;
-            }
-
-            if (current.Next != null)
-            {
-                current.Next.Previous = current.Previous;
-            }
-            else
-            {
-                Debug.Assert(current == tail);
-
-                tail = tail.Previous;
-
-                endOfTrackMidiEvent.SetAbsoluteTicks(Length);
-                endOfTrackMidiEvent.Previous = tail;
-            }
-
-            current.Next = current.Previous = null;
-
-            Count--;
-
-            #region Invariant
-
-            AssertValid();
-
-            #endregion
+            current.Previous = newMidiEvent;
         }
 
-        /// <summary>
-        ///     Gets the MidiEvent at the specified index.
-        /// </summary>
-        /// <param name="index">
-        ///     The index of the MidiEvent to get.
-        /// </param>
-        /// <returns>
-        ///     The MidiEvent at the specified index.
-        /// </returns>
-        public MidiEvent GetMidiEvent(int index)
-        {
-            #region Require
+        Count++;
 
-            if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException(nameof(index), index,
-                    "Track index out of range.");
+        #region Invariant
 
-            #endregion
-
-            MidiEvent result;
-
-            if (index == Count - 1)
-            {
-                result = endOfTrackMidiEvent;
-            }
-            else
-            {
-                if (index < Count / 2)
-                {
-                    result = head;
-
-                    for (var i = 0; i < index; i++) result = result.Next;
-                }
-                else
-                {
-                    result = tail;
-
-                    for (var i = Count - 2; i > index; i--) result = result.Previous;
-                }
-            }
-
-            #region Ensure
-
-#if(DEBUG)
-            if(index == Count - 1)
-            {
-                Debug.Assert(result.AbsoluteTicks == Length);
-                Debug.Assert(result.MidiMessage == MetaMessage.EndOfTrackMessage);
-            }
-            else
-            {
-                MidiEvent t = head;
-
-                for(int i = 0; i < index; i++)
-                {
-                    t = t.Next;
-                }
-
-                Debug.Assert(t == result);
-            }
-#endif
-
-            #endregion
-
-            return result;
-        }
-
-        public void Move(MidiEvent e, int newPosition)
-        {
-            #region Require
-
-            if (e.Owner != this) throw new ArgumentException("MidiEvent does not belong to this Track.");
-
-            if (newPosition < 0) throw new ArgumentOutOfRangeException(nameof(newPosition));
-
-            if (e == endOfTrackMidiEvent)
-                throw new InvalidOperationException(
-                    "Cannot move end of track message. Use the EndOfTrackOffset property instead.");
-
-            #endregion
-
-            var previous = e.Previous;
-            var next = e.Next;
-
-            if (e.Previous != null && e.Previous.AbsoluteTicks > newPosition)
-            {
-                e.Previous.Next = e.Next;
-
-                if (e.Next != null) e.Next.Previous = e.Previous;
-
-                while (previous != null && previous.AbsoluteTicks > newPosition)
-                {
-                    next = previous;
-                    previous = previous.Previous;
-                }
-            }
-            else if (e.Next != null && e.Next.AbsoluteTicks < newPosition)
-            {
-                e.Next.Previous = e.Previous;
-
-                if (e.Previous != null) e.Previous.Next = e.Next;
-
-                while (next != null && next.AbsoluteTicks < newPosition)
-                {
-                    previous = next;
-                    next = next.Next;
-                }
-            }
-
-            if (previous != null) previous.Next = e;
-
-            if (next != null) next.Previous = e;
-
-            e.Previous = previous;
-            e.Next = next;
-            e.SetAbsoluteTicks(newPosition);
-
-            if (newPosition < head.AbsoluteTicks) head = e;
-
-            if (newPosition > tail.AbsoluteTicks) tail = e;
-
-            endOfTrackMidiEvent.SetAbsoluteTicks(Length);
-            endOfTrackMidiEvent.Previous = tail;
-
-            #region Invariant
-
-            AssertValid();
-
-            #endregion
-        }
-
-        [Conditional("MIDIDEBUG")]
-        private void AssertValid()
-        {
-            var c = 1;
-            var current = head;
-            var ticks = 1;
-
-            while (current != null)
-            {
-                ticks += current.DeltaTicks;
-
-                if (current.Previous != null)
-                {
-                    Debug.Assert(current.AbsoluteTicks >= current.Previous.AbsoluteTicks);
-                    Debug.Assert(current.DeltaTicks == current.AbsoluteTicks - current.Previous.AbsoluteTicks);
-                }
-
-                if (current.Next == null) Debug.Assert(tail == current);
-
-                current = current.Next;
-
-                c++;
-            }
-
-            ticks += EndOfTrackOffset;
-
-            Debug.Assert(ticks == Length, "Length mismatch");
-            Debug.Assert(c == Count, "Count mismatch");
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        ///     Gets the number of MidiEvents in the Track.
-        /// </summary>
-        public int Count { get; private set; } = 1;
-
-        /// <summary>
-        ///     Gets the length of the Track in ticks.
-        /// </summary>
-        public int Length
-        {
-            get
-            {
-                var length = EndOfTrackOffset;
-
-                if (tail != null) length += tail.AbsoluteTicks;
-
-                return length + 1;
-            }
-        }
-
-        /// <summary>
-        ///     Gets or sets the end of track meta message position offset.
-        /// </summary>
-        public int EndOfTrackOffset
-        {
-            get { return endOfTrackOffset; }
-            set
-            {
-                #region Require
-
-                if (value < 0)
-                    throw new ArgumentOutOfRangeException("EndOfTrackOffset", value,
-                        "End of track offset out of range.");
-
-                #endregion
-
-                endOfTrackOffset = value;
-
-                endOfTrackMidiEvent.SetAbsoluteTicks(Length);
-            }
-        }
-
-        /// <summary>
-        ///     Gets an object that can be used to synchronize access to the Track.
-        /// </summary>
-        public object SyncRoot => this;
-
-        public static bool Listen => true;
-
-        #endregion
+        AssertValid();
 
         #endregion
     }
+
+    /// <summary>
+    ///     Clears all of the MidiEvents, with the exception of the end of track
+    ///     message, from the Track.
+    /// </summary>
+    public void Clear()
+    {
+        head = tail = null;
+
+        Count = 1;
+
+        #region Invariant
+
+        AssertValid();
+
+        #endregion
+    }
+
+    /// <summary>
+    ///     Merges the specified Track with the current Track.
+    /// </summary>
+    /// <param name="trk">
+    ///     The Track to merge with.
+    /// </param>
+    public void Merge(Track trk)
+    {
+        #region Require
+
+        if (trk == null) throw new ArgumentNullException("trk");
+
+        #endregion
+
+        #region Guard
+
+        if (trk == this)
+            return;
+        if (trk.Count == 1) return;
+
+        #endregion
+
+#if(DEBUG)
+        var oldCount = Count;
+#endif
+
+        Count += trk.Count - 1;
+
+        var a = head;
+        var b = trk.head;
+        MidiEvent current = null;
+
+        Debug.Assert(b != null);
+
+        if (a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
+        {
+            current = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
+            a = a.Next;
+        }
+        else
+        {
+            current = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
+            b = b.Next;
+        }
+
+        head = current;
+
+        while (a != null && b != null)
+        {
+            while (a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
+            {
+                current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
+                current.Next.Previous = current;
+                current = current.Next;
+                a = a.Next;
+            }
+
+            if (a != null)
+                while (b != null && b.AbsoluteTicks <= a.AbsoluteTicks)
+                {
+                    current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
+                    current.Next.Previous = current;
+                    current = current.Next;
+                    b = b.Next;
+                }
+        }
+
+        while (a != null)
+        {
+            current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
+            current.Next.Previous = current;
+            current = current.Next;
+            a = a.Next;
+        }
+
+        while (b != null)
+        {
+            current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
+            current.Next.Previous = current;
+            current = current.Next;
+            b = b.Next;
+        }
+
+        tail = current;
+
+        endOfTrackMidiEvent.SetAbsoluteTicks(Length);
+        endOfTrackMidiEvent.Previous = tail;
+
+        #region Ensure
+
+#if(DEBUG)
+        Debug.Assert(Count == oldCount + trk.Count - 1);
+#endif
+
+        #endregion
+
+        #region Invariant
+
+        AssertValid();
+
+        #endregion
+    }
+
+    /// <summary>
+    ///     Removes the MidiEvent at the specified index.
+    /// </summary>
+    /// <param name="index">
+    ///     The index into the Track at which to remove the MidiEvent.
+    /// </param>
+    public void RemoveAt(int index)
+    {
+        #region Require
+
+        if (index < 0)
+            throw new ArgumentOutOfRangeException("index", index, "Track index out of range.");
+        if (index == Count - 1) throw new ArgumentException("Cannot remove the end of track event.", "index");
+
+        #endregion
+
+        var current = GetMidiEvent(index);
+
+        if (current.Previous != null)
+        {
+            current.Previous.Next = current.Next;
+        }
+        else
+        {
+            Debug.Assert(current == head);
+
+            head = head.Next;
+        }
+
+        if (current.Next != null)
+        {
+            current.Next.Previous = current.Previous;
+        }
+        else
+        {
+            Debug.Assert(current == tail);
+
+            tail = tail.Previous;
+
+            endOfTrackMidiEvent.SetAbsoluteTicks(Length);
+            endOfTrackMidiEvent.Previous = tail;
+        }
+
+        current.Next = current.Previous = null;
+
+        Count--;
+
+        #region Invariant
+
+        AssertValid();
+
+        #endregion
+    }
+
+    /// <summary>
+    ///     Gets the MidiEvent at the specified index.
+    /// </summary>
+    /// <param name="index">
+    ///     The index of the MidiEvent to get.
+    /// </param>
+    /// <returns>
+    ///     The MidiEvent at the specified index.
+    /// </returns>
+    public MidiEvent GetMidiEvent(int index)
+    {
+        #region Require
+
+        if (index < 0 || index >= Count)
+            throw new ArgumentOutOfRangeException("index", index,
+                "Track index out of range.");
+
+        #endregion
+
+        MidiEvent result;
+
+        if (index == Count - 1)
+        {
+            result = endOfTrackMidiEvent;
+        }
+        else
+        {
+            if (index < Count / 2)
+            {
+                result = head;
+
+                for (var i = 0; i < index; i++) result = result.Next;
+            }
+            else
+            {
+                result = tail;
+
+                for (var i = Count - 2; i > index; i--) result = result.Previous;
+            }
+        }
+
+        #region Ensure
+
+#if(DEBUG)
+        if (index == Count - 1)
+        {
+            Debug.Assert(result.AbsoluteTicks == Length);
+            Debug.Assert(result.MidiMessage == MetaMessage.EndOfTrackMessage);
+        }
+        else
+        {
+            var t = head;
+
+            for (var i = 0; i < index; i++) t = t.Next;
+
+            Debug.Assert(t == result);
+        }
+#endif
+
+        #endregion
+
+        return result;
+    }
+
+    public void Move(MidiEvent e, int newPosition)
+    {
+        #region Require
+
+        if (e.Owner != this)
+            throw new ArgumentException("MidiEvent does not belong to this Track.");
+        if (newPosition < 0)
+            throw new ArgumentOutOfRangeException("newPosition");
+        if (e == endOfTrackMidiEvent)
+            throw new InvalidOperationException(
+                "Cannot move end of track message. Use the EndOfTrackOffset property instead.");
+
+        #endregion
+
+        var previous = e.Previous;
+        var next = e.Next;
+
+        if (e.Previous != null && e.Previous.AbsoluteTicks > newPosition)
+        {
+            e.Previous.Next = e.Next;
+
+            if (e.Next != null) e.Next.Previous = e.Previous;
+
+            while (previous != null && previous.AbsoluteTicks > newPosition)
+            {
+                next = previous;
+                previous = previous.Previous;
+            }
+        }
+        else if (e.Next != null && e.Next.AbsoluteTicks < newPosition)
+        {
+            e.Next.Previous = e.Previous;
+
+            if (e.Previous != null) e.Previous.Next = e.Next;
+
+            while (next != null && next.AbsoluteTicks < newPosition)
+            {
+                previous = next;
+                next = next.Next;
+            }
+        }
+
+        if (previous != null) previous.Next = e;
+
+        if (next != null) next.Previous = e;
+
+        e.Previous = previous;
+        e.Next = next;
+        e.SetAbsoluteTicks(newPosition);
+
+        if (newPosition < head.AbsoluteTicks) head = e;
+
+        if (newPosition > tail.AbsoluteTicks) tail = e;
+
+        endOfTrackMidiEvent.SetAbsoluteTicks(Length);
+        endOfTrackMidiEvent.Previous = tail;
+
+        #region Invariant
+
+        AssertValid();
+
+        #endregion
+    }
+
+    [Conditional("MIDIDEBUG")]
+    private void AssertValid()
+    {
+        var c = 1;
+        var current = head;
+        var ticks = 1;
+
+        while (current != null)
+        {
+            ticks += current.DeltaTicks;
+
+            if (current.Previous != null)
+            {
+                Debug.Assert(current.AbsoluteTicks >= current.Previous.AbsoluteTicks);
+                Debug.Assert(current.DeltaTicks == current.AbsoluteTicks - current.Previous.AbsoluteTicks);
+            }
+
+            if (current.Next == null) Debug.Assert(tail == current);
+
+            current = current.Next;
+
+            c++;
+        }
+
+        ticks += EndOfTrackOffset;
+
+        Debug.Assert(ticks == Length, "Length mismatch");
+        Debug.Assert(c == Count, "Count mismatch");
+    }
+
+    #endregion
+
+    #region Properties
+
+    /// <summary>
+    ///     Gets the number of MidiEvents in the Track.
+    /// </summary>
+    public int Count { get; private set; } = 1;
+
+    /// <summary>
+    ///     Gets the length of the Track in ticks.
+    /// </summary>
+    public int Length
+    {
+        get
+        {
+            var length = EndOfTrackOffset;
+
+            if (tail != null) length += tail.AbsoluteTicks;
+
+            return length + 1;
+        }
+    }
+
+    /// <summary>
+    ///     Gets or sets the end of track meta message position offset.
+    /// </summary>
+    public int EndOfTrackOffset
+    {
+        get { return endOfTrackOffset; }
+        set
+        {
+            #region Require
+
+            if (value < 0)
+                throw new ArgumentOutOfRangeException("EndOfTrackOffset", value,
+                    "End of track offset out of range.");
+
+            #endregion
+
+            endOfTrackOffset = value;
+
+            endOfTrackMidiEvent.SetAbsoluteTicks(Length);
+        }
+    }
+
+    /// <summary>
+    ///     Gets an object that can be used to synchronize access to the Track.
+    /// </summary>
+    public object SyncRoot => this;
+
+    public bool Listen { set; get; } = true;
+
+    #endregion
+
+    #endregion
 }
