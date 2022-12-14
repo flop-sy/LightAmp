@@ -3,10 +3,10 @@
     <PropertyGroup>
         <ProjectGuid>{E8DAFE06-97DF-4B94-BE4A-EE29033495F8}</ProjectGuid>
         <OutputType>WinExe</OutputType>
-        <RootNamespace>UI</RootNamespace>
+        <RootNamespace>Ui</RootNamespace>
         <AssemblyName>LightAmp</AssemblyName>
         <TargetFramework>net481</TargetFramework>
-        <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
+        <Platforms>x64</Platforms>
         <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <OutputPath>bin\$(Configuration)\</OutputPath>
@@ -16,7 +16,6 @@
         <LangVersion>latest</LangVersion>
         <Configurations>Debug;Release</Configurations>
         <ApplicationIcon>iconp.ico</ApplicationIcon>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <PackageProjectUrl>https://bardmusicplayer.com</PackageProjectUrl>
         <RepositoryUrl>https://github.com/GiR-Zippo/LightAmp</RepositoryUrl>
@@ -33,7 +32,6 @@
         <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
         <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
         <EnableDefaultPageItems>false</EnableDefaultPageItems>
-        <Platforms>x64</Platforms>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
@@ -91,8 +89,8 @@
         <Compile Include="UI_Skinned\Settings\SettingsView.xaml.cs" DependentUpon="SettingsView.xaml"/>
         <Compile Include="UI_Skinned\Skinloader.cs"/>
         <Compile Include="MainWindow.xaml.cs" DependentUpon="MainWindow.xaml" SubType="Code"/>
-        <Compile Include="Properties\Resources.Designer.cs" AutoGen="True" DependentUpon="Resources.resx" DesignTime="True"/>
-        <Compile Include="Properties\Settings.Designer.cs" AutoGen="True" DependentUpon="Settings.settings" DesignTimeSharedInput="True"/>
+        <Compile Include="Properties\Resources.Designer.cs" AutoGen="True" DesignTime="True"/>
+        <Compile Include="Properties\Settings.Designer.cs" AutoGen="True" DesignTimeSharedInput="True"/>
 
         <Page Include="Controls\BardExtSettingsWindow.xaml" SubType="Designer" Generator="MSBuild:Compile"/>
         <Page Include="Controls\MacroEditWindow.xaml" SubType="Designer" Generator="MSBuild:Compile"/>
@@ -123,10 +121,6 @@
         <Page Include="UI_Skinned\Settings\SettingsView.xaml" SubType="Designer" Generator="MSBuild:Compile"/>
         <Page Include="UI_Skinned\Playlist\Skinned_PlaylistView.xaml" SubType="Designer" Generator="MSBuild:Compile"/>
         <Page Include="UI_Skinned\SongBrowserWindow\SongbrowserWindow.xaml" SubType="Designer" Generator="MSBuild:Compile"/>
-
-        <None Include="App.config"/>
-        <None Include="Properties\Settings.settings" Generator="SettingsSingleFileGenerator" LastGenOutput="Settings.Designer.cs"/>
-        <EmbeddedResource Include="Properties\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs"/>
     </ItemGroup>
 
     <ItemGroup>
