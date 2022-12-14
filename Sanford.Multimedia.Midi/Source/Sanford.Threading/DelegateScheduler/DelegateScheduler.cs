@@ -329,7 +329,7 @@ public class DelegateScheduler : IComponent
                 queue.Dequeue();
 
                 // While it's time for the task to run.
-                while ((tk.Count == Infinite || tk.Count > 0) && tk.NextTimeout <= e.SignalTime)
+                while (tk.Count is Infinite or > 0 && tk.NextTimeout <= e.SignalTime)
                     try
                     {
                         Debug.WriteLine("Invoking delegate.");
@@ -356,7 +356,7 @@ public class DelegateScheduler : IComponent
                     }
 
                 // If this task should run again.
-                if (tk.Count == Infinite || tk.Count > 0)
+                if (tk.Count is Infinite or > 0)
                     // Enqueue task back into priority queue.
                     queue.Enqueue(tk);
 

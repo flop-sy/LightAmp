@@ -49,6 +49,7 @@ public sealed class GP6File : GPFile
                 var length = bs.GetBitsLE(wordSize);
                 var sourcePosition = data.Count - offset;
                 if (sourcePosition < 0) break;
+
                 var to_read = Math.Min(length, offset);
                 for (var r = sourcePosition; r < sourcePosition + to_read; r++) data.Add(data[r]);
             }
@@ -91,20 +92,22 @@ public sealed class GP6File : GPFile
 
     public static GP5File GP6NodeToGP5File(Node node) //node = GPIF tag
     {
-        var file = new GP5File(new byte[] { });
-        file.version = "GUITAR PRO 6.0";
-        file.versionTuple = new[] { 6, 0 };
-        //set direct members of song:
-        file.title = node.getSubnodeByName("Score", true).subnodes[0].content;
-        file.subtitle = node.getSubnodeByName("Score").subnodes[1].content;
-        file.interpret = node.getSubnodeByName("Score").subnodes[2].content;
-        file.album = node.getSubnodeByName("Score").subnodes[3].content;
-        file.words = node.getSubnodeByName("Score").subnodes[4].content;
-        file.music = node.getSubnodeByName("Score").subnodes[5].content;
-        file.copyright = node.getSubnodeByName("Score").subnodes[7].content;
-        file.tab_author = node.getSubnodeByName("Score").subnodes[8].content;
-        file.instructional = node.getSubnodeByName("Score").subnodes[9].content;
-        file.notice = node.getSubnodeByName("Score").subnodes[10].content.Split('\n'); //?
+        var file = new GP5File(new byte[] { })
+        {
+            version = "GUITAR PRO 6.0",
+            versionTuple = new[] { 6, 0 },
+            //set direct members of song:
+            title = node.getSubnodeByName("Score", true).subnodes[0].content,
+            subtitle = node.getSubnodeByName("Score").subnodes[1].content,
+            interpret = node.getSubnodeByName("Score").subnodes[2].content,
+            album = node.getSubnodeByName("Score").subnodes[3].content,
+            words = node.getSubnodeByName("Score").subnodes[4].content,
+            music = node.getSubnodeByName("Score").subnodes[5].content,
+            copyright = node.getSubnodeByName("Score").subnodes[7].content,
+            tab_author = node.getSubnodeByName("Score").subnodes[8].content,
+            instructional = node.getSubnodeByName("Score").subnodes[9].content,
+            notice = node.getSubnodeByName("Score").subnodes[10].content.Split('\n') //?
+        };
 
         //Page Layout
         var nPageLayout = node.getSubnodeByName("Score", true).getSubnodeByName("PageSetup", true);
@@ -183,11 +186,9 @@ public sealed class GP6File : GPFile
 
             _bar.voices = new List<Voice>();
 
-            foreach (var voice in voices)
-            {
-                var voiceParsed = int.Parse(voice, CultureInfo.InvariantCulture);
-                if (voiceParsed >= 0) _bar.voices.Add(transferVoice(node, voiceParsed, _bar));
-            }
+            foreach (var voiceParsed in voices.Select(static voice => int.Parse(voice, CultureInfo.InvariantCulture))
+                         .Where(static voiceParsed => voiceParsed >= 0))
+                _bar.voices.Add(transferVoice(node, voiceParsed, _bar));
 
             song.tracks[(cnt - 1) % song.trackCount].addMeasure(_bar);
         }
@@ -254,8 +255,10 @@ public sealed class GP6File : GPFile
         var nNotes = nBeat.getSubnodeByName("Notes");
         beat.notes = new List<Note>();
         beat.voice = voice;
-        beat.effect = new BeatEffect();
-        beat.effect.mixTableChange = new MixTableChange();
+        beat.effect = new BeatEffect
+        {
+            mixTableChange = new MixTableChange()
+        };
 
 
         //Beat Duration
@@ -357,8 +360,10 @@ public sealed class GP6File : GPFile
         {
             var direction = nArpeggio.content;
             var bsd = direction.Equals("Up") ? BeatStrokeDirection.up : BeatStrokeDirection.down;
-            beat.effect.stroke = new BeatStroke();
-            beat.effect.stroke.direction = bsd;
+            beat.effect.stroke = new BeatStroke
+            {
+                direction = bsd
+            };
             searchArpeggioParams = true;
         }
 
@@ -390,8 +395,10 @@ public sealed class GP6File : GPFile
                     {
                         var direction = nProperty.subnodes[0].content;
                         var bsd = direction.Equals("Up") ? BeatStrokeDirection.up : BeatStrokeDirection.down;
-                        beat.effect.stroke = new BeatStroke();
-                        beat.effect.stroke.direction = bsd;
+                        beat.effect.stroke = new BeatStroke
+                        {
+                            direction = bsd
+                        };
                         searchBrushParams = true; //search in Xproperty
                         break;
                     }
@@ -447,12 +454,16 @@ public sealed class GP6File : GPFile
                 }
 
                 if (whammyBarMiddleOffset2 == -1.0f) whammyBarMiddleOffset2 = whammyBarMiddleOffset1;
-                beat.effect.tremoloBar = new BendEffect();
-                beat.effect.tremoloBar.type = BendType.none; //Not defined in GP6
-                beat.effect.tremoloBar.points = new List<BendPoint>();
+                beat.effect.tremoloBar = new BendEffect
+                {
+                    type = BendType.none, //Not defined in GP6
+                    points = new List<BendPoint>
+                    {
+                        new(0.0f, whammyBarOriginValue),
+                        new(whammyBarOriginOffset, whammyBarOriginValue)
+                    }
+                };
 
-                beat.effect.tremoloBar.points.Add(new BendPoint(0.0f, whammyBarOriginValue));
-                beat.effect.tremoloBar.points.Add(new BendPoint(whammyBarOriginOffset, whammyBarOriginValue));
                 //Peak or Valley
                 if ((whammyBarMiddleValue - whammyBarOriginValue) * (whammyBarDestinationValue - whammyBarMiddleValue) <
                     0)
@@ -469,9 +480,11 @@ public sealed class GP6File : GPFile
         var nWhammy = nBeat.getSubnodeByName("Whammy", true);
         if (nWhammy != null)
         {
-            beat.effect.tremoloBar = new BendEffect();
-            beat.effect.tremoloBar.type = BendType.none; //Not defined in GP6
-            beat.effect.tremoloBar.points = new List<BendPoint>();
+            beat.effect.tremoloBar = new BendEffect
+            {
+                type = BendType.none, //Not defined in GP6
+                points = new List<BendPoint>()
+            };
             var originValue = float.Parse(nWhammy.propertyValues[0], CultureInfo.InvariantCulture);
             var middleValue = float.Parse(nWhammy.propertyValues[1], CultureInfo.InvariantCulture);
             var destinationValue = float.Parse(nWhammy.propertyValues[2], CultureInfo.InvariantCulture);
@@ -518,12 +531,12 @@ public sealed class GP6File : GPFile
         }
 
         if (nBeat.getSubnodeByName("Wah") != null)
-        {
-            beat.effect.mixTableChange.wah = new WahEffect();
-            beat.effect.mixTableChange.wah.state = nBeat.getSubnodeByName("Wah").content.Equals("Open")
-                ? WahState.opened
-                : WahState.closed;
-        }
+            beat.effect.mixTableChange.wah = new WahEffect
+            {
+                state = nBeat.getSubnodeByName("Wah").content.Equals("Open")
+                    ? WahState.opened
+                    : WahState.closed
+            };
 
         GraceEffect graceEffect = null; //Stay null if there is none
         var nGraceEffect = nBeat.getSubnodeByName("GraceNotes");
@@ -738,9 +751,11 @@ public sealed class GP6File : GPFile
         if (nTrill != null)
         {
             var secondNote = int.Parse(nTrill.content, CultureInfo.InvariantCulture);
-            note.effect.trill = new TrillEffect();
-            note.effect.trill.fret = secondNote;
-            note.effect.trill.duration = new Duration(trillLength);
+            note.effect.trill = new TrillEffect
+            {
+                fret = secondNote,
+                duration = new Duration(trillLength)
+            };
         }
 
         var nVibrato = nNote.getSubnodeByName("Vibrato");
@@ -763,9 +778,11 @@ public sealed class GP6File : GPFile
 
         if (!tremolo.Equals(""))
         {
-            note.effect.tremoloPicking = new TremoloPickingEffect();
-            //1/2 = 8th, 1/4 = 16ths, 1/8 = 32nds
-            note.effect.tremoloPicking.duration = new Duration();
+            note.effect.tremoloPicking = new TremoloPickingEffect
+            {
+                //1/2 = 8th, 1/4 = 16ths, 1/8 = 32nds
+                duration = new Duration()
+            };
             note.effect.tremoloPicking.duration.value = tremolo switch
             {
                 "1/2" => 8,
@@ -817,19 +834,20 @@ public sealed class GP6File : GPFile
     {
         var ret_val = new List<GP6Chord>();
         var tcnt = 0;
-        foreach (var nDiagrams in nTracks.subnodes.Select(nTrack => nTrack.getSubnodeByName("Properties"))
-                     .Select(nProperties => nProperties?.getSubnodeByProperty("name", "DiagramCollection")))
+        foreach (var nDiagrams in nTracks.subnodes.Select(static nTrack => nTrack.getSubnodeByName("Properties"))
+                     .Select(static nProperties => nProperties?.getSubnodeByProperty("name", "DiagramCollection")))
         {
             if (nDiagrams != null)
             {
                 var nItems = nDiagrams.getSubnodeByName("Items");
                 var chordcnt = 0;
-                foreach (var Item in nItems.subnodes)
+                foreach (var chord in nItems.subnodes.Select(Item => new GP6Chord
+                         {
+                             id = chordcnt,
+                             forTrack = tcnt,
+                             name = Item.propertyValues[1]
+                         }))
                 {
-                    var chord = new GP6Chord();
-                    chord.id = chordcnt;
-                    chord.forTrack = tcnt;
-                    chord.name = Item.propertyValues[1];
                     //Here I can later parse the chord picture
                     ret_val.Add(chord);
                     chordcnt++;
@@ -878,8 +896,10 @@ public sealed class GP6File : GPFile
         var cnt = 0;
         foreach (var nTrack in nTracks.subnodes)
         {
-            var _track = new Track(song, cnt++);
-            _track.name = nTrack.getSubnodeByName("Name").content;
+            var _track = new Track(song, cnt++)
+            {
+                name = nTrack.getSubnodeByName("Name").content
+            };
             var colors = nTrack.getSubnodeByName("Color").content.Split(' ');
             _track.color = new myColor(int.Parse(colors[0]), int.Parse(colors[1]),
                 int.Parse(colors[2], CultureInfo.InvariantCulture));
@@ -1008,8 +1028,10 @@ public sealed class GP6File : GPFile
             var timeSig = nMasterBar.getSubnodeByName("Time", true).content.Split('/');
 
             _measureHeader.timeSignature.numerator = int.Parse(timeSig[0], CultureInfo.InvariantCulture);
-            _measureHeader.timeSignature.denominator = new Duration();
-            _measureHeader.timeSignature.denominator.value = int.Parse(timeSig[1], CultureInfo.InvariantCulture);
+            _measureHeader.timeSignature.denominator = new Duration
+            {
+                value = int.Parse(timeSig[1], CultureInfo.InvariantCulture)
+            };
 
             _measureHeader.tripletFeel = TripletFeel.none;
             if (nMasterBar.getSubnodeByName("TripletFeel", true) != null)
@@ -1046,6 +1068,7 @@ public sealed class GP6File : GPFile
     {
         var ret_val = new List<string>();
         if (nDirections == null) return ret_val;
+
         ret_val.AddRange(from nElement in nDirections.subnodes
             where nElement.name.Equals("Target")
             select nElement.content);
@@ -1056,6 +1079,7 @@ public sealed class GP6File : GPFile
     {
         var ret_val = new List<string>();
         if (nDirections == null) return ret_val;
+
         ret_val.AddRange(from nElement in nDirections.subnodes
             where nElement.name.Equals("Jump")
             select nElement.content);
@@ -1066,18 +1090,18 @@ public sealed class GP6File : GPFile
     {
         var ret_val = new List<Lyrics>();
         if (nTracks == null) return ret_val;
+
         foreach (var nTrack in nTracks.subnodes)
         {
             var nLyrics = nTrack.getSubnodeByName("Lyrics");
             var lyrics = new Lyrics();
             var cnt = 0;
-            foreach (var nLine in nLyrics.subnodes)
-            {
-                var _line = new LyricLine();
-                _line.lyrics = nLine.subnodes[0].content;
-                _line.startingMeasure = int.Parse(nLine.subnodes[1].content, CultureInfo.InvariantCulture);
+            foreach (var _line in nLyrics.subnodes.Select(static nLine => new LyricLine
+                     {
+                         lyrics = nLine.subnodes[0].content,
+                         startingMeasure = int.Parse(nLine.subnodes[1].content, CultureInfo.InvariantCulture)
+                     }))
                 lyrics.lines[cnt++] = _line;
-            }
 
             ret_val.Add(lyrics);
         }
@@ -1117,7 +1141,7 @@ public sealed class GP6File : GPFile
         //Parse all Tags
         for (var x = 1; x < split.Length; x++)
         {
-            if (split[x].StartsWith("/"))
+            if (split[x].StartsWith("/", StringComparison.Ordinal))
             {
                 //Closes a tag.
                 openTags--;
@@ -1128,7 +1152,7 @@ public sealed class GP6File : GPFile
                 continue;
             }
 
-            if (split[x].StartsWith("!["))
+            if (split[x].StartsWith("![", StringComparison.Ordinal))
                 //normal string value encased in ![CDATA[ and ]]>
                 //Already dealt with below (as content value of previous normal tag)
                 continue;
@@ -1136,6 +1160,7 @@ public sealed class GP6File : GPFile
             //Is normal Tag (might have parameters in tag and might be closed with />
             var endOfTag = split[x].IndexOf(">", StringComparison.Ordinal);
             if (endOfTag == -1) break; //File Error
+
             var sb = new StringBuilder();
             var firstSpace = split[x].IndexOf(' ');
             var firstSlash = split[x].IndexOf('/');
@@ -1202,7 +1227,7 @@ public sealed class GP6File : GPFile
             //Collect values outside of tag
             var finalValue = "";
             if (x < split.Length - 1)
-                finalValue = split[x + 1].StartsWith("![")
+                finalValue = split[x + 1].StartsWith("![", StringComparison.Ordinal)
                     ? split[x + 1].Substring(8, split[x + 1].LastIndexOf("]]>", StringComparison.Ordinal) - 8)
                     : split[x].Substring(endOfTag + 1);
 
@@ -1215,14 +1240,14 @@ public sealed class GP6File : GPFile
 
 //XML Classes
 
-public class GP6Chord
+public sealed class GP6Chord
 {
     public int forTrack;
     public int id;
     public string name = ""; //Values of this are found in Score->Properties->Property(DiagramCollection)
 }
 
-public class GP6Rhythm
+public sealed class GP6Rhythm
 {
     public int augmentationDots; //0, 1 or 2
     public int id;
@@ -1235,13 +1260,15 @@ public class GP6Rhythm
         this.noteValue = noteValue;
         this.augmentationDots = augmentationDots;
 
-        primaryTuplet = new Tuplet();
-        primaryTuplet.enters = n;
-        primaryTuplet.times = m;
+        primaryTuplet = new Tuplet
+        {
+            enters = n,
+            times = m
+        };
     }
 }
 
-public class GP6Tempo
+public sealed class GP6Tempo
 {
     public int bar;
     public bool linear;
@@ -1264,7 +1291,7 @@ public class GP6Tempo
     }
 }
 
-public class Node
+public sealed class Node
 {
     public string content;
     public string name = "";
@@ -1301,6 +1328,7 @@ public class Node
             }
 
             if (!found) continue;
+
             if (n.propertyValues[cnt].Equals(property)) return n;
         }
 
@@ -1310,10 +1338,11 @@ public class Node
     public Node getSubnodeByName(string name, bool directOnly = false)
     {
         if (this.name.Equals(name)) return this;
+
         return directOnly
             ? //Only search the direct children
             subnodes.FirstOrDefault(n => n.name.Equals(name))
-            : subnodes.Select(n => n.getSubnodeByName(name)).FirstOrDefault(sub => sub != null);
+            : subnodes.Select(n => n.getSubnodeByName(name)).FirstOrDefault(static sub => sub != null);
     }
 }
 
@@ -1563,7 +1592,7 @@ public class Node
 
 */
 
-public class BitStream
+public sealed class BitStream
 {
     private static readonly int[] powers_rev = { 128, 64, 32, 16, 8, 4, 2, 1 };
     private static readonly int[] powers = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024 };
@@ -1582,6 +1611,7 @@ public class BitStream
     public bool GetBit()
     {
         if (finished) return false;
+
         var ret_val = (data[pointer] >> (7 - subpointer)) % 2 == 1;
         increase_subpointer();
         return ret_val;

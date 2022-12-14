@@ -60,7 +60,7 @@ public static class MidiNoteConverter
     {
         #region Require
 
-        if (noteID < NoteIDMinValue || noteID > NoteIDMaxValue)
+        if (noteID is < NoteIDMinValue or > NoteIDMaxValue)
             throw new ArgumentOutOfRangeException("Note ID out of range.");
 
         #endregion
@@ -96,7 +96,7 @@ public static class MidiNoteConverter
         }
 
         // If the note is not the first or last note, narrow the results.
-        if (noteID <= 0 || noteID >= NoteIDMaxValue) return noteID;
+        if (noteID is <= 0 or >= NoteIDMaxValue) return noteID;
         // Get the frequency of the previous note.
         var previousFrequncy = NoteToFrequency(noteID - 1);
         // Get the frequency of the next note.

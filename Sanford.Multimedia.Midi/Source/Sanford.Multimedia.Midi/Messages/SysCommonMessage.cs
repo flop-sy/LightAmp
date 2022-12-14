@@ -158,7 +158,7 @@ public sealed class SysCommonMessage : ShortMessage
     {
         #region Guard
 
-        if (!(obj is SysCommonMessage commonMessage)) return false;
+        if (obj is not SysCommonMessage commonMessage) return false;
 
         #endregion
 

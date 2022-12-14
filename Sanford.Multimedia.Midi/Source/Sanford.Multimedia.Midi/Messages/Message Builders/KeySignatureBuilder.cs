@@ -233,131 +233,45 @@ public class KeySignatureBuilder : IMessageBuilder
 
         // If the key is major.
         if (message[1] == 0)
-            switch (b)
+            Key = b switch
             {
-                case -7:
-                    Key = Key.CFlatMajor;
-                    break;
-
-                case -6:
-                    Key = Key.GFlatMajor;
-                    break;
-
-                case -5:
-                    Key = Key.DFlatMajor;
-                    break;
-
-                case -4:
-                    Key = Key.AFlatMajor;
-                    break;
-
-                case -3:
-                    Key = Key.EFlatMajor;
-                    break;
-
-                case -2:
-                    Key = Key.BFlatMajor;
-                    break;
-
-                case -1:
-                    Key = Key.FMajor;
-                    break;
-
-                case 0:
-                    Key = Key.CMajor;
-                    break;
-
-                case 1:
-                    Key = Key.GMajor;
-                    break;
-
-                case 2:
-                    Key = Key.DMajor;
-                    break;
-
-                case 3:
-                    Key = Key.AMajor;
-                    break;
-
-                case 4:
-                    Key = Key.EMajor;
-                    break;
-
-                case 5:
-                    Key = Key.BMajor;
-                    break;
-
-                case 6:
-                    Key = Key.FSharpMajor;
-                    break;
-
-                case 7:
-                    Key = Key.CSharpMajor;
-                    break;
-            }
+                -7 => Key.CFlatMajor,
+                -6 => Key.GFlatMajor,
+                -5 => Key.DFlatMajor,
+                -4 => Key.AFlatMajor,
+                -3 => Key.EFlatMajor,
+                -2 => Key.BFlatMajor,
+                -1 => Key.FMajor,
+                0 => Key.CMajor,
+                1 => Key.GMajor,
+                2 => Key.DMajor,
+                3 => Key.AMajor,
+                4 => Key.EMajor,
+                5 => Key.BMajor,
+                6 => Key.FSharpMajor,
+                7 => Key.CSharpMajor,
+                _ => Key
+            };
         // Else the key is minor.
         else
-            switch (b)
+            Key = b switch
             {
-                case -7:
-                    Key = Key.AFlatMinor;
-                    break;
-
-                case -6:
-                    Key = Key.EFlatMinor;
-                    break;
-
-                case -5:
-                    Key = Key.BFlatMinor;
-                    break;
-
-                case -4:
-                    Key = Key.FMinor;
-                    break;
-
-                case -3:
-                    Key = Key.CMinor;
-                    break;
-
-                case -2:
-                    Key = Key.GMinor;
-                    break;
-
-                case -1:
-                    Key = Key.DMinor;
-                    break;
-
-                case 0:
-                    Key = Key.AMinor;
-                    break;
-
-                case 1:
-                    Key = Key.EMinor;
-                    break;
-
-                case 2:
-                    Key = Key.BMinor;
-                    break;
-
-                case 3:
-                    Key = Key.FSharpMinor;
-                    break;
-
-                case 4:
-                    Key = Key.CSharpMinor;
-                    break;
-
-                case 5:
-                    Key = Key.GSharpMinor;
-                    break;
-
-                case 6:
-                    Key = Key.DSharpMinor;
-                    break;
-
-                case 7:
-                    Key = Key.ASharpMinor;
-                    break;
-            }
+                -7 => Key.AFlatMinor,
+                -6 => Key.EFlatMinor,
+                -5 => Key.BFlatMinor,
+                -4 => Key.FMinor,
+                -3 => Key.CMinor,
+                -2 => Key.GMinor,
+                -1 => Key.DMinor,
+                0 => Key.AMinor,
+                1 => Key.EMinor,
+                2 => Key.BMinor,
+                3 => Key.FSharpMinor,
+                4 => Key.CSharpMinor,
+                5 => Key.GSharpMinor,
+                6 => Key.DSharpMinor,
+                7 => Key.ASharpMinor,
+                _ => Key
+            };
     }
 }

@@ -121,9 +121,8 @@ internal sealed class TrackReader
     private void ParseMessage()
     {
         // If this is a channel message.
-        if (status >= (int)ChannelCommand.NoteOff &&
-            status <= (int)ChannelCommand.PitchWheel +
-            ChannelMessage.MidiChannelMaxValue)
+        if (status is >= (int)ChannelCommand.NoteOff and <= (int)ChannelCommand.PitchWheel +
+                                                            ChannelMessage.MidiChannelMaxValue)
             ParseChannelMessage();
         else
             switch (status)
@@ -143,13 +142,16 @@ internal sealed class TrackReader
                 // Else if this is a system common message.
                 default:
                 {
-                    if (status >= (int)SysCommonType.MidiTimeCode &&
-                        status <= (int)SysCommonType.TuneRequest)
-                        ParseSysCommonMessage();
-                    // Else if this is a system realtime message.
-                    else if (status >= (int)SysRealtimeType.Clock &&
-                             status <= (int)SysRealtimeType.Reset)
-                        ParseSysRealtimeMessage();
+                    switch (status)
+                    {
+                        case >= (int)SysCommonType.MidiTimeCode and <= (int)SysCommonType.TuneRequest:
+                            ParseSysCommonMessage();
+                            break;
+                        // Else if this is a system realtime message.
+                        case >= (int)SysRealtimeType.Clock and <= (int)SysRealtimeType.Reset:
+                            ParseSysRealtimeMessage();
+                            break;
+                    }
 
                     break;
                 }
@@ -294,38 +296,17 @@ internal sealed class TrackReader
 
     private void ParseSysRealtimeMessage()
     {
-        SysRealtimeMessage e = null;
-
-        switch ((SysRealtimeType)status)
+        var e = (SysRealtimeType)status switch
         {
-            case SysRealtimeType.ActiveSense:
-                e = SysRealtimeMessage.ActiveSenseMessage;
-                break;
-
-            case SysRealtimeType.Clock:
-                e = SysRealtimeMessage.ClockMessage;
-                break;
-
-            case SysRealtimeType.Continue:
-                e = SysRealtimeMessage.ContinueMessage;
-                break;
-
-            case SysRealtimeType.Reset:
-                e = SysRealtimeMessage.ResetMessage;
-                break;
-
-            case SysRealtimeType.Start:
-                e = SysRealtimeMessage.StartMessage;
-                break;
-
-            case SysRealtimeType.Stop:
-                e = SysRealtimeMessage.StopMessage;
-                break;
-
-            case SysRealtimeType.Tick:
-                e = SysRealtimeMessage.TickMessage;
-                break;
-        }
+            SysRealtimeType.ActiveSense => SysRealtimeMessage.ActiveSenseMessage,
+            SysRealtimeType.Clock => SysRealtimeMessage.ClockMessage,
+            SysRealtimeType.Continue => SysRealtimeMessage.ContinueMessage,
+            SysRealtimeType.Reset => SysRealtimeMessage.ResetMessage,
+            SysRealtimeType.Start => SysRealtimeMessage.StartMessage,
+            SysRealtimeType.Stop => SysRealtimeMessage.StopMessage,
+            SysRealtimeType.Tick => SysRealtimeMessage.TickMessage,
+            _ => null
+        };
 
         newTrack.Insert(ticks, e);
     }

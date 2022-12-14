@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using BardMusicPlayer.Quotidian;
 using BardMusicPlayer.Siren.AlphaTab;
 using BardMusicPlayer.Siren.AlphaTab.Audio.Synth;
-using BardMusicPlayer.Siren.AlphaTab.Audio.Synth.Midi;
 using BardMusicPlayer.Siren.AlphaTab.Util;
 using BardMusicPlayer.Siren.Properties;
 using BardMusicPlayer.Transmogrify.Song;
@@ -145,8 +144,7 @@ public sealed class BmpSiren
         if (!IsReady) throw new BmpException("Siren not initialized.");
 
         if (_player.State == PlayerState.Playing) _player.Stop();
-        MidiFile midiFile;
-        (midiFile, _lyrics) = await song.GetSynthMidi();
+        (var midiFile, _lyrics) = await song.GetSynthMidi();
         _lyricIndex = 0;
         _player.LoadMidiFile(midiFile);
         CurrentSongTitle = song.Title;

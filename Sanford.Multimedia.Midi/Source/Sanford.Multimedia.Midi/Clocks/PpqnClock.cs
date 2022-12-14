@@ -103,7 +103,7 @@ public abstract class PpqnClock : IClock
     {
         #region Require
 
-        if (speed < 0.1f || speed > 5.0f)
+        if (speed is < 0.1f or > 5.0f)
             throw new ArgumentOutOfRangeException(
                 "Tempo speed out of range.");
 

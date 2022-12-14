@@ -572,7 +572,7 @@ public class SkipList : IDictionary
         IList<Node> update)
     {
         // Make sure key is comparable.
-        if (!(key is IComparable))
+        if (key is not IComparable)
             throw new ArgumentException(
                 "The SkipList was set to use the IComparable interface and an attempt was made to add a key that does not support this interface.");
 

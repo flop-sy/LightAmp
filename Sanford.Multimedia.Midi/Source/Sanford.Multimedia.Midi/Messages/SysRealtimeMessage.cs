@@ -144,7 +144,7 @@ public sealed class SysRealtimeMessage : ShortMessage
     {
         #region Guard
 
-        if (!(obj is SysRealtimeMessage realtimeMessage)) return false;
+        if (obj is not SysRealtimeMessage realtimeMessage) return false;
 
         #endregion
 

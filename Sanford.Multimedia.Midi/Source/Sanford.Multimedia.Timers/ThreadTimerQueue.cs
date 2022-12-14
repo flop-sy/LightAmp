@@ -23,7 +23,7 @@ internal sealed class ThreadTimerQueue
     {
     }
 
-    public static ThreadTimerQueue Instance => instance ?? (instance = new ThreadTimerQueue());
+    public static ThreadTimerQueue Instance => instance ??= new ThreadTimerQueue();
 
     public void Add(ThreadTimer timer)
     {
@@ -116,7 +116,7 @@ internal sealed class ThreadTimerQueue
 
         public int CompareTo(object obj)
         {
-            if (!(obj is Tick r)) return -1;
+            if (obj is not Tick r) return -1;
 
             return Time.CompareTo(r.Time);
         }

@@ -83,7 +83,7 @@ internal sealed class RalTreeNode
     }
 
     // Recursive method for getting the value at the specified position.
-    private object GetValue(int index, RalTreeNode node)
+    private static object GetValue(int index, RalTreeNode node)
     {
         object result;
 

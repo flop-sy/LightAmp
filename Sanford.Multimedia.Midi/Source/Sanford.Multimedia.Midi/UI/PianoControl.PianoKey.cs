@@ -1,12 +1,3 @@
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
-
 #region
 
 using System;
@@ -21,12 +12,11 @@ public partial class PianoControl
 {
     private sealed class PianoKey : Control
     {
-        private int noteID = 60;
-
         private readonly SolidBrush offBrush = new(Color.White);
 
         private readonly SolidBrush onBrush = new(Color.SkyBlue);
         private readonly PianoControl owner;
+        private int noteID = 60;
 
         public PianoKey(PianoControl owner)
         {
@@ -63,7 +53,7 @@ public partial class PianoControl
             {
                 #region Require
 
-                if (value >= 0 && value <= ShortMessage.DataMaxValue)
+                if (value is >= 0 and <= ShortMessage.DataMaxValue)
                     noteID = value;
                 else
                     throw new ArgumentOutOfRangeException("NoteID", noteID,

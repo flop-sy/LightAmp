@@ -161,7 +161,7 @@ public class TimeSignatureBuilder : IMessageBuilder
         {
             #region Require
 
-            if (value < 2 || value > 32)
+            if (value is < 2 or > 32)
                 throw new ArgumentOutOfRangeException("Denominator must be between 2 and 32.");
 
             if ((value & (value - 1)) != 0) throw new ArgumentException("Denominator must be a power of 2.");

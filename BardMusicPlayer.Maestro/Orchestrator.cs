@@ -38,7 +38,7 @@ public struct TitleParsingHelper
 /// </summary>
 public sealed class Orchestrator : IDisposable
 {
-    private readonly Timer _addPushedbackGamesTimer = null!;
+    private readonly Timer _addPushedbackGamesTimer;
     private CancellationTokenSource _updaterTokenSource;
 
     /// <summary>

@@ -1,12 +1,3 @@
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
-
 #region
 
 using System;
@@ -55,6 +46,10 @@ public partial class PianoControl : Control
         KeyType.White
     };
 
+    private readonly NoteMessageCallback noteOffCallback;
+
+    private readonly NoteMessageCallback noteOnCallback;
+
     private SynchronizationContext context;
 
     private int highNoteID = DefaultHighNoteID;
@@ -62,10 +57,6 @@ public partial class PianoControl : Control
     private PianoKey[] keys;
 
     private int lowNoteID = DefaultLowNoteID;
-
-    private readonly NoteMessageCallback noteOffCallback;
-
-    private readonly NoteMessageCallback noteOnCallback;
 
     private Color noteOnColor = Color.SkyBlue;
 
@@ -119,7 +110,7 @@ public partial class PianoControl : Control
         {
             #region Require
 
-            if (value < 0 || value > ShortMessage.DataMaxValue)
+            if (value is < 0 or > ShortMessage.DataMaxValue)
                 throw new ArgumentOutOfRangeException("LowNoteID", value,
                     "Low note ID out of range.");
 
@@ -147,7 +138,7 @@ public partial class PianoControl : Control
         {
             #region Require
 
-            if (value < 0 || value > ShortMessage.DataMaxValue)
+            if (value is < 0 or > ShortMessage.DataMaxValue)
                 throw new ArgumentOutOfRangeException("HighNoteID", value,
                     "High note ID out of range.");
 
@@ -344,39 +335,20 @@ public partial class PianoControl : Control
         }
         else
         {
-            switch (k)
+            octaveOffset = k switch
             {
-                case Keys.D0:
-                    octaveOffset = 0;
-                    break;
-                case Keys.D1:
-                    octaveOffset = 1;
-                    break;
-                case Keys.D2:
-                    octaveOffset = 2;
-                    break;
-                case Keys.D3:
-                    octaveOffset = 3;
-                    break;
-                case Keys.D4:
-                    octaveOffset = 4;
-                    break;
-                case Keys.D5:
-                    octaveOffset = 5;
-                    break;
-                case Keys.D6:
-                    octaveOffset = 6;
-                    break;
-                case Keys.D7:
-                    octaveOffset = 7;
-                    break;
-                case Keys.D8:
-                    octaveOffset = 8;
-                    break;
-                case Keys.D9:
-                    octaveOffset = 9;
-                    break;
-            }
+                Keys.D0 => 0,
+                Keys.D1 => 1,
+                Keys.D2 => 2,
+                Keys.D3 => 3,
+                Keys.D4 => 4,
+                Keys.D5 => 5,
+                Keys.D6 => 6,
+                Keys.D7 => 7,
+                Keys.D8 => 8,
+                Keys.D9 => 9,
+                _ => octaveOffset
+            };
         }
     }
 

@@ -1,12 +1,3 @@
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
-
 #region
 
 using System;

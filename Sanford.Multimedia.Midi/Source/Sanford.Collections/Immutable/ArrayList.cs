@@ -377,7 +377,7 @@ public class ArrayList
         return result;
     }
 
-    private IAvlNode CollectionToTree(IEnumerator enumerator, int height)
+    private static IAvlNode CollectionToTree(IEnumerator enumerator, int height)
     {
         IAvlNode result;
 
@@ -464,7 +464,7 @@ public class ArrayList
     }
 
     // Recursive SetValue helper method.
-    private IAvlNode SetValue(int index, object value, IAvlNode node)
+    private static IAvlNode SetValue(int index, object value, IAvlNode node)
     {
         // Preconditions.
         Debug.Assert(index >= 0 && index < node.Count);

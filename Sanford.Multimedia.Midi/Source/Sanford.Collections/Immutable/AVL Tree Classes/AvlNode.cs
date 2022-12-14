@@ -270,7 +270,7 @@ internal sealed class AvlNode : IAvlNode
     }
 
     // Finds and removes replacement node for deletion (third case).
-    private IAvlNode RemoveReplacement(IAvlNode node, ref IAvlNode replacement)
+    private static IAvlNode RemoveReplacement(IAvlNode node, ref IAvlNode replacement)
     {
         IAvlNode newNode;
 
@@ -312,14 +312,12 @@ internal sealed class AvlNode : IAvlNode
     /// </returns>
     public IAvlNode Balance()
     {
-        IAvlNode result;
-
-        if (BalanceFactor < -1)
-            result = LeftChild.BalanceFactor < 0 ? DoLLRotation(this) : DoLRRotation(this);
-        else if (BalanceFactor > 1)
-            result = RightChild.BalanceFactor > 0 ? DoRRRotation(this) : DoRLRotation(this);
-        else
-            result = this;
+        var result = BalanceFactor switch
+        {
+            < -1 => LeftChild.BalanceFactor < 0 ? DoLLRotation(this) : DoLRRotation(this),
+            > 1 => RightChild.BalanceFactor > 0 ? DoRRRotation(this) : DoRLRotation(this),
+            _ => this
+        };
 
         Debug.Assert(result.IsBalanced());
 
@@ -335,7 +333,7 @@ internal sealed class AvlNode : IAvlNode
     /// </returns>
     public bool IsBalanced()
     {
-        return BalanceFactor >= -1 && BalanceFactor <= 1;
+        return BalanceFactor is >= -1 and <= 1;
     }
 
     /// <summary>

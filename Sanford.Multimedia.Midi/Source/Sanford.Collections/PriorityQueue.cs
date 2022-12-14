@@ -550,7 +550,7 @@ public class PriorityQueue : ICollection
         {
             #region Require
 
-            if (!(y is IComparable))
+            if (y is not IComparable)
                 throw new ArgumentException(
                     "Item does not implement IComparable.");
 

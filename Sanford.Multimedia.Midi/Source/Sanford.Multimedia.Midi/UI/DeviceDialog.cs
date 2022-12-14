@@ -35,83 +35,82 @@
 using System;
 using System.Windows.Forms;
 
-namespace Sanford.Multimedia.Midi.UI
+namespace Sanford.Multimedia.Midi.UI;
+
+public partial class DeviceDialog : Form
 {
-    public partial class DeviceDialog : Form
+    private int inputDeviceID;
+
+    private int outputDeviceID;
+
+    public DeviceDialog()
     {
-        private int inputDeviceID;
+        InitializeComponent();
 
-        private int outputDeviceID;
-
-        public DeviceDialog()
+        if (InputDevice.DeviceCount > 0)
         {
-            InitializeComponent();
+            for (var i = 0; i < InputDevice.DeviceCount; i++) inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
 
-            if (InputDevice.DeviceCount > 0)
-            {
-                for (var i = 0; i < InputDevice.DeviceCount; i++) inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
-
-                inputComboBox.SelectedIndex = inputDeviceID;
-            }
-
-            if (OutputDeviceBase.DeviceCount <= 0) return;
-
-            {
-                for (var i = 0; i < OutputDeviceBase.DeviceCount; i++) outputComboBox.Items.Add(OutputDeviceBase.GetDeviceCapabilities(i).name);
-
-                outputComboBox.SelectedIndex = inputDeviceID;
-            }
+            inputComboBox.SelectedIndex = inputDeviceID;
         }
 
-        protected override void OnShown(EventArgs e)
+        if (OutputDeviceBase.DeviceCount <= 0) return;
+
         {
-            if (InputDevice.DeviceCount > 0) inputComboBox.SelectedIndex = inputDeviceID;
+            for (var i = 0; i < OutputDeviceBase.DeviceCount; i++) outputComboBox.Items.Add(OutputDeviceBase.GetDeviceCapabilities(i).name);
 
-            if (OutputDeviceBase.DeviceCount > 0) outputComboBox.SelectedIndex = outputDeviceID;
-
-            base.OnShown(e);
+            outputComboBox.SelectedIndex = inputDeviceID;
         }
+    }
 
-        private void okButton_Click(object sender, EventArgs e)
+    protected override void OnShown(EventArgs e)
+    {
+        if (InputDevice.DeviceCount > 0) inputComboBox.SelectedIndex = inputDeviceID;
+
+        if (OutputDeviceBase.DeviceCount > 0) outputComboBox.SelectedIndex = outputDeviceID;
+
+        base.OnShown(e);
+    }
+
+    private void okButton_Click(object sender, EventArgs e)
+    {
+        if (InputDevice.DeviceCount > 0) inputDeviceID = inputComboBox.SelectedIndex;
+
+        if (OutputDeviceBase.DeviceCount > 0) outputDeviceID = outputComboBox.SelectedIndex;
+
+        DialogResult = DialogResult.OK;
+    }
+
+    private void cancelButton_Click(object sender, EventArgs e)
+    {
+        DialogResult = DialogResult.Cancel;
+    }
+
+    public int InputDeviceID
+    {
+        get
         {
-            if (InputDevice.DeviceCount > 0) inputDeviceID = inputComboBox.SelectedIndex;
+            #region Require
 
-            if (OutputDeviceBase.DeviceCount > 0) outputDeviceID = outputComboBox.SelectedIndex;
+            if (InputDevice.DeviceCount == 0) throw new InvalidOperationException();
 
-            DialogResult = DialogResult.OK;
+            #endregion
+
+            return inputDeviceID;
         }
+    }
 
-        private void cancelButton_Click(object sender, EventArgs e)
+    public int OutputDeviceID
+    {
+        get
         {
-            DialogResult = DialogResult.Cancel;
-        }
+            #region Require
 
-        public int InputDeviceID
-        {
-            get
-            {
-                #region Require
+            if (OutputDeviceBase.DeviceCount == 0) throw new InvalidOperationException();
 
-                if (InputDevice.DeviceCount == 0) throw new InvalidOperationException();
+            #endregion
 
-                #endregion
-
-                return inputDeviceID;
-            }
-        }
-
-        public int OutputDeviceID
-        {
-            get
-            {
-                #region Require
-
-                if (OutputDeviceBase.DeviceCount == 0) throw new InvalidOperationException();
-
-                #endregion
-
-                return outputDeviceID;
-            }
+            return outputDeviceID;
         }
     }
 }

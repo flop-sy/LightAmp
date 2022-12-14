@@ -102,7 +102,7 @@ public class ShortMessage : MidiMessageBase, IMidiMessage
     {
         #region Require
 
-        if (status < 0 || status > StatusMaxValue)
+        if (status is < 0 or > StatusMaxValue)
             throw new ArgumentOutOfRangeException(nameof(status), status,
                 "Status value out of range.");
 
@@ -115,7 +115,7 @@ public class ShortMessage : MidiMessageBase, IMidiMessage
     {
         #region Require
 
-        if (data1 < 0 || data1 > DataMaxValue)
+        if (data1 is < 0 or > DataMaxValue)
             throw new ArgumentOutOfRangeException(nameof(data1), data1,
                 "Data 1 value out of range.");
 
@@ -128,7 +128,7 @@ public class ShortMessage : MidiMessageBase, IMidiMessage
     {
         #region Require
 
-        if (data2 < 0 || data2 > DataMaxValue)
+        if (data2 is < 0 or > DataMaxValue)
             throw new ArgumentOutOfRangeException(nameof(data2), data2,
                 "Data 2 value out of range.");
 

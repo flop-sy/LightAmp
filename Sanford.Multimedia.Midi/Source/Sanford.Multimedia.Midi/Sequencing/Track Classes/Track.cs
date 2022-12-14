@@ -61,9 +61,9 @@ public sealed partial class Track
         #region Require
 
         if (position < 0)
-            throw new ArgumentOutOfRangeException("position", position,
+            throw new ArgumentOutOfRangeException(nameof(position), position,
                 "IMidiMessage position out of range.");
-        if (message == null) throw new ArgumentNullException("message");
+        if (message == null) throw new ArgumentNullException(nameof(message));
 
         #endregion
 
@@ -135,7 +135,7 @@ public sealed partial class Track
     {
         #region Require
 
-        if (trk == null) throw new ArgumentNullException("trk");
+        if (trk == null) throw new ArgumentNullException(nameof(trk));
 
         #endregion
 
@@ -176,34 +176,43 @@ public sealed partial class Track
         {
             while (a != null && a.AbsoluteTicks <= b.AbsoluteTicks)
             {
-                current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
-                current.Next.Previous = current;
+                current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage)
+                {
+                    Previous = current
+                };
                 current = current.Next;
                 a = a.Next;
             }
 
-            if (a != null)
-                while (b != null && b.AbsoluteTicks <= a.AbsoluteTicks)
+            if (a == null) continue;
+
+            while (b != null && b.AbsoluteTicks <= a.AbsoluteTicks)
+            {
+                current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage)
                 {
-                    current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
-                    current.Next.Previous = current;
-                    current = current.Next;
-                    b = b.Next;
-                }
+                    Previous = current
+                };
+                current = current.Next;
+                b = b.Next;
+            }
         }
 
         while (a != null)
         {
-            current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage);
-            current.Next.Previous = current;
+            current.Next = new MidiEvent(this, a.AbsoluteTicks, a.MidiMessage)
+            {
+                Previous = current
+            };
             current = current.Next;
             a = a.Next;
         }
 
         while (b != null)
         {
-            current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage);
-            current.Next.Previous = current;
+            current.Next = new MidiEvent(this, b.AbsoluteTicks, b.MidiMessage)
+            {
+                Previous = current
+            };
             current = current.Next;
             b = b.Next;
         }
@@ -239,8 +248,8 @@ public sealed partial class Track
         #region Require
 
         if (index < 0)
-            throw new ArgumentOutOfRangeException("index", index, "Track index out of range.");
-        if (index == Count - 1) throw new ArgumentException("Cannot remove the end of track event.", "index");
+            throw new ArgumentOutOfRangeException(nameof(index), index, "Track index out of range.");
+        if (index == Count - 1) throw new ArgumentException("Cannot remove the end of track event.", nameof(index));
 
         #endregion
 
@@ -296,7 +305,7 @@ public sealed partial class Track
         #region Require
 
         if (index < 0 || index >= Count)
-            throw new ArgumentOutOfRangeException("index", index,
+            throw new ArgumentOutOfRangeException(nameof(index), index,
                 "Track index out of range.");
 
         #endregion
@@ -353,7 +362,7 @@ public sealed partial class Track
         if (e.Owner != this)
             throw new ArgumentException("MidiEvent does not belong to this Track.");
         if (newPosition < 0)
-            throw new ArgumentOutOfRangeException("newPosition");
+            throw new ArgumentOutOfRangeException(nameof(newPosition));
         if (e == endOfTrackMidiEvent)
             throw new InvalidOperationException(
                 "Cannot move end of track message. Use the EndOfTrackOffset property instead.");

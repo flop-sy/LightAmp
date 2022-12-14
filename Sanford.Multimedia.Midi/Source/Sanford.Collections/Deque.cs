@@ -132,7 +132,7 @@ public class Deque : ICollection, ICloneable
         {
             if (o == null && obj == null) return true;
 
-            if (o.Equals(obj)) return true;
+            if (o != null && o.Equals(obj)) return true;
         }
 
         return false;

@@ -89,67 +89,45 @@ public sealed partial class InputDevice
 
         var status = ShortMessage.UnpackStatus(message);
 
-        if (status >= (int)ChannelCommand.NoteOff &&
-            status <= (int)ChannelCommand.PitchWheel +
-            ChannelMessage.MidiChannelMaxValue)
+        switch (status)
         {
-            cmBuilder.Message = message;
-            cmBuilder.Build();
+            case >= (int)ChannelCommand.NoteOff and <= (int)ChannelCommand.PitchWheel +
+                                                       ChannelMessage.MidiChannelMaxValue:
+                cmBuilder.Message = message;
+                cmBuilder.Build();
 
-            cmBuilder.Result.Timestamp = timestamp;
-            OnMessageReceived(cmBuilder.Result);
-            OnChannelMessageReceived(new ChannelMessageEventArgs(null, cmBuilder.Result));
-        }
-        else if (status == (int)SysCommonType.MidiTimeCode ||
-                 status == (int)SysCommonType.SongPositionPointer ||
-                 status == (int)SysCommonType.SongSelect ||
-                 status == (int)SysCommonType.TuneRequest)
-        {
-            scBuilder.Message = message;
-            scBuilder.Build();
+                cmBuilder.Result.Timestamp = timestamp;
+                OnMessageReceived(cmBuilder.Result);
+                OnChannelMessageReceived(new ChannelMessageEventArgs(null, cmBuilder.Result));
+                break;
+            case (int)SysCommonType.MidiTimeCode or (int)SysCommonType.SongPositionPointer
+                or (int)SysCommonType.SongSelect or (int)SysCommonType.TuneRequest:
+                scBuilder.Message = message;
+                scBuilder.Build();
 
-            scBuilder.Result.Timestamp = timestamp;
-            OnMessageReceived(scBuilder.Result);
-            OnSysCommonMessageReceived(new SysCommonMessageEventArgs(scBuilder.Result));
-        }
-        else
-        {
-            SysRealtimeMessageEventArgs e = null;
-
-            switch ((SysRealtimeType)status)
+                scBuilder.Result.Timestamp = timestamp;
+                OnMessageReceived(scBuilder.Result);
+                OnSysCommonMessageReceived(new SysCommonMessageEventArgs(scBuilder.Result));
+                break;
+            default:
             {
-                case SysRealtimeType.ActiveSense:
-                    e = SysRealtimeMessageEventArgs.ActiveSense;
-                    break;
+                var e = (SysRealtimeType)status switch
+                {
+                    SysRealtimeType.ActiveSense => SysRealtimeMessageEventArgs.ActiveSense,
+                    SysRealtimeType.Clock => SysRealtimeMessageEventArgs.Clock,
+                    SysRealtimeType.Continue => SysRealtimeMessageEventArgs.Continue,
+                    SysRealtimeType.Reset => SysRealtimeMessageEventArgs.Reset,
+                    SysRealtimeType.Start => SysRealtimeMessageEventArgs.Start,
+                    SysRealtimeType.Stop => SysRealtimeMessageEventArgs.Stop,
+                    SysRealtimeType.Tick => SysRealtimeMessageEventArgs.Tick,
+                    _ => null
+                };
 
-                case SysRealtimeType.Clock:
-                    e = SysRealtimeMessageEventArgs.Clock;
-                    break;
-
-                case SysRealtimeType.Continue:
-                    e = SysRealtimeMessageEventArgs.Continue;
-                    break;
-
-                case SysRealtimeType.Reset:
-                    e = SysRealtimeMessageEventArgs.Reset;
-                    break;
-
-                case SysRealtimeType.Start:
-                    e = SysRealtimeMessageEventArgs.Start;
-                    break;
-
-                case SysRealtimeType.Stop:
-                    e = SysRealtimeMessageEventArgs.Stop;
-                    break;
-
-                case SysRealtimeType.Tick:
-                    e = SysRealtimeMessageEventArgs.Tick;
-                    break;
+                e.Message.Timestamp = timestamp;
+                OnMessageReceived(e.Message);
+                OnSysRealtimeMessageReceived(e);
+                break;
             }
-
-            e.Message.Timestamp = timestamp;
-            OnMessageReceived(e.Message);
-            OnSysRealtimeMessageReceived(e);
         }
     }
 

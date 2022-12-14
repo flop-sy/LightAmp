@@ -272,20 +272,8 @@ public sealed class MetaTextBuilder : IMessageBuilder
     /// </returns>
     private static bool IsTextType(MetaType type)
     {
-        bool result;
-
-        if (type == MetaType.Copyright ||
-            type == MetaType.CuePoint ||
-            type == MetaType.DeviceName ||
-            type == MetaType.InstrumentName ||
-            type == MetaType.Lyric ||
-            type == MetaType.Marker ||
-            type == MetaType.ProgramName ||
-            type == MetaType.Text ||
-            type == MetaType.TrackName)
-            result = true;
-        else
-            result = false;
+        var result = type is MetaType.Copyright or MetaType.CuePoint or MetaType.DeviceName or MetaType.InstrumentName
+            or MetaType.Lyric or MetaType.Marker or MetaType.ProgramName or MetaType.Text or MetaType.TrackName;
 
         return result;
     }

@@ -60,23 +60,28 @@ internal sealed class MidiFileProperties
         {
             #region Require
 
-            if (value < 0 || value > 3)
-                throw new ArgumentOutOfRangeException("Format", value,
-                    "MIDI file format out of range.");
+            switch (value)
+            {
+                case < 0 or > 3:
+                    throw new ArgumentOutOfRangeException("Format", value,
+                        "MIDI file format out of range.");
+                case 0 when trackCount > 1:
+                    throw new ArgumentException(
+                        "MIDI file format invalid for this track count.");
+                default:
 
-            if (value == 0 && trackCount > 1)
-                throw new ArgumentException(
-                    "MIDI file format invalid for this track count.");
+                    #endregion
 
-            #endregion
+                    format = value;
 
-            format = value;
+                    #region Invariant
 
-            #region Invariant
+                    AssertValid();
 
-            AssertValid();
+                    #endregion
 
-            #endregion
+                    break;
+            }
         }
     }
 
@@ -87,23 +92,28 @@ internal sealed class MidiFileProperties
         {
             #region Require
 
-            if (value < 0)
-                throw new ArgumentOutOfRangeException("TrackCount", value,
-                    "Track count out of range.");
+            switch (value)
+            {
+                case < 0:
+                    throw new ArgumentOutOfRangeException("TrackCount", value,
+                        "Track count out of range.");
+                case > 1 when Format == 0:
+                    throw new ArgumentException(
+                        "Track count invalid for this format.");
+                default:
 
-            if (value > 1 && Format == 0)
-                throw new ArgumentException(
-                    "Track count invalid for this format.");
+                    #endregion
 
-            #endregion
+                    trackCount = value;
 
-            trackCount = value;
+                    #region Invariant
 
-            #region Invariant
+                    AssertValid();
 
-            AssertValid();
+                    #endregion
 
-            #endregion
+                    break;
+            }
         }
     }
 
@@ -170,7 +180,7 @@ internal sealed class MidiFileProperties
         #endregion
     }
 
-    private void FindHeader(Stream stream)
+    private static void FindHeader(Stream stream)
     {
         var found = false;
 
@@ -204,7 +214,7 @@ internal sealed class MidiFileProperties
                 throw new MidiFileException("Unable to find MIDI file header.");
     }
 
-    private ushort ReadProperty(Stream strm)
+    private static ushort ReadProperty(Stream strm)
     {
         var data = new byte[PropertyLength];
 
@@ -231,7 +241,7 @@ internal sealed class MidiFileProperties
         WriteProperty(strm, (ushort)Division);
     }
 
-    private void WriteProperty(Stream strm, ushort property)
+    private static void WriteProperty(Stream strm, ushort property)
     {
         var data = BitConverter.GetBytes(property);
 
@@ -254,7 +264,7 @@ internal sealed class MidiFileProperties
     [Conditional("MIDIDEBUG")]
     private void AssertValid()
     {
-        if (trackCount > 1) Debug.Assert(Format == 1 || Format == 2);
+        if (trackCount > 1) Debug.Assert(Format is 1 or 2);
 
         if (IsSmpte(Division))
         {

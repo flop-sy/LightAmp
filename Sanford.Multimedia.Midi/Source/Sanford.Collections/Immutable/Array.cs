@@ -160,7 +160,7 @@ public class Array : IEnumerable
     }
 
     // Creates subtrees within the random access list.
-    private RalTreeNode CreateSubTree(int count)
+    private static RalTreeNode CreateSubTree(int count)
     {
         RalTreeNode result = null;
 

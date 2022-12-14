@@ -1404,7 +1404,7 @@ public sealed class Track
     {
         var val = 0;
         //Capo, base tone and fret (if not natural harmonic) shift the harmonics simply
-        val = val + baseTone + capo;
+        val = baseTone + capo;
         if (type != HarmonicType.natural) val += (int)Math.Round(harmonicFret);
 
         val += fret;

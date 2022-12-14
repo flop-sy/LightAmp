@@ -639,7 +639,7 @@ public sealed partial class DelegateQueue : SynchronizationContext, IComponent, 
 
         if (disposed) throw new ObjectDisposedException("DelegateQueue");
 
-        if (!(result is DelegateQueueAsyncResult asyncResult)) throw new ArgumentException();
+        if (result is not DelegateQueueAsyncResult asyncResult) throw new ArgumentException();
 
         if (asyncResult.Owner != this) throw new ArgumentException();
 

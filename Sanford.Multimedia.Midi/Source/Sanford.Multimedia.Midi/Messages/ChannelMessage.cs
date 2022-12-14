@@ -534,7 +534,7 @@ public sealed class ChannelMessage : ShortMessage
     {
         #region Guard
 
-        if (!(obj is ChannelMessage channelMessage)) return false;
+        if (obj is not ChannelMessage channelMessage) return false;
 
         #endregion
 
@@ -553,13 +553,7 @@ public sealed class ChannelMessage : ShortMessage
     /// </returns>
     internal static int DataBytesPerType(ChannelCommand command)
     {
-        int result;
-
-        if (command == ChannelCommand.ChannelPressure ||
-            command == ChannelCommand.ProgramChange)
-            result = 1;
-        else
-            result = 2;
+        var result = command is ChannelCommand.ChannelPressure or ChannelCommand.ProgramChange ? 1 : 2;
 
         return result;
     }
@@ -613,7 +607,7 @@ public sealed class ChannelMessage : ShortMessage
     {
         #region Preconditons
 
-        if (midiChannel < 0 || midiChannel > MidiChannelMaxValue)
+        if (midiChannel is < 0 or > MidiChannelMaxValue)
             throw new ArgumentOutOfRangeException(nameof(midiChannel), midiChannel,
                 "MIDI channel out of range.");
 

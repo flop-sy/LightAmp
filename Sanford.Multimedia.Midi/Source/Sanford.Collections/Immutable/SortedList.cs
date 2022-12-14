@@ -131,7 +131,7 @@ public class SortedList : IEnumerable
             throw new ArgumentNullException(nameof(key),
                 "Key cannot be null.");
 
-        if (comparer == null && !(key is IComparable))
+        if (comparer == null && key is not IComparable)
             throw new ArgumentException(
                 "Key does not implement IComparable interface.");
 
@@ -189,7 +189,7 @@ public class SortedList : IEnumerable
             throw new ArgumentNullException(nameof(key),
                 "Key cannot be null.");
 
-        if (comparer == null && !(key is IComparable))
+        if (comparer == null && key is not IComparable)
             throw new ArgumentException(
                 "Key does not implement IComparable interface.");
 
@@ -206,7 +206,7 @@ public class SortedList : IEnumerable
     }
 
     // Method for comparing keys using the IComparable interface.
-    private int CompareWithoutComparer(object x, object y)
+    private static int CompareWithoutComparer(object x, object y)
     {
         return ((IComparable)x).CompareTo(y);
     }
@@ -237,25 +237,16 @@ public class SortedList : IEnumerable
             var entry = (DictionaryEntry)node.Data;
             var compareResult = compareHandler(key, entry.Key);
 
-            // If the specified key is less than the current key.
-            if (compareResult < 0)
+            result = compareResult switch
+            {
+                // If the specified key is less than the current key.
                 // Create new node and continue searching to the left.
-                result = new AvlNode(
-                    node.Data,
-                    Add(key, value, node.LeftChild),
-                    node.RightChild);
-            // Else the specified key is greater than the current key.
-            else if (compareResult > 0)
+                < 0 => new AvlNode(node.Data, Add(key, value, node.LeftChild), node.RightChild),
+                // Else the specified key is greater than the current key.
                 // Create new node and continue searching to the right.
-                result = new AvlNode(
-                    node.Data,
-                    node.LeftChild,
-                    Add(key, value, node.RightChild));
-            // Else the specified key is equal to the current key.
-            else
-                // Throw exception. Duplicate keys are not allowed.
-                throw new ArgumentException(
-                    "Item is already in the collection.");
+                > 0 => new AvlNode(node.Data, node.LeftChild, Add(key, value, node.RightChild)),
+                _ => throw new ArgumentException("Item is already in the collection.")
+            };
         }
 
         // If the current node is not balanced.
@@ -283,18 +274,16 @@ public class SortedList : IEnumerable
             var entry = (DictionaryEntry)node.Data;
             var compareResult = compareHandler(key, entry.Key);
 
-            // If the specified key is less than the current key.
-            if (compareResult < 0)
+            result = compareResult switch
+            {
+                // If the specified key is less than the current key.
                 // Search to the left.
-                result = Search(key, node.LeftChild);
-            // Else if the specified key is greater than the current key.
-            else if (compareResult > 0)
+                < 0 => Search(key, node.LeftChild),
+                // Else if the specified key is greater than the current key.
                 // Search to the right.
-                result = Search(key, node.RightChild);
-            // Else the key has been found.
-            else
-                // Get value.
-                result = entry.Value;
+                > 0 => Search(key, node.RightChild),
+                _ => entry.Value
+            };
         }
 
         return result;
@@ -317,24 +306,16 @@ public class SortedList : IEnumerable
             var entry = (DictionaryEntry)node.Data;
             var compareResult = compareHandler(key, entry.Key);
 
-            // If the specified key is less than the current key.
-            if (compareResult < 0)
+            result = compareResult switch
+            {
+                // If the specified key is less than the current key.
                 // Create node and continue searching to the left.
-                result = new AvlNode(
-                    node.Data,
-                    Remove(key, node.LeftChild),
-                    node.RightChild);
-            // Else if the specified key is greater than the current key.
-            else if (compareResult > 0)
+                < 0 => new AvlNode(node.Data, Remove(key, node.LeftChild), node.RightChild),
+                // Else if the specified key is greater than the current key.
                 // Create node and continue searching to the right.
-                result = new AvlNode(
-                    node.Data,
-                    node.LeftChild,
-                    Remove(key, node.RightChild));
-            // Else the node to remove has been found.
-            else
-                // Remove node.
-                result = node.Remove();
+                > 0 => new AvlNode(node.Data, node.LeftChild, Remove(key, node.RightChild)),
+                _ => node.Remove()
+            };
         }
 
         // If the node is out of balance.

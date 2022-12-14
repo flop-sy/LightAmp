@@ -1,12 +1,3 @@
-#region Contact
-
-/*
- * Leslie Sanford
- * Email: jabberdabber@hotmail.com
- */
-
-#endregion
-
 #region
 
 using System;
@@ -35,7 +26,7 @@ public partial class PianoControlDialog : Form
         {
             #region Require
 
-            if (value < 0 || value > ShortMessage.DataMaxValue)
+            if (value is < 0 or > ShortMessage.DataMaxValue)
                 throw new ArgumentOutOfRangeException("LowNoteID", value,
                     "Low note ID out of range.");
 
@@ -59,7 +50,7 @@ public partial class PianoControlDialog : Form
         {
             #region Require
 
-            if (value < 0 || value > ShortMessage.DataMaxValue)
+            if (value is < 0 or > ShortMessage.DataMaxValue)
                 throw new ArgumentOutOfRangeException("HighNoteID", value,
                     "High note ID out of range.");
 

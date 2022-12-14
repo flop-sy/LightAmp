@@ -13,7 +13,7 @@ public sealed class Task : IComparable
 
     public int CompareTo(object obj)
     {
-        if (!(obj is Task t)) throw new ArgumentException("obj is not the same type as this instance.");
+        if (obj is not Task t) throw new ArgumentException("obj is not the same type as this instance.");
 
         return -nextTimeout.CompareTo(t.nextTimeout);
     }
@@ -68,7 +68,7 @@ public sealed class Task : IComparable
 
     internal object Invoke(DateTime signalTime)
     {
-        Debug.Assert(Count == DelegateScheduler.Infinite || Count > 0);
+        Debug.Assert(Count is DelegateScheduler.Infinite or > 0);
 
         var returnValue = Method.DynamicInvoke(args);
 

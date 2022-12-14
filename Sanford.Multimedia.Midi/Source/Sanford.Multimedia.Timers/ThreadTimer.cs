@@ -186,7 +186,7 @@ internal sealed class ThreadTimer : ITimer
             throw new NotImplementedException();
         }
 
-        if (SynchronizingObject != null && SynchronizingObject.InvokeRequired)
+        if (SynchronizingObject is { InvokeRequired: true })
             SynchronizingObject.BeginInvoke(
                 new EventRaiser(OnStarted),
                 new object[] { EventArgs.Empty });
@@ -211,7 +211,7 @@ internal sealed class ThreadTimer : ITimer
         queue.Remove(this);
         IsRunning = false;
 
-        if (SynchronizingObject != null && SynchronizingObject.InvokeRequired)
+        if (SynchronizingObject is { InvokeRequired: true })
             SynchronizingObject.BeginInvoke(
                 new EventRaiser(OnStopped),
                 new object[] { EventArgs.Empty });
@@ -221,7 +221,7 @@ internal sealed class ThreadTimer : ITimer
 
     internal void DoTick()
     {
-        if (SynchronizingObject != null && SynchronizingObject.InvokeRequired)
+        if (SynchronizingObject is { InvokeRequired: true })
             SynchronizingObject.BeginInvoke(tickRaiser, emptyArgs);
         else
             OnTick(EventArgs.Empty);

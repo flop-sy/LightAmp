@@ -255,7 +255,7 @@ public sealed class MetaMessage : MidiMessageBase, IMidiMessage
     {
         #region Guard
 
-        if (!(obj is MetaMessage message)) return false;
+        if (obj is not MetaMessage message) return false;
 
         #endregion
 

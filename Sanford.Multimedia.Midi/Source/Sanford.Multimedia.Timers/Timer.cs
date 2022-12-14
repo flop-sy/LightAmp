@@ -257,7 +257,7 @@ internal sealed class Timer : ITimer
         {
             IsRunning = true;
 
-            if (SynchronizingObject != null && SynchronizingObject.InvokeRequired)
+            if (SynchronizingObject is { InvokeRequired: true })
                 SynchronizingObject.BeginInvoke(
                     new EventRaiser(OnStarted),
                     new object[] { EventArgs.Empty });
@@ -297,7 +297,7 @@ internal sealed class Timer : ITimer
 
         IsRunning = false;
 
-        if (SynchronizingObject != null && SynchronizingObject.InvokeRequired)
+        if (SynchronizingObject is { InvokeRequired: true })
             SynchronizingObject.BeginInvoke(
                 new EventRaiser(OnStopped),
                 new object[] { EventArgs.Empty });

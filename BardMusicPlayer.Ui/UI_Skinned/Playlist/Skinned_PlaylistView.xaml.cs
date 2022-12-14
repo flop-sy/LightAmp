@@ -216,8 +216,11 @@ public sealed partial class Skinned_PlaylistView
     {
         if (e.ChangedButton != MouseButton.Left) return;
 
-        var rectangle = sender as Rectangle;
+        if (sender is not Rectangle rectangle) return;
+
         var contextMenu = rectangle.ContextMenu;
+        if (contextMenu == null) return;
+
         contextMenu.PlacementTarget = rectangle;
         contextMenu.Placement = PlacementMode.Top;
         contextMenu.IsOpen = true;
@@ -335,10 +338,13 @@ public sealed partial class Skinned_PlaylistView
     /// </summary>
     private void PlaylistContainer_Drop(object sender, DragEventArgs e)
     {
-        var droppedData = e.Data.GetData(typeof(string)) as string;
         var target = ((ListBoxItem)sender).DataContext as string;
 
+        if (e.Data.GetData(typeof(string)) is not string droppedData) return;
+
         var removedIdx = PlaylistContainer.Items.IndexOf(droppedData);
+        if (target == null) return;
+
         var targetIdx = PlaylistContainer.Items.IndexOf(target);
 
         if (removedIdx < targetIdx)

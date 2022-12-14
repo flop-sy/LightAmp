@@ -119,7 +119,7 @@ public sealed class SysExMessage : MidiMessageBase, IMidiMessage, IEnumerable
     {
         #region Guard
 
-        if (!(obj is SysExMessage message)) return false;
+        if (obj is not SysExMessage message) return false;
 
         #endregion
 
