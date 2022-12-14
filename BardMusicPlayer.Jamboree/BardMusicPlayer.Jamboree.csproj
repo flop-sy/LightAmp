@@ -35,17 +35,4 @@
         <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Folder Include="Lib\"/>
-        <Folder Include="PartyClient\ZeroTier\"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ContentWithTargetPath Include="Lib\libzt.dll">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <TargetPath>libzt.dll</TargetPath>
-        </ContentWithTargetPath>
-        <None Include="Lib\libzt.dll"/>
-    </ItemGroup>
-
 </Project>

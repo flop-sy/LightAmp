@@ -39,6 +39,7 @@
         <PlatformTarget>x64</PlatformTarget>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <Optimize>false</Optimize>
+        <NoWarn>1701;1702; MSB3246</NoWarn>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
@@ -46,6 +47,7 @@
         <PlatformTarget>x64</PlatformTarget>
         <DefineConstants>TRACE</DefineConstants>
         <Optimize>true</Optimize>
+        <NoWarn>1701;1702; MSB3246</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
