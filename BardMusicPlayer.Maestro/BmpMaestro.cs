@@ -171,6 +171,22 @@ public partial class BmpMaestro : IDisposable
         _orchestrator?.SetSpeedshift(p, percentage);
     }
 
+        /// <summary>
+        /// sets the speed for bard
+        /// </summary>
+        public void SetSpeedShiftAll(float percentage)
+        {
+            if (_orchestrator == null)
+                return;
+
+            var performers = _orchestrator.GetAllPerformers();
+            Parallel.ForEach(performers, perf =>
+            {
+                _orchestrator.SetSpeedshift(perf, percentage);
+            });
+
+        }
+
     /// <summary>
     ///     sets the speed for host performer
     /// </summary>
