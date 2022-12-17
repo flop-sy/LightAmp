@@ -311,7 +311,7 @@ public partial class BmpMaestro : IDisposable
             return;
 
         var perf = _orchestrator.GetAllPerformers();
-        foreach (var p in perf.Where(static p => p.HostProcess))
+        foreach (var p in perf)
             p.DoReadyCheck();
     }
 
