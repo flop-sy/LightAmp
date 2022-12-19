@@ -243,11 +243,11 @@ public sealed partial class Classic_MainView
 
     public void AppendChatLog(ChatLog ev)
     {
-        if (BmpMaestro.Instance.GetHostPid() == ev.ChatLogGame.Pid)
+        /*if (BmpMaestro.Instance.GetHostPid() == ev.ChatLogGame.Pid)
         {
             ChatBox.AppendText(ev);
             ChatBox.ScrollToEnd();
-        }
+        }*/
 
         if (ev.ChatLogCode != "0039") return;
 
