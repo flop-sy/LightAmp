@@ -151,7 +151,7 @@
                     <ColumnDefinition Width="275*" />
                 </Grid.ColumnDefinitions>
                 <TabControl Grid.ColumnSpan="2">
-                    /*<TabItem Header="[Chat] All">
+                    <!-- <TabItem Header="[Chat] All">
                         <RichTextBox x:Name="ChatBox" IsReadOnly="False"
                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      ScrollViewer.IsDeferredScrollingEnabled="True" Background="Gray">
@@ -168,7 +168,7 @@
                                 </Style>
                             </RichTextBox.Style>
                         </RichTextBox>
-                    </TabItem>*/
+                    </TabItem> -->
                     <TabItem Header="Performers">
                         <Grid Background="WhiteSmoke">
                             <control:BardView x:Name="BardsList" />
