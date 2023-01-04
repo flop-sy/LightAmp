@@ -1,5 +1,6 @@
 #region
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -17,6 +18,8 @@ public sealed class Interpreter
 
     public delegate void PrintFunction(ChatMessageChannelType type, string text);
 
+    public delegate void CPrintFunction(string text);
+
     public delegate void SelectedBard(int num);
 
     public delegate void SelectedBardAsString(string name);
@@ -33,6 +36,8 @@ public sealed class Interpreter
     private readonly Lexer lex;
     private readonly Dictionary<string, Marker> loops; // for loops
 
+    private readonly Dictionary<string, Value> loopsteps; // for loops steps
+
     private readonly Dictionary<string, Value> vars; // all variables are stored here
 
     private bool exit; // do we need to exit?
@@ -44,6 +49,7 @@ public sealed class Interpreter
     private Token prevToken; // token before last one
 
     public PrintFunction printHandler;
+    public CPrintFunction cprintHandler;
     public SelectedBardAsString selectedBardAsStringHandler;
     public SelectedBard selectedBardHandler;
     public TapKeyFunction tapKeyHandler;
@@ -55,6 +61,7 @@ public sealed class Interpreter
         vars = new Dictionary<string, Value>();
         labels = new Dictionary<string, Marker>();
         loops = new Dictionary<string, Marker>();
+        loopsteps = new Dictionary<string, Value>();
         funcs = new Dictionary<string, BasicFunction>();
         ifcounter = 0;
         BuiltIns.InstallAll(this); // map all builtins functions
@@ -152,6 +159,9 @@ public sealed class Interpreter
                 case Token.Macro:
                     Macro();
                     break;
+                case Token.CPrint:
+                    CPrint();
+                    break;
                 case Token.Input:
                     Input();
                     break;
@@ -232,6 +242,11 @@ public sealed class Interpreter
     {
         printHandler?.Invoke(ChatMessageChannelType.None, "/" + Expr());
     }
+
+        private void CPrint()
+        {
+            cprintHandler?.Invoke(Expr().ToString());
+        }
 
     private void Input()
     {
@@ -392,6 +407,19 @@ public sealed class Interpreter
         GetNextToken();
         v = Expr();
 
+            if (lastToken == Token.Step)
+            {
+                GetNextToken();
+                var step = Expr();
+                if (step.Type == ValueType.Real)
+                {
+                    if (loopsteps.ContainsKey(var))
+                        loopsteps[var] = step;
+                    else
+                        loopsteps.Add(var, step);
+                }
+            }
+
         if (vars[var].BinOp(v, Token.More).Real != 1) return;
 
         while (true)
@@ -403,6 +431,7 @@ public sealed class Interpreter
             if (lex.Identifier != var) continue;
 
             loops.Remove(var);
+            loopsteps.Remove(var);
             GetNextToken();
             Match(Token.NewLine);
             break;
@@ -414,7 +443,13 @@ public sealed class Interpreter
         // jump to begining of the "for" loop
         Match(Token.Identifier);
         var var = lex.Identifier;
-        vars[var] = vars[var].BinOp(new Value(1), Token.Plus);
+
+            //check if the loop has a stepping
+            if (loopsteps.ContainsKey(var))
+                vars[var] = vars[var].BinOp(loopsteps[var], Token.Plus);
+            else
+                vars[var] = vars[var].BinOp(new Value(1), Token.Plus);
+
         lex.GoTo(new Marker(loops[var].Pointer - 1, loops[var].Line, loops[var].Column - 1));
         lastToken = Token.NewLine;
     }

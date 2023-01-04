@@ -5,6 +5,8 @@ using System.IO;
 using System.Windows;
 using BardMusicPlayer.Maestro.Events;
 using BardMusicPlayer.Ui.Functions;
+using BardMusicPlayer.Ui.MidiEdit.Managers;
+using BardMusicPlayer.Ui.MidiEdit.Ui;
 using Microsoft.Win32;
 
 #endregion
@@ -68,4 +70,11 @@ public sealed partial class Classic_MainView
         song.GetExportMidi().WriteTo(myStream);
         myStream.Close();
     }
+
+        private void MidiProcessing_Click(object sender, RoutedEventArgs e)
+        {
+            UiManager.Instance.mainWindow = new MidiEditWindow();
+            if (PlaybackFunctions.CurrentSong != null)
+                MidiManager.Instance.OpenFile(PlaybackFunctions.CurrentSong.GetExportMidi());
+        }
 }

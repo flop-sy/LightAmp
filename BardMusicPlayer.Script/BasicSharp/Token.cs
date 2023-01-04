@@ -17,6 +17,7 @@ public enum Token
     For,
     To,
     Next,
+    Step,
     Goto,
     Input,
     Let,
@@ -29,6 +30,7 @@ public enum Token
     UnSelect,
     Sleep,
     TapKey,
+    CPrint,
 
     NewLine,
     Colon,

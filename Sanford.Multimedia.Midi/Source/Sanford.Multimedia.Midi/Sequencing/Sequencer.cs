@@ -104,6 +104,23 @@ public class Sequencer : IComponent
         }
     }
 
+        public int Tempo
+        {
+            get
+            {
+                #region Require
+
+                if (disposed)
+                {
+                    throw new ObjectDisposedException(this.GetType().Name);
+                }
+
+                #endregion
+
+                return clock.Tempo;
+            }
+        }
+
     public Sequence Sequence
     {
         get { return sequence; }
