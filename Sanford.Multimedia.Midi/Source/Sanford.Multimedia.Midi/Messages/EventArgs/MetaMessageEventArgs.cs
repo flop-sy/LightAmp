@@ -1,20 +1,30 @@
-#region
-
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public sealed class MetaMessageEventArgs : EventArgs
+namespace Sanford.Multimedia.Midi
 {
-    public MetaMessageEventArgs(Track track, MetaMessage message)
+    public class MetaMessageEventArgs : EventArgs
     {
-        Message = message;
-        MidiTrack = track;
+        private MetaMessage message;
+		private Track track;
+
+        public MetaMessageEventArgs(Track track, MetaMessage message)
+        {
+            this.message = message;
+			this.track = track;
+        }
+
+        public MetaMessage Message
+        {
+            get
+            {
+                return message;
+            }
+        }
+
+		public Track MidiTrack {
+			get { return track; }
+		}
     }
-
-    public MetaMessage Message { get; }
-
-    public Track MidiTrack { get; }
 }

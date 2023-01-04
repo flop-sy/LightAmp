@@ -1,73 +1,97 @@
-#region
-
+using System;
 using System.Collections.Generic;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public class RecordingSession
+namespace Sanford.Multimedia.Midi
 {
-    private readonly List<TimestampedMessage> buffer = new();
-    private readonly IClock clock;
-
-    public RecordingSession(IClock clock)
+    public class RecordingSession
     {
-        this.clock = clock;
-    }
+        private IClock clock;
 
-    public Track Result { get; private set; } = new();
+        private List<TimestampedMessage> buffer = new List<TimestampedMessage>();
 
-    public void Build()
-    {
-        Result = new Track();
+        private Track result = new Track();
 
-        buffer.Sort(new TimestampComparer());
-
-        foreach (var tm in buffer) Result.Insert(tm.ticks, tm.message);
-    }
-
-    public void Clear()
-    {
-        buffer.Clear();
-    }
-
-    public void Record(ChannelMessage message)
-    {
-        if (clock.IsRunning) buffer.Add(new TimestampedMessage(clock.Ticks, message));
-    }
-
-    public void Record(SysExMessage message)
-    {
-        if (clock.IsRunning) buffer.Add(new TimestampedMessage(clock.Ticks, message));
-    }
-
-    private struct TimestampedMessage
-    {
-        public readonly int ticks;
-
-        public readonly IMidiMessage message;
-
-        public TimestampedMessage(int ticks, IMidiMessage message)
+        public RecordingSession(IClock clock)
         {
-            this.ticks = ticks;
-            this.message = message;
-        }
-    }
-
-    private class TimestampComparer : IComparer<TimestampedMessage>
-    {
-        #region IComparer<TimestampedMessage> Members
-
-        public int Compare(TimestampedMessage x, TimestampedMessage y)
-        {
-            if (x.ticks > y.ticks) return 1;
-
-            if (x.ticks < y.ticks) return -1;
-
-            return 0;
+            this.clock = clock;
         }
 
-        #endregion
+        public void Build()
+        {
+            result = new Track();
+
+            buffer.Sort(new TimestampComparer());
+
+            foreach(TimestampedMessage tm in buffer)
+            {
+                result.Insert(tm.ticks, tm.message);
+            }
+        }
+
+        public void Clear()
+        {
+            buffer.Clear();
+        }
+
+        public Track Result
+        {
+            get
+            {
+                return result;
+            }
+        }
+
+        public void Record(ChannelMessage message)
+        {
+            if(clock.IsRunning)
+            {
+                buffer.Add(new TimestampedMessage(clock.Ticks, message));
+            }
+        }
+
+        public void Record(SysExMessage message)
+        {
+            if(clock.IsRunning)
+            {
+                buffer.Add(new TimestampedMessage(clock.Ticks, message));
+            }
+        }
+
+        private struct TimestampedMessage
+        {
+            public int ticks;
+
+            public IMidiMessage message;
+
+            public TimestampedMessage(int ticks, IMidiMessage message)
+            {
+                this.ticks = ticks;
+                this.message = message;
+            }
+        }
+
+        private class TimestampComparer : IComparer<TimestampedMessage>
+        {
+            #region IComparer<TimestampedMessage> Members
+
+            public int Compare(TimestampedMessage x, TimestampedMessage y)
+            {
+                if(x.ticks > y.ticks)
+                {
+                    return 1;
+                }
+                else if(x.ticks < y.ticks)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+
+            #endregion
+        }
     }
 }

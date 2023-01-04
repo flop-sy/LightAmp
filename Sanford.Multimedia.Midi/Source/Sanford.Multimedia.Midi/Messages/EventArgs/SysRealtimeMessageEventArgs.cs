@@ -1,31 +1,38 @@
-#region
-
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public sealed class SysRealtimeMessageEventArgs : EventArgs
+namespace Sanford.Multimedia.Midi
 {
-    public static readonly SysRealtimeMessageEventArgs Start = new(SysRealtimeMessage.StartMessage);
-
-    public static readonly SysRealtimeMessageEventArgs Continue = new(SysRealtimeMessage.ContinueMessage);
-
-    public static readonly SysRealtimeMessageEventArgs Stop = new(SysRealtimeMessage.StopMessage);
-
-    public static readonly SysRealtimeMessageEventArgs Clock = new(SysRealtimeMessage.ClockMessage);
-
-    public static readonly SysRealtimeMessageEventArgs Tick = new(SysRealtimeMessage.TickMessage);
-
-    public static readonly SysRealtimeMessageEventArgs ActiveSense = new(SysRealtimeMessage.ActiveSenseMessage);
-
-    public static readonly SysRealtimeMessageEventArgs Reset = new(SysRealtimeMessage.ResetMessage);
-
-    private SysRealtimeMessageEventArgs(SysRealtimeMessage message)
+    public class SysRealtimeMessageEventArgs : EventArgs
     {
-        Message = message;
-    }
+        public static readonly SysRealtimeMessageEventArgs Start = new SysRealtimeMessageEventArgs(SysRealtimeMessage.StartMessage);
 
-    public SysRealtimeMessage Message { get; }
+        public static readonly SysRealtimeMessageEventArgs Continue = new SysRealtimeMessageEventArgs(SysRealtimeMessage.ContinueMessage);
+
+        public static readonly SysRealtimeMessageEventArgs Stop = new SysRealtimeMessageEventArgs(SysRealtimeMessage.StopMessage);
+
+        public static readonly SysRealtimeMessageEventArgs Clock = new SysRealtimeMessageEventArgs(SysRealtimeMessage.ClockMessage);
+
+        public static readonly SysRealtimeMessageEventArgs Tick = new SysRealtimeMessageEventArgs(SysRealtimeMessage.TickMessage);
+
+        public static readonly SysRealtimeMessageEventArgs ActiveSense = new SysRealtimeMessageEventArgs(SysRealtimeMessage.ActiveSenseMessage);
+
+        public static readonly SysRealtimeMessageEventArgs Reset = new SysRealtimeMessageEventArgs(SysRealtimeMessage.ResetMessage);
+
+        private SysRealtimeMessage message;
+
+        private SysRealtimeMessageEventArgs(SysRealtimeMessage message)
+        {
+            this.message = message;
+        }
+
+        public SysRealtimeMessage Message
+        {
+            get
+            {
+                return message;
+            }
+        }
+    }
 }

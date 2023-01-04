@@ -1,17 +1,24 @@
-#region
-
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public sealed class InvalidShortMessageEventArgs : EventArgs
+namespace Sanford.Multimedia.Midi
 {
-    public InvalidShortMessageEventArgs(int message)
+    public class InvalidShortMessageEventArgs : EventArgs
     {
-        Message = message;
-    }
+        private int message;
 
-    public int Message { get; }
+        public InvalidShortMessageEventArgs(int message)
+        {
+            this.message = message;
+        }
+
+        public int Message
+        {
+            get
+            {
+                return message;
+            }
+        }
+    }
 }

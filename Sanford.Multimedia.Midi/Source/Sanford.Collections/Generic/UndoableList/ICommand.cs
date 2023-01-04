@@ -1,7 +1,12 @@
-namespace Sanford.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-internal interface ICommand
+namespace Sanford.Collections.Generic
 {
-    void Execute();
-    void Undo();
+    internal interface ICommand
+    {
+        void Execute();
+        void Undo();
+    }
 }

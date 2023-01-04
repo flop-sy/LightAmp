@@ -1,89 +1,121 @@
-#region
-
 using System;
+using System.Diagnostics;
+using System.Threading;
 
-#endregion
-
-namespace Sanford.Threading;
-
-public sealed partial class DelegateQueue
+namespace Sanford.Threading
 {
-    private enum NotificationType
+    public partial class DelegateQueue
     {
-        None,
-        BeginInvokeCompleted,
-        PostCompleted
-    }
-
-    /// <summary>
-    ///     Implements the IAsyncResult interface for the DelegateQueue class.
-    /// </summary>
-    private sealed class DelegateQueueAsyncResult : AsyncResult
-    {
-        // The delegate to be invoked.
-
-        // Args to be passed to the delegate.
-        private readonly object[] args;
-
-        // The object returned from the delegate.
-
-        // Represents a possible exception thrown by invoking the method.
-
-        public DelegateQueueAsyncResult(
-            object owner,
-            Delegate method,
-            object[] args,
-            bool synchronously,
-            NotificationType notificationType)
-            : base(owner, null, null)
+        private enum NotificationType
         {
-            Method = method;
-            this.args = args;
-            NotificationType = notificationType;
+            None,
+            BeginInvokeCompleted,
+            PostCompleted
         }
 
-        public DelegateQueueAsyncResult(
-            object owner,
-            AsyncCallback callback,
-            object state,
-            Delegate method,
-            object[] args,
-            bool synchronously,
-            NotificationType notificationType)
-            : base(owner, callback, state)
+        /// <summary>
+        /// Implements the IAsyncResult interface for the DelegateQueue class.
+        /// </summary>
+        private class DelegateQueueAsyncResult : AsyncResult
         {
-            Method = method;
-            this.args = args;
-            NotificationType = notificationType;
-        }
+            // The delegate to be invoked.
+            private Delegate method;
 
-        public object ReturnValue { get; private set; }
+            // Args to be passed to the delegate.
+            private object[] args;
 
-        public Exception Error { get; private set; }
+            // The object returned from the delegate.
+            private object returnValue = null;
 
-        public Delegate Method { get; }
+            // Represents a possible exception thrown by invoking the method.
+            private Exception error = null;
 
-        public NotificationType NotificationType { get; }
+            private NotificationType notificationType;
 
-        public void Invoke()
-        {
-            try
+            public DelegateQueueAsyncResult(
+                object owner, 
+                Delegate method, 
+                object[] args, 
+                bool synchronously, 
+                NotificationType notificationType) 
+                : base(owner, null, null)
             {
-                ReturnValue = Method.DynamicInvoke(args);
+                this.method = method;
+                this.args = args;
+                this.notificationType = notificationType;
             }
-            catch (Exception ex)
-            {
-                Error = ex;
-            }
-            finally
-            {
-                Signal();
-            }
-        }
 
-        public object[] GetArgs()
-        {
-            return args;
+            public DelegateQueueAsyncResult(
+                object owner,
+                AsyncCallback callback,
+                object state,
+                Delegate method,
+                object[] args,
+                bool synchronously,
+                NotificationType notificationType)
+                : base(owner, callback, state)
+            {
+                this.method = method;
+                this.args = args;
+                this.notificationType = notificationType;
+            }
+
+            public void Invoke()
+            {
+                try
+                {
+                    returnValue = method.DynamicInvoke(args);
+                }
+                catch(Exception ex)
+                {
+                    error = ex;
+                }
+                finally
+                {
+                    Signal();
+                }
+            }
+
+            public object[] GetArgs()
+            {
+                return args;
+            }
+
+            public object ReturnValue
+            {
+                get
+                {
+                    return returnValue;
+                }
+            }
+
+            public Exception Error
+            {
+                get
+                {
+                    return error;
+                }
+                set
+                {
+                    error = value;
+                }
+            }
+
+            public Delegate Method
+            {
+                get
+                {
+                    return method;
+                }
+            }
+
+            public NotificationType NotificationType
+            {
+                get
+                {
+                    return notificationType;
+                }
+            }
         }
     }
 }

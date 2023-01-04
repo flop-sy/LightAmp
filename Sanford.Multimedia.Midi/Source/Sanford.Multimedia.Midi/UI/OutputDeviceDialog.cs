@@ -1,58 +1,104 @@
-#region
+#region License
 
-using System;
-using System.Windows.Forms;
+/* Copyright (c) 2006 Leslie Sanford
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software. 
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE.
+ */
 
 #endregion
 
-namespace Sanford.Multimedia.Midi.UI;
+#region Contact
 
-public partial class OutputDeviceDialog : Form
+/*
+ * Leslie Sanford
+ * Email: jabberdabber@hotmail.com
+ */
+
+#endregion
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace Sanford.Multimedia.Midi.UI
 {
-    private int outputDeviceID;
-
-    public OutputDeviceDialog()
+    public partial class OutputDeviceDialog : Form
     {
-        InitializeComponent();
+        private int outputDeviceID = 0;
 
-        if (OutputDeviceBase.DeviceCount <= 0) return;
-
-        for (var i = 0; i < OutputDeviceBase.DeviceCount; i++)
-            outputComboBox.Items.Add(OutputDeviceBase.GetDeviceCapabilities(i).name);
-
-        outputComboBox.SelectedIndex = outputDeviceID;
-    }
-
-    public int OutputDeviceID
-    {
-        get
+        public OutputDeviceDialog()
         {
-            #region Require
+            InitializeComponent();
 
-            if (OutputDeviceBase.DeviceCount == 0) throw new InvalidOperationException();
+            if(OutputDevice.DeviceCount > 0)
+            {
+                for(int i = 0; i < OutputDevice.DeviceCount; i++)
+                {
+                    outputComboBox.Items.Add(OutputDevice.GetDeviceCapabilities(i).name);
+                }
 
-            #endregion
-
-            return outputDeviceID;
+                outputComboBox.SelectedIndex = outputDeviceID;
+            }
         }
-    }
 
-    protected override void OnShown(EventArgs e)
-    {
-        if (OutputDeviceBase.DeviceCount > 0) outputComboBox.SelectedIndex = outputDeviceID;
+        protected override void OnShown(EventArgs e)
+        {
+            if(OutputDevice.DeviceCount > 0)
+            {
+                outputComboBox.SelectedIndex = outputDeviceID;
+            }
 
-        base.OnShown(e);
-    }
+            base.OnShown(e);
+        }
 
-    private void okButton_Click(object sender, EventArgs e)
-    {
-        if (OutputDeviceBase.DeviceCount > 0) outputDeviceID = outputComboBox.SelectedIndex;
+        private void okButton_Click(object sender, EventArgs e)
+        {
+            if(OutputDevice.DeviceCount > 0)
+            {
+                outputDeviceID = outputComboBox.SelectedIndex;
+            }
 
-        DialogResult = DialogResult.OK;
-    }
+            DialogResult = DialogResult.OK;
+        }
 
-    private void cancelButton_Click(object sender, EventArgs e)
-    {
-        DialogResult = DialogResult.Cancel;
+        private void cancelButton_Click(object sender, EventArgs e)
+        {
+            DialogResult = DialogResult.Cancel;
+        }
+
+        public int OutputDeviceID
+        {
+            get
+            {
+                #region Require
+
+                if(OutputDevice.DeviceCount == 0)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                #endregion
+
+                return outputDeviceID;
+            }
+        }
     }
 }
