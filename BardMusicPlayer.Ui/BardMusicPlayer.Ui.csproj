@@ -26,8 +26,8 @@
         <Description>LightAmp for the BoL</Description>
         <Company>GiR-Zippo</Company>
         <Product>LightAmp</Product>
-        <Copyright>Copywrong © 2022</Copyright>
-        <Version>1.0.4.6</Version>
+        <Copyright>Copywrong © 2023</Copyright>
+        <Version>1.0.4.7</Version>
 
         <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
         <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>

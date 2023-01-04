@@ -187,8 +187,7 @@ public class MidiLineControl
 
     internal void InsertNote(double start, double end, int noteIndex)
     {
-        return;
-/*
+        /*
         if (MidiManager.Instance.IsPlaying) return;
         // Generate Midi Note
         const int channel = 0;
