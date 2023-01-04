@@ -66,7 +66,7 @@ public sealed class BmpScript
             unselected_bards = new List<string>();
             basic = new Interpreter(File.ReadAllText(basicfile));
             basic.printHandler += Print;
-			basic.cprintHandler += Console.WriteLine;
+            basic.cprintHandler += Console.WriteLine;
             basic.tapKeyHandler += TapKey;
             basic.selectedBardHandler += SetSelectedBard;
             basic.selectedBardAsStringHandler += SetSelectedBardName;
@@ -84,7 +84,7 @@ public sealed class BmpScript
 
             unselected_bards = null;
             basic.printHandler -= Print;
-			basic.cprintHandler -= Console.WriteLine;
+            basic.cprintHandler -= Console.WriteLine;
             basic.tapKeyHandler -= TapKey;
             basic.selectedBardHandler -= SetSelectedBard;
             basic.selectedBardAsStringHandler -= SetSelectedBardName;

@@ -1,6 +1,5 @@
 #region
 
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -14,11 +13,11 @@ public sealed class Interpreter
 {
     public delegate Value BasicFunction(Interpreter interpreter, List<Value> args);
 
+    public delegate void CPrintFunction(string text);
+
     public delegate string InputFunction();
 
     public delegate void PrintFunction(ChatMessageChannelType type, string text);
-
-    public delegate void CPrintFunction(string text);
 
     public delegate void SelectedBard(int num);
 
@@ -39,6 +38,7 @@ public sealed class Interpreter
     private readonly Dictionary<string, Value> loopsteps; // for loops steps
 
     private readonly Dictionary<string, Value> vars; // all variables are stored here
+    public CPrintFunction cprintHandler;
 
     private bool exit; // do we need to exit?
 
@@ -49,7 +49,6 @@ public sealed class Interpreter
     private Token prevToken; // token before last one
 
     public PrintFunction printHandler;
-    public CPrintFunction cprintHandler;
     public SelectedBardAsString selectedBardAsStringHandler;
     public SelectedBard selectedBardHandler;
     public TapKeyFunction tapKeyHandler;
@@ -243,10 +242,10 @@ public sealed class Interpreter
         printHandler?.Invoke(ChatMessageChannelType.None, "/" + Expr());
     }
 
-        private void CPrint()
-        {
-            cprintHandler?.Invoke(Expr().ToString());
-        }
+    private void CPrint()
+    {
+        cprintHandler?.Invoke(Expr().ToString());
+    }
 
     private void Input()
     {
@@ -407,18 +406,18 @@ public sealed class Interpreter
         GetNextToken();
         v = Expr();
 
-            if (lastToken == Token.Step)
+        if (lastToken == Token.Step)
+        {
+            GetNextToken();
+            var step = Expr();
+            if (step.Type == ValueType.Real)
             {
-                GetNextToken();
-                var step = Expr();
-                if (step.Type == ValueType.Real)
-                {
-                    if (loopsteps.ContainsKey(var))
-                        loopsteps[var] = step;
-                    else
-                        loopsteps.Add(var, step);
-                }
+                if (loopsteps.ContainsKey(var))
+                    loopsteps[var] = step;
+                else
+                    loopsteps.Add(var, step);
             }
+        }
 
         if (vars[var].BinOp(v, Token.More).Real != 1) return;
 
@@ -444,11 +443,11 @@ public sealed class Interpreter
         Match(Token.Identifier);
         var var = lex.Identifier;
 
-            //check if the loop has a stepping
-            if (loopsteps.ContainsKey(var))
-                vars[var] = vars[var].BinOp(loopsteps[var], Token.Plus);
-            else
-                vars[var] = vars[var].BinOp(new Value(1), Token.Plus);
+        //check if the loop has a stepping
+        if (loopsteps.ContainsKey(var))
+            vars[var] = vars[var].BinOp(loopsteps[var], Token.Plus);
+        else
+            vars[var] = vars[var].BinOp(new Value(1), Token.Plus);
 
         lex.GoTo(new Marker(loops[var].Pointer - 1, loops[var].Line, loops[var].Column - 1));
         lastToken = Token.NewLine;

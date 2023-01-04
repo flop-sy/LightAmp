@@ -71,10 +71,10 @@ public sealed partial class Classic_MainView
         myStream.Close();
     }
 
-        private void MidiProcessing_Click(object sender, RoutedEventArgs e)
-        {
-            UiManager.Instance.mainWindow = new MidiEditWindow();
-            if (PlaybackFunctions.CurrentSong != null)
-                MidiManager.Instance.OpenFile(PlaybackFunctions.CurrentSong.GetExportMidi());
-        }
+    private void MidiProcessing_Click(object sender, RoutedEventArgs e)
+    {
+        UiManager.Instance.mainWindow = new MidiEditWindow();
+        if (PlaybackFunctions.CurrentSong != null)
+            MidiManager.Instance.OpenFile(PlaybackFunctions.CurrentSong.GetExportMidi());
+    }
 }

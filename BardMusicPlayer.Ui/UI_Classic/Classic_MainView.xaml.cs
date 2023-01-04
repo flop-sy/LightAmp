@@ -101,6 +101,14 @@ public sealed partial class Classic_MainView
         _directLoaded = true;
     }
 
+    private void Macro_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var macroLaunchpad = new MacroLaunchpad
+        {
+            Visibility = Visibility.Visible
+        };
+    }
+
     #region EventHandler
 
     private void Instance_PlaybackTimeChanged(object sender, CurrentPlayPositionEvent e)
@@ -394,12 +402,4 @@ public sealed partial class Classic_MainView
     }
 
     #endregion
-
-    private void Macro_Button_Click(object sender, RoutedEventArgs e)
-    {
-        var macroLaunchpad = new MacroLaunchpad
-        {
-            Visibility = Visibility.Visible
-        };
-    }
 }

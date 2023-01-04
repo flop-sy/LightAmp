@@ -1,107 +1,106 @@
-﻿using Sanford.Multimedia.Midi;
+﻿#region
+
 using System;
 using System.Collections.Generic;
-using System.Windows.Media;
 using System.Windows;
-using BardMusicPlayer.Ui.MidiEdit.Utils;
+using System.Windows.Media;
 using BardMusicPlayer.Ui.MidiEdit.Managers;
+using BardMusicPlayer.Ui.MidiEdit.Utils;
 using BardMusicPlayer.Ui.MidiEdit.Utils.TrackExtensions;
+using Sanford.Multimedia.Midi;
 
-namespace BardMusicPlayer.Ui.MidiEdit.Ui.TrackLine
+#endregion
+
+namespace BardMusicPlayer.Ui.MidiEdit.Ui.TrackLine;
+
+public class MidiLineModel : HandleBinding
 {
-    public class MidiLineModel : HandleBinding
+    public readonly Thickness SelectedBorderThickness = new(.5f);
+    public readonly Thickness UnselectedBorderThickness = new(0);
+    public bool isDragging = false;
+    public Point mouseDragEndPoint;
+    public Point mouseDragStartPoint;
+
+    #region CTOR
+
+    public MidiLineControl Ctrl { get; set; }
+    public Track Track { get; }
+
+    public MidiLineModel(Track track)
     {
-        #region CTOR
+        Track = track;
+        var color = track.Color();
+        tColor = new SolidColorBrush(color);
+        LastNotesOn = new Dictionary<int, Tuple<int, MidiEvent>>();
+    }
 
-        public MidiLineControl Ctrl { get; set; }
-        public Track Track { get; }
+    #endregion
 
-        public MidiLineModel(Track track)
+    #region ATRB
+
+    private SolidColorBrush tColor;
+
+    public SolidColorBrush TColor
+    {
+        get => tColor;
+        set
         {
-            this.Track = track;
-            Color color = track.Color();
-            tColor = new SolidColorBrush(color);
-            LastNotesOn = new Dictionary<int, Tuple<int, MidiEvent>>();
+            tColor = value;
+            RaisePropertyChanged("TColor");
         }
+    }
 
-        #endregion
+    public int MidiInstrument { get; internal set; }
 
+    public Dictionary<int, Tuple<int, MidiEvent>> LastNotesOn { get; set; }
 
-        public readonly Thickness SelectedBorderThickness = new Thickness(.5f);
-        public readonly Thickness UnselectedBorderThickness = new Thickness(0);
-        public Point mouseDragStartPoint;
-        public Point mouseDragEndPoint;
-        public bool isDragging = false;
+    #region ZOOM
 
-        #region ATRB
+#pragma warning disable S3237
 
-        private SolidColorBrush tColor;
-        public SolidColorBrush TColor
+    public float CellWidth
+    {
+        get => UiManager.Instance.mainWindow.Model.XZoom;
+        set
         {
-            get { return tColor; }
-            set { tColor = value; RaisePropertyChanged("TColor"); }
+            RaisePropertyChanged("CellWidth");
+            RaisePropertyChanged("CellHeigth");
+            Ctrl.DrawPianoRoll();
+            Ctrl.DrawMidiEvents();
         }
+    }
 
-        public int MidiInstrument { get; internal set; }
-
-        public Dictionary<int, Tuple<int, MidiEvent>> LastNotesOn { get; set; }
-
-        #region ZOOM
-        #pragma warning disable S3237
-
-        public float CellWidth
+    public float CellHeigth
+    {
+        get => UiManager.Instance.mainWindow.Model.YZoom;
+        set
         {
-            get
-            {
-                return (UiManager.Instance.mainWindow.Model.XZoom);
-            }
-            set
-            {
-                RaisePropertyChanged("CellWidth");
-                RaisePropertyChanged("CellHeigth");
-                Ctrl.DrawPianoRoll();
-                Ctrl.DrawMidiEvents();
-            }
+            RaisePropertyChanged("CellHeigth");
+            RaisePropertyChanged("CellWidth");
+            Ctrl.DrawPianoRoll();
+            Ctrl.DrawMidiEvents();
         }
-
-        public float CellHeigth
-        {
-            get
-            {
-                return (UiManager.Instance.mainWindow.Model.YZoom);
-            }
-            set
-            {
-                RaisePropertyChanged("CellHeigth");
-                RaisePropertyChanged("CellWidth");
-                Ctrl.DrawPianoRoll();
-                Ctrl.DrawMidiEvents();
-            }
-        }
+    }
 
 #pragma warning restore S3237
-        #endregion
 
-        private double xOffset;
-        public double XOffset
+    #endregion
+
+    private double xOffset;
+
+    public double XOffset
+    {
+        get => xOffset;
+        set
         {
-            get { return xOffset; }
-            set
-            {
-                xOffset = value;
-                Ctrl.view.TrackBody.Margin = new Thickness(-XOffset,0,0,0);
-            }
+            xOffset = value;
+            Ctrl.view.TrackBody.Margin = new Thickness(-XOffset, 0, 0, 0);
         }
-        public double DAWhosReso { get; } = 1;
-        public double PlotReso
-        {
-            get
-            {
-                return 1 / UiManager.Instance.plotDivider;
-            }
-        }
-
-        #endregion
-
     }
+
+    public double DAWhosReso => 1;
+
+    public static double PlotReso => 1 / UiManager.Instance.plotDivider;
+
+    #endregion
 }
