@@ -1,12 +1,12 @@
-﻿#region
+#region
 
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
-using BardMusicPlayer.Maestro.Events;
+using BardMusicPlayer.MidiUtil.Managers;
+using BardMusicPlayer.MidiUtil.Ui;
+using BardMusicPlayer.Transmogrify.Song;
 using BardMusicPlayer.Ui.Functions;
-using BardMusicPlayer.Ui.MidiEdit.Managers;
-using BardMusicPlayer.Ui.MidiEdit.Ui;
 using Microsoft.Win32;
 
 #endregion
@@ -73,7 +73,8 @@ public sealed partial class Classic_MainView
 
     private void MidiProcessing_Click(object sender, RoutedEventArgs e)
     {
-        UiManager.Instance.mainWindow = new MidiEditWindow();
+        MidiUtil.MidiUtil.Instance.Start();
+        //UiManager.Instance.mainWindow = new MidiEditWindow();
         if (PlaybackFunctions.CurrentSong != null)
             MidiManager.Instance.OpenFile(PlaybackFunctions.CurrentSong.GetExportMidi());
     }

@@ -164,7 +164,7 @@ public sealed partial class Classic_MainView
     private void Instance_SynthTimePositionChanged(string songTitle, double currentTime, double endTime,
         int activeVoices)
     {
-        Dispatcher.BeginInvoke(new Action(() => Siren_PlaybackTimeChanged(currentTime, endTime)));
+        Dispatcher.BeginInvoke(new Action(() => Siren_PlaybackTimeChanged(currentTime, endTime, activeVoices)));
     }
 
     private void PlaybackTimeChanged(CurrentPlayPositionEvent e)

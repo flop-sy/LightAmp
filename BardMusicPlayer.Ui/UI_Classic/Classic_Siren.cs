@@ -44,6 +44,7 @@ public sealed partial class Classic_MainView
     /// <param name="e"></param>
     private void Siren_Load_Click(object sender, RoutedEventArgs e)
     {
+        Siren_VoiceCount.Content = 0;
         BmpSong CurrentSong = null;
         if (PlaylistContainer.SelectedItem is not string song)
         {
@@ -95,8 +96,9 @@ public sealed partial class Classic_MainView
     /// <param name="e"></param>
     private void Siren_Pause_Click(object sender, RoutedEventArgs e)
     {
-        if (BmpSiren.Instance.IsReadyForPlayback)
-            BmpSiren.Instance.Pause();
+        if (!BmpSiren.Instance.IsReadyForPlayback)
+            return;
+        BmpSiren.Instance.Pause();
     }
 
     private void Siren_Pause_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -124,8 +126,9 @@ public sealed partial class Classic_MainView
     /// <param name="e"></param>
     private void Siren_Stop_Click(object sender, RoutedEventArgs e)
     {
-        if (BmpSiren.Instance.IsReadyForPlayback)
-            BmpSiren.Instance.Stop();
+        if (!BmpSiren.Instance.IsReadyForPlayback)
+            return;
+        BmpSiren.Instance.Stop();
     }
 
     /// <summary>
@@ -161,11 +164,13 @@ public sealed partial class Classic_MainView
     /// </summary>
     /// <param name="currentTime"></param>
     /// <param name="endTime"></param>
-    private void Siren_PlaybackTimeChanged(double currentTime, double endTime)
+    private void Siren_PlaybackTimeChanged(double currentTime, double endTime, int activeVoices)
     {
         //if we are finished, stop the playback
         if (currentTime >= endTime)
             BmpSiren.Instance.Stop();
+
+        Siren_VoiceCount.Content = activeVoices.ToString();
 
         TimeSpan t;
         if (Siren_Position.Maximum != endTime)
