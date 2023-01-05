@@ -3,9 +3,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
+using BardMusicPlayer.Maestro.Events;
 using BardMusicPlayer.MidiUtil.Managers;
-using BardMusicPlayer.MidiUtil.Ui;
-using BardMusicPlayer.Transmogrify.Song;
 using BardMusicPlayer.Ui.Functions;
 using Microsoft.Win32;
 
