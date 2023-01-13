@@ -32,7 +32,7 @@ internal sealed class MachinaManager : IDisposable
         {
             MonitorType = NetworkMonitorType.RawSocket,
             OodlePath = BmpSeer.Instance.Games.Values.First().GamePath + @"\game\ffxiv_dx11.exe",
-            OodleImplementation = OodleImplementation.Ffxiv
+            OodleImplementation = OodleImplementation.FfxivUdp
         };
         _monitor.MessageReceivedEventHandler += MessageReceivedEventHandler;
     }
