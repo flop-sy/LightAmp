@@ -101,6 +101,14 @@ public sealed partial class Classic_MainView
         _directLoaded = true;
     }
 
+    private void Macro_Button_Click(object sender, RoutedEventArgs e)
+    {
+        var macroLaunchpad = new MacroLaunchpad
+        {
+            Visibility = Visibility.Visible
+        };
+    }
+
     #region EventHandler
 
     private void Instance_PlaybackTimeChanged(object sender, CurrentPlayPositionEvent e)
@@ -156,7 +164,7 @@ public sealed partial class Classic_MainView
     private void Instance_SynthTimePositionChanged(string songTitle, double currentTime, double endTime,
         int activeVoices)
     {
-        Dispatcher.BeginInvoke(new Action(() => Siren_PlaybackTimeChanged(currentTime, endTime)));
+        Dispatcher.BeginInvoke(new Action(() => Siren_PlaybackTimeChanged(currentTime, endTime, activeVoices)));
     }
 
     private void PlaybackTimeChanged(CurrentPlayPositionEvent e)
@@ -243,11 +251,11 @@ public sealed partial class Classic_MainView
 
     public void AppendChatLog(ChatLog ev)
     {
-        if (BmpMaestro.Instance.GetHostPid() == ev.ChatLogGame.Pid)
+        /* if (BmpMaestro.Instance.GetHostPid() == ev.ChatLogGame.Pid)
         {
             ChatBox.AppendText(ev);
             ChatBox.ScrollToEnd();
-        }
+        } */
 
         if (ev.ChatLogCode != "0039") return;
 
@@ -378,28 +386,20 @@ public sealed partial class Classic_MainView
         if (!int.TryParse(speed_txtNum.Text.Replace(@"%", ""), out var t)) return;
 
         var speedShift = (Convert.ToDouble(t) / 100).Clamp(0.1f, 2.0f);
-        BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);
+        BmpMaestro.Instance.SetSpeedShiftAll((float)speedShift);
     }
 
     private void speed_cmdUp_Click(object sender, RoutedEventArgs e)
     {
         var speedShift = SpeedNumValue + 0.01;
-        BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);
+        BmpMaestro.Instance.SetSpeedShiftAll((float)speedShift);
     }
 
     private void speed_cmdDown_Click(object sender, RoutedEventArgs e)
     {
         var speedShift = SpeedNumValue - 0.01;
-        BmpMaestro.Instance.SetSpeedShiftOnHost((float)speedShift);
+        BmpMaestro.Instance.SetSpeedShiftAll((float)speedShift);
     }
 
     #endregion
-
-    private void Macro_Button_Click(object sender, RoutedEventArgs e)
-    {
-        var macroLaunchpad = new MacroLaunchpad
-        {
-            Visibility = Visibility.Visible
-        };
-    }
 }

@@ -1,102 +1,151 @@
-﻿#region
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-/// <summary>
-///     Takes a number of MidiEvents and merges them into a new single MidiEvent source
-/// </summary>
-public class MergeMidiEvents : MidiEvents
+namespace Sanford.Multimedia.Midi
 {
-    private readonly List<MidiEvents> FMidiEventsList = new();
-
-    public MergeMidiEvents(IEnumerable<MidiEvents> midiEvents)
+    /// <summary>
+    /// Takes a number of MidiEvents and merges them into a new single MidiEvent source
+    /// </summary>
+    public class MergeMidiEvents : MidiEvents
     {
-        foreach (var elem in midiEvents.Where(elem => elem != null))
-            FMidiEventsList.Add(elem);
-    }
+        public int DeviceID
+        {
+            get
+            {
+                return -3;
+            }
+        }
 
-    public IEnumerable<MidiEvents> EventSources => FMidiEventsList;
-    public int DeviceID => -3;
+        readonly List<MidiEvents> FMidiEventsList = new List<MidiEvents>();
 
-    public void Dispose()
-    {
-    }
+        public MergeMidiEvents(IEnumerable<MidiEvents> midiEvents)
+        {
+            foreach (var elem in midiEvents)
+            {
+                if (elem != null)
+                    FMidiEventsList.Add(elem);
+            }
+        }
 
-    public event MidiMessageEventHandler MessageReceived
-    {
-        add
+        public IEnumerable<MidiEvents> EventSources
         {
-            foreach (var elem in FMidiEventsList) elem.MessageReceived += value;
+            get
+            {
+                return FMidiEventsList;
+            }
         }
-        remove
-        {
-            foreach (var elem in FMidiEventsList) elem.MessageReceived -= value;
-        }
-    }
 
-    public event EventHandler<ShortMessageEventArgs> ShortMessageReceived
-    {
-        add
+        public void Dispose()
         {
-            foreach (var elem in FMidiEventsList) elem.ShortMessageReceived += value;
         }
-        remove
-        {
-            foreach (var elem in FMidiEventsList) elem.ShortMessageReceived -= value;
-        }
-    }
 
-    public event EventHandler<ChannelMessageEventArgs> ChannelMessageReceived
-    {
-        add
+        public event MidiMessageEventHandler MessageReceived
         {
-            foreach (var elem in FMidiEventsList) elem.ChannelMessageReceived += value;
+            add
+            {
+                foreach (var elem in FMidiEventsList)
+                {
+                    elem.MessageReceived += value;
+                }
+            }
+            remove
+            {
+                foreach (var elem in FMidiEventsList)
+                {
+                    elem.MessageReceived -= value;
+                }
+            }
         }
-        remove
-        {
-            foreach (var elem in FMidiEventsList) elem.ChannelMessageReceived -= value;
-        }
-    }
 
-    public event EventHandler<SysExMessageEventArgs> SysExMessageReceived
-    {
-        add
+        public event EventHandler<ShortMessageEventArgs> ShortMessageReceived
         {
-            foreach (var elem in FMidiEventsList) elem.SysExMessageReceived += value;
+            add
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.ShortMessageReceived += value;
+                }
+            }
+            remove
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.ShortMessageReceived -= value;
+                }
+            }
         }
-        remove
-        {
-            foreach (var elem in FMidiEventsList) elem.SysExMessageReceived -= value;
-        }
-    }
 
-    public event EventHandler<SysCommonMessageEventArgs> SysCommonMessageReceived
-    {
-        add
+        public event EventHandler<ChannelMessageEventArgs> ChannelMessageReceived
         {
-            foreach (var elem in FMidiEventsList) elem.SysCommonMessageReceived += value;
+            add
+            {
+                foreach (var elem in FMidiEventsList)
+                {
+                    elem.ChannelMessageReceived += value;
+                }
+            }
+            remove
+            {
+                foreach (var elem in FMidiEventsList)
+                {
+                    elem.ChannelMessageReceived -= value;
+                }
+            }
         }
-        remove
-        {
-            foreach (var elem in FMidiEventsList) elem.SysCommonMessageReceived -= value;
-        }
-    }
 
-    public event EventHandler<SysRealtimeMessageEventArgs> SysRealtimeMessageReceived
-    {
-        add
+        public event EventHandler<SysExMessageEventArgs> SysExMessageReceived
         {
-            foreach (var elem in FMidiEventsList) elem.SysRealtimeMessageReceived += value;
+            add
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.SysExMessageReceived += value;
+                }
+            }
+            remove
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.SysExMessageReceived -= value;
+                }
+            }
         }
-        remove
+
+        public event EventHandler<SysCommonMessageEventArgs> SysCommonMessageReceived
         {
-            foreach (var elem in FMidiEventsList) elem.SysRealtimeMessageReceived -= value;
+            add
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.SysCommonMessageReceived += value;
+                }
+            }
+            remove
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.SysCommonMessageReceived -= value;
+                }
+            }
         }
+
+        public event EventHandler<SysRealtimeMessageEventArgs> SysRealtimeMessageReceived
+        {
+            add
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.SysRealtimeMessageReceived += value;
+                }
+            }
+            remove
+            {
+                foreach (var elem in FMidiEventsList) 
+                {
+                    elem.SysRealtimeMessageReceived -= value;
+                }
+            }
+        }
+        
     }
 }

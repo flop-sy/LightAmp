@@ -33,84 +33,112 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
 
-namespace Sanford.Multimedia.Midi.UI;
-
-public partial class DeviceDialog : Form
+namespace Sanford.Multimedia.Midi.UI
 {
-    private int inputDeviceID;
-
-    private int outputDeviceID;
-
-    public DeviceDialog()
+    public partial class DeviceDialog : Form
     {
-        InitializeComponent();
+        private int inputDeviceID = 0;
 
-        if (InputDevice.DeviceCount > 0)
+        private int outputDeviceID = 0;
+
+        public DeviceDialog()
         {
-            for (var i = 0; i < InputDevice.DeviceCount; i++) inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
+            InitializeComponent();
 
-            inputComboBox.SelectedIndex = inputDeviceID;
+            if(InputDevice.DeviceCount > 0)
+            {
+                for(int i = 0; i < InputDevice.DeviceCount; i++)
+                {
+                    inputComboBox.Items.Add(InputDevice.GetDeviceCapabilities(i).name);
+                }
+
+                inputComboBox.SelectedIndex = inputDeviceID;
+            }
+
+            if(OutputDevice.DeviceCount > 0)
+            {
+                for(int i = 0; i < OutputDevice.DeviceCount; i++)
+                {
+                    outputComboBox.Items.Add(OutputDevice.GetDeviceCapabilities(i).name);
+                }
+
+                outputComboBox.SelectedIndex = inputDeviceID;
+            }
         }
 
-        if (OutputDeviceBase.DeviceCount <= 0) return;
-
+        protected override void OnShown(EventArgs e)
         {
-            for (var i = 0; i < OutputDeviceBase.DeviceCount; i++) outputComboBox.Items.Add(OutputDeviceBase.GetDeviceCapabilities(i).name);
+            if(InputDevice.DeviceCount > 0)
+            {
+                inputComboBox.SelectedIndex = inputDeviceID;
+            }
 
-            outputComboBox.SelectedIndex = inputDeviceID;
+            if(OutputDevice.DeviceCount > 0)
+            {
+                outputComboBox.SelectedIndex = outputDeviceID;
+            }
+
+            base.OnShown(e);
         }
-    }
 
-    protected override void OnShown(EventArgs e)
-    {
-        if (InputDevice.DeviceCount > 0) inputComboBox.SelectedIndex = inputDeviceID;
-
-        if (OutputDeviceBase.DeviceCount > 0) outputComboBox.SelectedIndex = outputDeviceID;
-
-        base.OnShown(e);
-    }
-
-    private void okButton_Click(object sender, EventArgs e)
-    {
-        if (InputDevice.DeviceCount > 0) inputDeviceID = inputComboBox.SelectedIndex;
-
-        if (OutputDeviceBase.DeviceCount > 0) outputDeviceID = outputComboBox.SelectedIndex;
-
-        DialogResult = DialogResult.OK;
-    }
-
-    private void cancelButton_Click(object sender, EventArgs e)
-    {
-        DialogResult = DialogResult.Cancel;
-    }
-
-    public int InputDeviceID
-    {
-        get
+        private void okButton_Click(object sender, EventArgs e)
         {
-            #region Require
+            if(InputDevice.DeviceCount > 0)
+            {
+                inputDeviceID = inputComboBox.SelectedIndex;
+            }
 
-            if (InputDevice.DeviceCount == 0) throw new InvalidOperationException();
+            if(OutputDevice.DeviceCount > 0)
+            {
+                outputDeviceID = outputComboBox.SelectedIndex;
+            }
 
-            #endregion
-
-            return inputDeviceID;
+            DialogResult = DialogResult.OK;
         }
-    }
 
-    public int OutputDeviceID
-    {
-        get
+        private void cancelButton_Click(object sender, EventArgs e)
         {
-            #region Require
+            DialogResult = DialogResult.Cancel;
+        }
 
-            if (OutputDeviceBase.DeviceCount == 0) throw new InvalidOperationException();
+        public int InputDeviceID
+        {
+            get
+            {
+                #region Require
 
-            #endregion
+                if(InputDevice.DeviceCount == 0)
+                {
+                    throw new InvalidOperationException();
+                }
 
-            return outputDeviceID;
+                #endregion
+
+                return inputDeviceID;
+            }
+        }
+
+        public int OutputDeviceID
+        {
+            get
+            {
+                #region Require
+
+                if(OutputDevice.DeviceCount == 0)
+                {
+                    throw new InvalidOperationException();
+                }
+
+                #endregion
+
+                return outputDeviceID;
+            }
         }
     }
 }

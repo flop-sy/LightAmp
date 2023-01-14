@@ -151,7 +151,8 @@
                     <ColumnDefinition Width="275*" />
                 </Grid.ColumnDefinitions>
                 <TabControl Grid.ColumnSpan="2">
-                    <TabItem Header="[Chat] All">
+                    <!-- 
+					<TabItem Header="[Chat] All">
                         <RichTextBox x:Name="ChatBox" IsReadOnly="False"
                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                                      ScrollViewer.IsDeferredScrollingEnabled="True" Background="Gray">
@@ -168,7 +169,8 @@
                                 </Style>
                             </RichTextBox.Style>
                         </RichTextBox>
-                    </TabItem>
+                    </TabItem> 
+					-->
                     <TabItem Header="Performers">
                         <Grid Background="WhiteSmoke">
                             <control:BardView x:Name="BardsList" />
@@ -313,7 +315,7 @@
                             <!--
                             <Label Grid.Row="1" Grid.Column="0" Content="Beats per minute" />
                             <Label Grid.Row="1" Grid.Column="1" x:Name="Statistics_BPM_Label" />
--->
+                            -->
                             <Label Grid.Row="1" Grid.Column="0" Content="Total tracks" />
                             <Label Grid.Row="1" Grid.Column="1" x:Name="Statistics_Total_Tracks_Label" />
 
@@ -323,9 +325,15 @@
                             <Label Grid.Row="3" Grid.Column="0" Content="Track note count" />
                             <Label Grid.Row="3" Grid.Column="1" x:Name="Statistics_Track_Note_Count_Label" />
 
-                            <Label Grid.Row="7" Grid.Column="0" Content="Song functions:" />
-                            <Button Grid.Row="7" Grid.Column="1" Content="Export current song as Midi"
-                                    Click="ExportAsMidi" />
+                            <Label Grid.Row="6" Grid.Column="0" Content="Song functions:" />
+                            <Grid Grid.Row="6" Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Button Grid.Row="0" Content="Export current song as Midi" Click="ExportAsMidi" />
+                                <!--<Button Grid.Row="1" Content="Open Midi with Fus edit" Click="MidiProcessing_Click" />-->
+                            </Grid>
                         </Grid>
                     </TabItem>
                     <TabItem Header="Song Preview">
@@ -343,13 +351,20 @@
                                 <ColumnDefinition Width="50" />
                                 <ColumnDefinition Width="100" />
                             </Grid.ColumnDefinitions>
-                            <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3">
+                            <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="50" />
+                                    <ColumnDefinition Width="25" />
+                                    <ColumnDefinition Width="15" />
                                 </Grid.ColumnDefinitions>
                                 <Label Grid.Column="0" Content="Song title:" />
                                 <Label Grid.Column="1" x:Name="Siren_SongName" Content="No song loaded" />
+                                <Label Grid.Column="2" Content="Voices: " HorizontalAlignment="Right"
+                                       VerticalAlignment="Center" />
+                                <Label Grid.Column="3" x:Name="Siren_VoiceCount" Content="0" HorizontalAlignment="Left"
+                                       VerticalAlignment="Center" />
                             </Grid>
 
                             <DataGrid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding}"

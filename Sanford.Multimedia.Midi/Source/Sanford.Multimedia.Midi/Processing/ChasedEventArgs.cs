@@ -1,18 +1,24 @@
-#region
-
 using System;
 using System.Collections;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public sealed class ChasedEventArgs : EventArgs
+namespace Sanford.Multimedia.Midi
 {
-    public ChasedEventArgs(ICollection messages)
+    public class ChasedEventArgs : EventArgs
     {
-        Messages = messages;
-    }
+        private ICollection messages;
 
-    public ICollection Messages { get; }
+        public ChasedEventArgs(ICollection messages)
+        {
+            this.messages = messages;
+        }
+
+        public ICollection Messages
+        {
+            get
+            {
+                return messages;
+            }
+        }
+    }
 }

@@ -172,6 +172,18 @@ public partial class BmpMaestro : IDisposable
     }
 
     /// <summary>
+    ///     sets the speed for bard
+    /// </summary>
+    public void SetSpeedShiftAll(float percentage)
+    {
+        if (_orchestrator == null)
+            return;
+
+        var performers = _orchestrator.GetAllPerformers();
+        Parallel.ForEach(performers, perf => { _orchestrator.SetSpeedshift(perf, percentage); });
+    }
+
+    /// <summary>
     ///     sets the speed for host performer
     /// </summary>
     public void SetSpeedShiftOnHost(float percentage)
@@ -299,7 +311,7 @@ public partial class BmpMaestro : IDisposable
             return;
 
         var perf = _orchestrator.GetAllPerformers();
-        foreach (var p in perf.Where(static p => p.HostProcess))
+        foreach (var p in perf)
             p.DoReadyCheck();
     }
 

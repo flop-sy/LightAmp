@@ -1,9 +1,10 @@
-﻿#region
+#region
 
 using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using BardMusicPlayer.Maestro.Events;
+// using BardMusicPlayer.MidiUtil.Managers;
 using BardMusicPlayer.Ui.Functions;
 using Microsoft.Win32;
 
@@ -68,4 +69,12 @@ public sealed partial class Classic_MainView
         song.GetExportMidi().WriteTo(myStream);
         myStream.Close();
     }
+
+    // private void MidiProcessing_Click(object sender, RoutedEventArgs e)
+    // {
+    //     MidiUtil.MidiUtil.Instance.Start();
+    //     //UiManager.Instance.mainWindow = new MidiEditWindow();
+    //     if (PlaybackFunctions.CurrentSong != null)
+    //         MidiManager.Instance.OpenFile(PlaybackFunctions.CurrentSong.GetExportMidi());
+    // }
 }

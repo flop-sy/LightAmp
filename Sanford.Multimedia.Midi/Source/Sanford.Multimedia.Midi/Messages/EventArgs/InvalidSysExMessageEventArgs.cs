@@ -1,20 +1,24 @@
-#region
-
 using System;
 using System.Collections;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public sealed class InvalidSysExMessageEventArgs : EventArgs
+namespace Sanford.Multimedia.Midi
 {
-    private readonly byte[] messageData;
-
-    public InvalidSysExMessageEventArgs(byte[] messageData)
+    public class InvalidSysExMessageEventArgs : EventArgs
     {
-        this.messageData = messageData;
-    }
+        private byte[] messageData;
 
-    public ICollection MessageData => messageData;
+        public InvalidSysExMessageEventArgs(byte[] messageData)
+        {
+            this.messageData = messageData;
+        }
+
+        public ICollection MessageData
+        {
+            get
+            {
+                return messageData;
+            }
+        }
+    }
 }

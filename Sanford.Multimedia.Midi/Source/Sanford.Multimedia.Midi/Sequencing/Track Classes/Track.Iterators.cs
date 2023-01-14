@@ -1,106 +1,141 @@
-#region
+#region License
 
-using System;
-using System.Collections.Generic;
+/* Copyright (c) 2006 Leslie Sanford
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy 
+ * of this software and associated documentation files (the "Software"), to 
+ * deal in the Software without restriction, including without limitation the 
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or 
+ * sell copies of the Software, and to permit persons to whom the Software is 
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in 
+ * all copies or substantial portions of the Software. 
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE.
+ */
 
 #endregion
 
-namespace Sanford.Multimedia.Midi;
+#region Contact
 
-public sealed partial class Track
+/*
+ * Leslie Sanford
+ * Email: jabberdabber@hotmail.com
+ */
+
+#endregion
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+
+namespace Sanford.Multimedia.Midi
 {
-    #region Iterators
-
-    public IEnumerable<MidiEvent> Iterator()
+    public sealed partial class Track
     {
-        var current = head;
+        #region Iterators
 
-        while (current != null)
+        public IEnumerable<MidiEvent> Iterator()
         {
+            MidiEvent current = head;
+
+            while(current != null)
+            {
+                yield return current;
+
+                current = current.Next;
+            }
+
+            current = endOfTrackMidiEvent;
+
             yield return current;
-
-            current = current.Next;
         }
-
-        current = endOfTrackMidiEvent;
-
-        yield return current;
-    }
-
-    public IEnumerable<int> DispatcherIterator(MessageDispatcher dispatcher)
-    {
-        var enumerator = Iterator().GetEnumerator();
-
-        while (enumerator.MoveNext())
+        
+        public IEnumerable<int> DispatcherIterator(MessageDispatcher dispatcher)
         {
-            yield return enumerator.Current.AbsoluteTicks;
+            IEnumerator<MidiEvent> enumerator = Iterator().GetEnumerator();
 
-            dispatcher.Dispatch(this, enumerator.Current.MidiMessage);
-        }
-    }
-
-    public IEnumerable<int> TickIterator(int startPosition,
-        ChannelChaser chaser, MessageDispatcher dispatcher)
-    {
-        #region Require
-
-        if (startPosition < 0)
-            throw new ArgumentOutOfRangeException(nameof(startPosition), startPosition,
-                "Start position out of range.");
-
-        #endregion
-
-        var enumerator = Iterator().GetEnumerator();
-
-        var notFinished = enumerator.MoveNext();
-
-        while (enumerator.Current != null && notFinished && enumerator.Current.AbsoluteTicks < startPosition)
-        {
-            var message = enumerator.Current.MidiMessage;
-
-            switch (message.MessageType)
+            while(enumerator.MoveNext())
             {
-                case MessageType.Channel:
-                    chaser.Process((ChannelMessage)message);
-                    break;
-                case MessageType.Meta:
+                yield return enumerator.Current.AbsoluteTicks;
+
+                dispatcher.Dispatch(this, enumerator.Current.MidiMessage);
+            }
+        }
+
+        public IEnumerable<int> TickIterator(int startPosition, 
+            ChannelChaser chaser, MessageDispatcher dispatcher)
+        {
+            #region Require
+
+            if(startPosition < 0)
+            {
+                throw new ArgumentOutOfRangeException("startPosition", startPosition,
+                    "Start position out of range.");
+            }
+
+            #endregion
+
+            IEnumerator<MidiEvent> enumerator = Iterator().GetEnumerator();
+
+            bool notFinished = enumerator.MoveNext();
+            IMidiMessage message;
+
+            while(notFinished && enumerator.Current.AbsoluteTicks < startPosition)
+            {
+                message = enumerator.Current.MidiMessage;
+
+                if(message.MessageType == MessageType.Channel)
                 {
-                    if (Listen) dispatcher.Dispatch(this, message);
-
-                    break;
+					chaser.Process((ChannelMessage) message);
                 }
-            }
-
-            notFinished = enumerator.MoveNext();
-        }
-
-        chaser.Chase();
-
-        var ticks = startPosition;
-
-        while (notFinished)
-        {
-            while (enumerator.Current != null && ticks < enumerator.Current.AbsoluteTicks)
-            {
-                yield return ticks;
-
-                ticks++;
-            }
-
-            yield return ticks;
-
-            while (enumerator.Current != null && notFinished && enumerator.Current.AbsoluteTicks == ticks)
-            {
-                var mb = enumerator.Current.MidiMessage;
-
-                if (Listen) dispatcher.Dispatch(this, enumerator.Current.MidiMessage);
+                else if(message.MessageType == MessageType.Meta)
+                {
+					if(Listen) {
+						dispatcher.Dispatch(this, message);
+					}
+                }
 
                 notFinished = enumerator.MoveNext();
             }
 
-            ticks++;
-        }
-    }
+            chaser.Chase();
 
-    #endregion
+            int ticks = startPosition;
+
+            while(notFinished)
+            {
+                while(ticks < enumerator.Current.AbsoluteTicks)
+                {
+                    yield return ticks;
+
+                    ticks++;
+                }
+
+                yield return ticks;
+
+                while(notFinished && enumerator.Current.AbsoluteTicks == ticks)
+                {
+					IMidiMessage mb = enumerator.Current.MidiMessage;
+
+					if(Listen) {
+						dispatcher.Dispatch(this, enumerator.Current.MidiMessage);
+					}
+
+                    notFinished = enumerator.MoveNext();    
+                }
+
+                ticks++;
+            }
+        }
+
+        #endregion
+    }
 }

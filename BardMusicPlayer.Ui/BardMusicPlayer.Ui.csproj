@@ -26,8 +26,8 @@
         <Description>LightAmp for the BoL</Description>
         <Company>GiR-Zippo</Company>
         <Product>LightAmp</Product>
-        <Copyright>Copywrong © 2022</Copyright>
-        <Version>1.0.4.6</Version>
+        <Copyright>Copywrong © 2023</Copyright>
+        <Version>1.0.4.7</Version>
 
         <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
         <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
@@ -130,12 +130,14 @@
         <ProjectReference Include="..\BardMusicPlayer.DalamudBridge\BardMusicPlayer.DalamudBridge.csproj" Project="{1249f5d0-0c18-4d50-b584-b03e69768211}" Name="BardMusicPlayer.DalamudBridge"/>
         <ProjectReference Include="..\BardMusicPlayer.Jamboree\BardMusicPlayer.Jamboree.csproj" Project="{7fe86db2-13da-4656-8776-6e7dfb9f9015}" Name="BardMusicPlayer.Jamboree"/>
         <ProjectReference Include="..\BardMusicPlayer.Maestro\BardMusicPlayer.Maestro.csproj" Project="{00bac18c-1670-4cfc-8826-ad02347ba776}" Name="BardMusicPlayer.Maestro"/>
+        <!-- <ProjectReference Include="..\BardMusicPlayer.MidiUtil\BardMusicPlayer.MidiUtil.csproj" Project="{692eba77-d80c-4e74-af9d-fb74fb8bad78}" Name="BardMusicPlayer.MidiUtil"/> -->
         <ProjectReference Include="..\BardMusicPlayer.Pigeonhole\BardMusicPlayer.Pigeonhole.csproj" Project="{cd059bec-16c3-4bf4-aa8f-15ea9d473758}" Name="BardMusicPlayer.Pigeonhole"/>
         <ProjectReference Include="..\BardMusicPlayer.Quotidian\BardMusicPlayer.Quotidian.csproj" Project="{97070a4a-0a5a-4b67-bc79-d2a2cf9b5b13}" Name="BardMusicPlayer.Quotidian"/>
         <ProjectReference Include="..\BardMusicPlayer.Script\BardMusicPlayer.Script.csproj" Project="{11429258-48cd-4230-9801-e1788c318704}" Name="BardMusicPlayer.Script"/>
         <ProjectReference Include="..\BardMusicPlayer.Seer\BardMusicPlayer.Seer.csproj" Project="{fae02d19-1da3-4697-8040-565c5fd8dd8a}" Name="BardMusicPlayer.Seer"/>
         <ProjectReference Include="..\BardMusicPlayer.Siren\BardMusicPlayer.Siren.csproj" Project="{03d848f1-f319-43da-b0f8-e83a19ef3108}" Name="BardMusicPlayer.Siren"/>
         <ProjectReference Include="..\BardMusicPlayer.Transmogrify\BardMusicPlayer.Transmogrify.csproj" Project="{afb55e52-c439-481e-99f4-0b56c42a6d4b}" Name="BardMusicPlayer.Transmogrify"/>
+        <ProjectReference Include="..\Sanford.Multimedia.Midi\Source\Sanford.Multimedia.Midi.csproj" Project="{4269C72A-8D3A-4737-8F89-72EAA33EA9E1}" Name="Sanford.Multimedia.Midi"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -168,10 +168,6 @@ public sealed class GP6File : GPFile
             _bar.header = song.measureHeaders[barCnt];
             currentMeasure = barCnt;
             currentTrack = cnt % song.trackCount;
-            if (currentTrack == 9)
-            {
-                //var a = 3;
-            }
 
             cnt++;
             var nSimileMark = nBar.getSubnodeByName("SimileMark", true);

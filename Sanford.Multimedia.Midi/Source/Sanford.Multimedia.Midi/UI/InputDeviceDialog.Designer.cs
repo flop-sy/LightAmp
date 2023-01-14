@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using System.Windows.Forms;
-
 namespace Sanford.Multimedia.Midi.UI
 {
     partial class InputDeviceDialog
@@ -8,7 +5,7 @@ namespace Sanford.Multimedia.Midi.UI
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private IContainer components = null;
+        private System.ComponentModel.IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -102,9 +99,9 @@ namespace Sanford.Multimedia.Midi.UI
 
         #endregion
 
-        private Label inputLabel;
-        private ComboBox inputComboBox;
-        private Button cancelButton;
-        private Button okButton;
+        private System.Windows.Forms.Label inputLabel;
+        private System.Windows.Forms.ComboBox inputComboBox;
+        private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.Button okButton;
     }
 }

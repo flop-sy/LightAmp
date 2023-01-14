@@ -61,7 +61,7 @@ public static partial class GameExtensions
     /// <param name="game"></param>
     /// <param name="instrumentToneWanted"></param>
     /// <returns></returns>
-    public static async Task<bool> EquipTone(this Game game, InstrumentTone instrumentToneWanted)
+    /*public static async Task<bool> EquipTone(this Game game, InstrumentTone instrumentToneWanted)
     {
         if (!BmpGrunt.Instance.Started) throw new BmpGruntException("Grunt not started.");
 
@@ -86,5 +86,5 @@ public static partial class GameExtensions
         }
 
         return Game.InstrumentToneHeld.Equals(instrumentToneWanted);
-    }
+    }*/
 }

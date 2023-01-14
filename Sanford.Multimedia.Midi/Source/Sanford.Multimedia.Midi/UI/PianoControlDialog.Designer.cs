@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using System.Windows.Forms;
-
 namespace Sanford.Multimedia.Midi.UI
 {
     partial class PianoControlDialog
@@ -8,7 +5,7 @@ namespace Sanford.Multimedia.Midi.UI
         /// <summary>
         /// Required designer variable.
         /// </summary>
-        private IContainer components = null;
+        private System.ComponentModel.IContainer components = null;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -155,12 +152,12 @@ namespace Sanford.Multimedia.Midi.UI
 
         #endregion
 
-        private Button okButton;
-        private Button cancelButton;
-        private NumericUpDown lowNoteIDNumericUpDown;
-        private GroupBox noteRangeGroupBox;
-        private Label highNoteIDLabel;
-        private Label lowNoteIDLabel;
-        private NumericUpDown highNoteIDNumericUpDown;
+        private System.Windows.Forms.Button okButton;
+        private System.Windows.Forms.Button cancelButton;
+        private System.Windows.Forms.NumericUpDown lowNoteIDNumericUpDown;
+        private System.Windows.Forms.GroupBox noteRangeGroupBox;
+        private System.Windows.Forms.Label highNoteIDLabel;
+        private System.Windows.Forms.Label lowNoteIDLabel;
+        private System.Windows.Forms.NumericUpDown highNoteIDNumericUpDown;
     }
 }

@@ -1,17 +1,24 @@
-#region
-
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia;
-
-public sealed class ErrorEventArgs : EventArgs
+namespace Sanford.Multimedia
 {
-    public ErrorEventArgs(Exception ex)
+    public class ErrorEventArgs : EventArgs
     {
-        Error = ex;
-    }
+        private Exception ex;
 
-    public Exception Error { get; }
+        public ErrorEventArgs(Exception ex)
+        {
+            this.ex = ex;
+        }
+
+        public Exception Error
+        {
+            get
+            {
+                return ex;
+            }
+        }
+    }
 }

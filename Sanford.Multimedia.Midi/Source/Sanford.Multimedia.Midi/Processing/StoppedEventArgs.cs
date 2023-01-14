@@ -1,18 +1,24 @@
-#region
-
 using System;
 using System.Collections;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public sealed class StoppedEventArgs : EventArgs
+namespace Sanford.Multimedia.Midi
 {
-    public StoppedEventArgs(ICollection messages)
+    public class StoppedEventArgs : EventArgs
     {
-        Messages = messages;
-    }
+        private ICollection messages;
 
-    public ICollection Messages { get; }
+        public StoppedEventArgs(ICollection messages)
+        {
+            this.messages = messages;
+        }
+
+        public ICollection Messages
+        {
+            get
+            {
+                return messages;
+            }
+        }
+    }
 }

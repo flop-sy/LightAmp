@@ -1,20 +1,30 @@
-#region
-
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-#endregion
-
-namespace Sanford.Multimedia.Midi;
-
-public sealed class SysExMessageEventArgs : EventArgs
+namespace Sanford.Multimedia.Midi
 {
-    public SysExMessageEventArgs(Track track, SysExMessage message)
+    public class SysExMessageEventArgs : EventArgs
     {
-        Message = message;
-        MidiTrack = track;
+        private SysExMessage message;
+		private Track track;
+
+        public SysExMessageEventArgs(Track track, SysExMessage message)
+        {
+            this.message = message;
+			this.track = track;
+        }
+
+        public SysExMessage Message
+        {
+            get
+            {
+                return message;
+            }
+        }
+
+		public Track MidiTrack {
+			get { return track; }
+		}
     }
-
-    public SysExMessage Message { get; }
-
-    public Track MidiTrack { get; }
 }

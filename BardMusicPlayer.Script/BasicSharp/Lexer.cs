@@ -85,6 +85,8 @@ public sealed class Lexer
                         return Token.Print;
                     case "MACRO":
                         return Token.Macro;
+                    case "CPRINT":
+                        return Token.CPrint;
                     case "IF":
                         return Token.If;
                     case "ENDIF":
@@ -97,6 +99,8 @@ public sealed class Lexer
                         return Token.For;
                     case "TO":
                         return Token.To;
+                    case "STEP":
+                        return Token.Step;
                     case "NEXT":
                         return Token.Next;
                     case "GOTO":
